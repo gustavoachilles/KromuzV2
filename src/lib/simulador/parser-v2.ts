@@ -5,6 +5,7 @@ export async function parseHisconPdf(buffer: Buffer): Promise<ExtratoHisconRaw> 
   
   const pdf = require("pdf-parse/dist/pdf-parse/cjs/index.cjs");
   
+  let text = "";
   try {
     const data = await pdf(buffer);
     text = data.text;

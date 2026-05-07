@@ -4,12 +4,7 @@ import { ArrowRightLeft, Building2, Percent, DollarSign, FileText, TrendingDown 
 
 type Regra = {
   id: string;
-  tipoOperacao: string;
-  banco: { nome: string; codigoCompe: string | null };
-  produto: { nomeProduto: string };
-  portTaxaMaxOrigem: number | null;
-  portTrocoPct: number | null;
-  refinPermitido: boolean | null;
+  [key: string]: any;
 };
 
 type Tabela = {
