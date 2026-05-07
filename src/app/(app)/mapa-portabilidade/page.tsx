@@ -33,7 +33,7 @@ export default async function MapaPortabilidadePage() {
       empresaId: eid,
       ativo: true,
       produto: {
-        regraProdutoCredito: {
+        regras: {
           some: {
             tipoOperacao: { in: ["PORTABILIDADE", "PORTABILIDADE_REFIN"] },
             ativa: true,
