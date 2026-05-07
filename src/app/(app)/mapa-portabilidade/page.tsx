@@ -22,7 +22,7 @@ export default async function MapaPortabilidadePage() {
     },
     include: {
       banco: { select: { nome: true, codigoCompe: true } },
-      produto: { select: { nome: true } },
+      produto: { select: { nomeProduto: true } },
     },
     orderBy: { banco: { nome: "asc" } },
   });
@@ -49,7 +49,7 @@ export default async function MapaPortabilidadePage() {
       coeficiente: true,
       comissaoFlatPct: true,
       banco: { select: { nome: true } },
-      produto: { select: { nome: true } },
+      produto: { select: { nomeProduto: true } },
     },
     orderBy: [{ taxaJurosMensal: "asc" }],
   });

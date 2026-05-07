@@ -6,7 +6,7 @@ type Regra = {
   id: string;
   tipoOperacao: string;
   banco: { nome: string; codigoCompe: string | null };
-  produto: { nome: string };
+  produto: { nomeProduto: string };
   portTaxaMaxOrigem: number | null;
   portTrocoPct: number | null;
   refinPermitido: boolean | null;
@@ -20,7 +20,7 @@ type Tabela = {
   coeficiente: number;
   comissaoFlatPct: number | null;
   banco: { nome: string };
-  produto: { nome: string };
+  produto: { nomeProduto: string };
 };
 
 type PropostaGrupo = {
