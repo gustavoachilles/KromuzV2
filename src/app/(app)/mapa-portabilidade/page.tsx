@@ -21,7 +21,7 @@ export default async function MapaPortabilidadePage() {
       tipoOperacao: { in: ["PORTABILIDADE", "PORTABILIDADE_REFIN"] },
     },
     include: {
-      banco: { select: { nome: true, codigo: true } },
+      banco: { select: { nome: true, codigoCompe: true } },
       produto: { select: { nome: true } },
     },
     orderBy: { banco: { nome: "asc" } },

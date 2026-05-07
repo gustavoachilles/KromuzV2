@@ -5,7 +5,7 @@ import { ArrowRightLeft, Building2, Percent, DollarSign, FileText, TrendingDown 
 type Regra = {
   id: string;
   tipoOperacao: string;
-  banco: { nome: string; codigo: string | null };
+  banco: { nome: string; codigoCompe: string | null };
   produto: { nome: string };
   portTaxaMaxOrigem: number | null;
   portTrocoPct: number | null;
