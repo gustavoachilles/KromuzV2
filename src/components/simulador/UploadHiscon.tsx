@@ -1,0 +1,117 @@
+"use client";
+
+import { useState } from "react";
+import { UploadCloud, FileType, CheckCircle, XCircle, Loader2 } from "lucide-react";
+
+interface UploadHisconProps {
+  onProcessamentoCompleto: (dados: any) => void;
+  empresaId: string;
+}
+
+export function UploadHiscon({ onProcessamentoCompleto, empresaId }: UploadHisconProps) {
+  const [isDragging, setIsDragging] = useState(false);
+  const [file, setFile] = useState<File | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleFile = async (selectedFile: File) => {
+    if (selectedFile.type !== "application/pdf") {
+      setError("Por favor, envie apenas arquivos PDF.");
+      return;
+    }
+    
+    setFile(selectedFile);
+    setError(null);
+    setLoading(true);
+
+    try {
+      const reader = new FileReader();
+      reader.readAsDataURL(selectedFile);
+      
+      reader.onload = async () => {
+        const base64 = (reader.result as string).split(",")[1];
+        
+        const response = await fetch("/api/simulador/extrair", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ pdfBase64: base64, empresaId }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || "Erro ao processar o extrato.");
+        }
+
+        onProcessamentoCompleto(data);
+        setLoading(false);
+      };
+      
+      reader.onerror = () => {
+        throw new Error("Erro ao ler o arquivo no navegador.");
+      };
+
+    } catch (err: any) {
+      setError(err.message || "Ocorreu um erro inesperado.");
+      setLoading(false);
+      setFile(null);
+    }
+  };
+
+  return (
+    <div className="w-full max-w-2xl mx-auto mt-8">
+      <div 
+        className={`relative flex flex-col items-center justify-center w-full h-64 border-2 border-dashed rounded-xl transition-all duration-300 ${
+          isDragging ? "border-indigo-500 bg-indigo-50/50" : "border-slate-300 hover:border-slate-400 bg-slate-50"
+        } ${loading ? "opacity-75 pointer-events-none" : "cursor-pointer"}`}
+        onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+        onDragLeave={() => setIsDragging(false)}
+        onDrop={(e) => {
+          e.preventDefault();
+          setIsDragging(false);
+          if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+            handleFile(e.dataTransfer.files[0]);
+          }
+        }}
+      >
+        <input 
+          type="file" 
+          accept=".pdf" 
+          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" 
+          onChange={(e) => e.target.files && handleFile(e.target.files[0])}
+          disabled={loading}
+        />
+        
+        <div className="flex flex-col items-center justify-center pt-5 pb-6 text-center px-4">
+          {loading ? (
+            <>
+              <Loader2 className="w-12 h-12 text-indigo-600 animate-spin mb-4" />
+              <p className="text-lg font-semibold text-slate-700">A Inteligência Artificial está lendo o extrato...</p>
+              <p className="text-sm text-slate-500 mt-2">Cruzando dados do cliente com as regras dos bancos.</p>
+            </>
+          ) : error ? (
+            <>
+              <XCircle className="w-12 h-12 text-red-500 mb-4" />
+              <p className="text-lg font-semibold text-red-600">Falha no Processamento</p>
+              <p className="text-sm text-slate-600 mt-2">{error}</p>
+              <p className="text-sm text-indigo-600 font-medium mt-4">Clique ou arraste outro arquivo para tentar novamente</p>
+            </>
+          ) : (
+            <>
+              <UploadCloud className={`w-12 h-12 mb-4 transition-colors ${isDragging ? "text-indigo-600" : "text-slate-400"}`} />
+              <p className="text-lg font-semibold text-slate-700">
+                Arraste o Extrato do INSS (HISCON) para cá
+              </p>
+              <p className="text-sm text-slate-500 mt-2">
+                Ou clique para selecionar o PDF do seu computador
+              </p>
+              <div className="mt-6 flex items-center text-xs text-slate-400 bg-white px-3 py-1 rounded-full border shadow-sm">
+                <FileType className="w-4 h-4 mr-2" /> PDF seguro (não fica salvo no banco de dados)
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}

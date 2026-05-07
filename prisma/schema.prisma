@@ -1,0 +1,566 @@
+// Kromuz V2 — Schema Prisma
+// Foco do Sprint 1: Motor de Regras + Ingestão de Roteiros Operacionais
+//
+// Convenções:
+//  - Multi-tenant via empresa_id em TODA entidade de negócio (RLS aplicada no Postgres).
+//  - Índices compostos sempre começando por empresa_id.
+//  - JSONB usado para schemas variáveis (faixas etárias, espécies, etc).
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  extensions = [pgcrypto, citext, vector]
+  schemas    = ["public"]
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// TENANT
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Empresa {
+  id              String    @id @default(uuid()) @db.Uuid
+  nomeEmpresa     String    @map("nome_empresa")
+  nomeFantasia    String?   @map("nome_fantasia")
+  cpfCnpj         String?   @map("cpf_cnpj")
+  status          String    @default("teste")
+  planoSlug       String    @default("beta") @map("plano_slug")
+  diasTrial       Int       @default(14) @map("dias_trial")
+  dataTrialFim    DateTime? @map("data_trial_fim") @db.Date
+  nivelPlataforma String    @default("inicio") @map("nivel_plataforma")
+  logoUrl         String?   @map("logo_url")
+  corPrimaria     String?   @map("cor_primaria")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  bancos               Banco[]
+  convenios            Convenio[]
+  produtosCredito      ProdutoCredito[]
+  tabelasCoeficiente   TabelaCoeficiente[]
+  regrasProduto        RegraProdutoCredito[]
+  roteirosOperacionais RoteiroOperacional[]
+  importacoesPdf       ImportacaoPDF[]
+  usuarios             UsuarioPerfil[]
+  bancoConvenios       BancoConvenio[]
+  auditLogs            AuditLog[]
+  propostas            Proposta[]
+  leads                Lead[]
+  metas                Meta[]
+
+  @@index([status])
+  @@map("empresa")
+  @@schema("public")
+}
+
+model UsuarioPerfil {
+  id         String   @id @default(uuid()) @db.Uuid
+  empresaId  String   @map("empresa_id") @db.Uuid
+  authUserId String   @unique @map("auth_user_id") @db.Uuid
+  email      String
+  nome       String?
+  perfilSlug String   @default("vendedor") @map("perfil_slug")
+  ativo      Boolean  @default(true)
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  empresa Empresa @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+
+  @@index([empresaId])
+  @@index([authUserId])
+  @@map("usuario_perfil")
+  @@schema("public")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MOTOR DE REGRAS — NÚCLEO (Sprint 1)
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Banco {
+  id                      String   @id @default(uuid()) @db.Uuid
+  empresaId               String   @map("empresa_id") @db.Uuid
+  nome                    String
+  codigoCompe             String?  @map("codigo_compe")
+  cnpj                    String?
+  tipo                    String   @default("consignado")
+  tipoBanco               String   @default("consignado") @map("tipo_banco")
+  status                  String   @default("ativo")
+  ativo                   Boolean  @default(true)
+  ativoSimulacao          Boolean  @default(false) @map("ativo_simulacao")
+  ordem                   Int      @default(99)
+  fatorSaldo              Float?   @map("fator_saldo")
+  multiplicadorMaxParcela Float?   @map("multiplicador_max_parcela")
+  prazoMaximo             Int?     @map("prazo_maximo")
+  parcelasMinimasSrcc     Int      @default(0) @map("parcelas_minimas_srcc")
+  observacoes             String?
+  logoUrl                 String?  @map("logo_url")
+  createdAt               DateTime @default(now()) @map("created_at")
+  updatedAt               DateTime @updatedAt @map("updated_at")
+
+  empresa              Empresa               @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  produtosCredito      ProdutoCredito[]
+  tabelasCoeficiente   TabelaCoeficiente[]
+  regrasProduto        RegraProdutoCredito[]
+  roteirosOperacionais RoteiroOperacional[]
+  bancoConvenios       BancoConvenio[]
+
+  @@unique([empresaId, nome])
+  @@index([empresaId, ativo])
+  @@map("banco")
+  @@schema("public")
+}
+
+model Convenio {
+  id        String   @id @default(uuid()) @db.Uuid
+  empresaId String   @map("empresa_id") @db.Uuid
+  nome      String
+  slug      String
+  tipo      String?
+  descricao String?
+  ativo     Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  empresa            Empresa               @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  produtosCredito    ProdutoCredito[]
+  tabelasCoeficiente TabelaCoeficiente[]
+  regrasProduto      RegraProdutoCredito[]
+  bancoConvenios     BancoConvenio[]
+
+  @@unique([empresaId, slug])
+  @@index([empresaId, ativo])
+  @@map("convenio")
+  @@schema("public")
+}
+
+model BancoConvenio {
+  id          String   @id @default(uuid()) @db.Uuid
+  empresaId   String   @map("empresa_id") @db.Uuid
+  bancoId     String   @map("banco_id") @db.Uuid
+  convenioId  String   @map("convenio_id") @db.Uuid
+  ativo       Boolean  @default(true)
+  observacoes String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  empresa  Empresa  @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  banco    Banco    @relation(fields: [bancoId], references: [id], onDelete: Cascade)
+  convenio Convenio @relation(fields: [convenioId], references: [id], onDelete: Cascade)
+
+  @@unique([empresaId, bancoId, convenioId])
+  @@index([empresaId])
+  @@map("banco_convenio")
+  @@schema("public")
+}
+
+enum TipoOperacao {
+  EMPRESTIMO_CONSIGNADO
+  REFINANCIAMENTO
+  PORTABILIDADE
+  PORTABILIDADE_REFIN
+  CARTAO_CONSIGNADO
+  CARTAO_BENEFICIO
+
+  @@schema("public")
+}
+
+model ProdutoCredito {
+  id               String       @id @default(uuid()) @db.Uuid
+  empresaId        String       @map("empresa_id") @db.Uuid
+  bancoId          String       @map("banco_id") @db.Uuid
+  convenioId       String?      @map("convenio_id") @db.Uuid
+  nomeProduto      String       @map("nome_produto")
+  tipoProduto      TipoOperacao @map("tipo_produto")
+  prazoMaximo      Int?         @map("prazo_maximo")
+  taxaMedia        Float?       @map("taxa_media")
+  permiteSeguro    Boolean      @default(false) @map("permite_seguro")
+  percentualSaque  Float?       @map("percentual_saque")
+  percentualCompra Float?       @map("percentual_compra")
+  ativo            Boolean      @default(true)
+  observacoes      String?
+  createdAt        DateTime     @default(now()) @map("created_at")
+  updatedAt        DateTime     @updatedAt @map("updated_at")
+
+  empresa  Empresa   @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  banco    Banco     @relation(fields: [bancoId], references: [id], onDelete: Cascade)
+  convenio Convenio? @relation(fields: [convenioId], references: [id], onDelete: SetNull)
+
+  tabelasCoeficiente TabelaCoeficiente[]
+  regras             RegraProdutoCredito[]
+
+  @@unique([empresaId, bancoId, tipoProduto, convenioId])
+  @@index([empresaId, bancoId])
+  @@map("produto_credito")
+  @@schema("public")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// TABELAS DE COEFICIENTES (COMERCIAL)
+// ─────────────────────────────────────────────────────────────────────────────
+
+model TabelaCoeficiente {
+  id                 String   @id @default(uuid()) @db.Uuid
+  empresaId          String   @map("empresa_id") @db.Uuid
+  bancoId            String   @map("banco_id") @db.Uuid
+  produtoId          String   @map("produto_id") @db.Uuid
+  convenioId         String?  @map("convenio_id") @db.Uuid
+  
+  nome               String
+  prazo              Int
+  taxaJurosMensal    Float    @map("taxa_juros_mensal")
+  coeficiente        Float
+  
+  comissaoFlatPct    Float?   @map("comissao_flat_pct")
+  comissaoRepassePct Float?   @map("comissao_repasse_pct")
+  
+  ativo              Boolean  @default(true)
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  empresa  Empresa        @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  banco    Banco          @relation(fields: [bancoId], references: [id], onDelete: Cascade)
+  produto  ProdutoCredito @relation(fields: [produtoId], references: [id], onDelete: Cascade)
+  convenio Convenio?      @relation(fields: [convenioId], references: [id], onDelete: SetNull)
+
+  @@index([empresaId, bancoId, produtoId])
+  @@map("tabela_coeficiente")
+  @@schema("public")
+}
+
+// ⭐ Regra Operacional do Produto — extraída via IA dos PDFs dos bancos.
+model RegraProdutoCredito {
+  id           String       @id @default(uuid()) @db.Uuid
+  empresaId    String       @map("empresa_id") @db.Uuid
+  bancoId      String       @map("banco_id") @db.Uuid
+  bancoNome    String       @map("banco_nome")
+  produtoId    String       @map("produto_id") @db.Uuid
+  produtoNome  String       @map("produto_nome")
+  convenioId   String?      @map("convenio_id") @db.Uuid
+  convenioNome String?      @map("convenio_nome")
+  tipoOperacao TipoOperacao @map("tipo_operacao")
+  ativa        Boolean      @default(true)
+  prioridade   Int          @default(0)
+
+  faixasEtarias Json @default("[]") @map("faixas_etarias") @db.JsonB
+  especies      Json @default("{}") @db.JsonB
+
+  // Regras Pessoais
+  representanteLegalPermitido Boolean? @map("representante_legal_permitido")
+  idadeMaxRepresentante       Int?     @map("idade_max_representante")
+  analfabetoPermitido         Boolean? @map("analfabeto_permitido")
+
+  // Regras de Convênio / UF
+  ufBloqueadas   String[] @default([]) @map("uf_bloqueadas")
+  ddbMinimoDias  Int?     @map("ddb_minimo_dias") // IN100
+
+  margemPadraoPct Float? @map("margem_padrao_pct")
+  margemLoasPct   Float? @map("margem_loas_pct")
+
+  margemNovaPermitido Boolean @default(true) @map("margem_nova_permitido")
+  margemNovaValorMin  Float?  @map("margem_nova_valor_min")
+  margemNovaValorMax  Float?  @map("margem_nova_valor_max")
+
+  refinPermitido        Boolean  @default(true) @map("refin_permitido")
+  refinParcelasMinPagas Int?     @map("refin_parcelas_min_pagas")
+  refinAgregaMargem     Boolean? @map("refin_agrega_margem")
+  refinPermiteMargemNeg Boolean? @map("refin_permite_margem_negativa")
+  refinValorMin         Float?   @map("refin_valor_min")
+  refinTrocoMin         Float?   @map("refin_troco_min")
+
+  portPermitido          Boolean  @default(true) @map("port_permitido")
+  portParcelasMinPagas   Int?     @map("port_parcelas_min_pagas")
+  portValorMin           Float?   @map("port_valor_min")
+  portPermiteReduzirParc Boolean? @map("port_permite_reduzir_parcela")
+  portPermiteMargemNeg   Boolean? @map("port_permite_margem_negativa")
+  portMaxContratosUnica  Int?     @map("port_max_contratos_unica_digitacao")
+
+  taxaMinimaAm Float? @map("taxa_minima_am")
+  taxaMaximaAm Float? @map("taxa_maxima_am")
+
+  maxContratosPorBeneficio Int?    @map("max_contratos_por_beneficio")
+  dataCorte                String? @map("data_corte")
+
+  limiteCartaoMinimo Float? @map("limite_cartao_minimo")
+  limiteCartaoMaximo Float? @map("limite_cartao_maximo")
+  fatorRmc           Float? @map("fator_rmc")
+  parcelaMinima      Float? @map("parcela_minima")
+
+  saldoDevedorMaximo  Float? @map("saldo_devedor_maximo")
+  trocoMinimoLiberado Float? @map("troco_minimo_liberado")
+
+  versaoRoteiro          String? @map("versao_roteiro")
+  dataAtualizacaoRoteiro String? @map("data_atualizacao_roteiro")
+  validadeRoteiro        String? @map("validade_roteiro")
+
+  bancosPagamento Json @default("[]") @map("bancos_pagamento") @db.JsonB
+
+  documentosObrigatorios String[] @default([]) @map("documentos_obrigatorios")
+  publicoExcluido        String[] @default([]) @map("publico_excluido")
+
+  restricoesPorEspecie Json @default("[]") @map("restricoes_por_especie") @db.JsonB
+
+  observacoes String?
+
+  fonteTipo        String?   @map("fonte_tipo")
+  fonteArquivoUrl  String?   @map("fonte_arquivo_url")
+  fonteArquivoNome String?   @map("fonte_arquivo_nome")
+  fonteModeloIa    String?   @map("fonte_modelo_ia")
+  fonteExtraidoEm  DateTime? @map("fonte_extraido_em")
+
+  importacaoPdfId String? @map("importacao_pdf_id") @db.Uuid
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  empresa       Empresa        @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  banco         Banco          @relation(fields: [bancoId], references: [id], onDelete: Cascade)
+  produto       ProdutoCredito @relation(fields: [produtoId], references: [id], onDelete: Cascade)
+  convenio      Convenio?      @relation(fields: [convenioId], references: [id], onDelete: SetNull)
+  importacaoPdf ImportacaoPDF? @relation(fields: [importacaoPdfId], references: [id], onDelete: SetNull)
+
+  @@unique([empresaId, bancoId, produtoId, tipoOperacao])
+  @@index([empresaId, bancoId, ativa])
+  @@index([empresaId, tipoOperacao])
+  @@map("regra_produto_credito")
+  @@schema("public")
+}
+
+model RoteiroOperacional {
+  id              String   @id @default(uuid()) @db.Uuid
+  empresaId       String   @map("empresa_id") @db.Uuid
+  bancoId         String   @map("banco_id") @db.Uuid
+  bancoNome       String   @map("banco_nome")
+  produto         String
+  titulo          String
+  descricao       String?
+  versaoAtual     String   @default("1.0") @map("versao_atual")
+  status          String   @default("rascunho")
+  arquivoPdfUrl   String?  @map("arquivo_pdf_url")
+  regrasExtraidas Int      @default(0) @map("regras_extraidas")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  empresa Empresa @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  banco   Banco   @relation(fields: [bancoId], references: [id], onDelete: Cascade)
+
+  @@index([empresaId, bancoId])
+  @@map("roteiro_operacional")
+  @@schema("public")
+}
+
+model ImportacaoPDF {
+  id           String    @id @default(uuid()) @db.Uuid
+  empresaId    String    @map("empresa_id") @db.Uuid
+  arquivoUrl   String    @map("arquivo_url")
+  nomeArquivo  String    @map("nome_arquivo")
+  bancoHint    String?   @map("banco_hint")
+  status       String    @default("pendente")
+  progresso    Int       @default(0)
+  etapa        String?
+  logs         String?
+  erro         String?
+  modeloIa     String?   @map("modelo_ia")
+  resultado    Json?     @db.JsonB
+  usuarioEmail String?   @map("usuario_email")
+  iniciadoEm   DateTime? @map("iniciado_em")
+  concluidoEm  DateTime? @map("concluido_em")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  empresa       Empresa               @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  regrasGeradas RegraProdutoCredito[]
+
+  @@index([empresaId, status])
+  @@index([empresaId, createdAt(sort: Desc)])
+  @@map("importacao_pdf")
+  @@schema("public")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// LOG DE AUDITORIA (Sprint 11)
+// ─────────────────────────────────────────────────────────────────────────────
+
+model AuditLog {
+  id           String   @id @default(uuid()) @db.Uuid
+  empresaId    String   @map("empresa_id") @db.Uuid
+  usuarioEmail String   @map("usuario_email")
+  usuarioNome  String?  @map("usuario_nome")
+  acao         String   // criou, editou, deletou, importou, vinculou, desvinculou
+  entidade     String   // regra, banco, produto, convenio, tabela, empresa, usuario
+  entidadeId   String?  @map("entidade_id") @db.Uuid
+  entidadeNome String?  @map("entidade_nome")
+  detalhes     Json?    @db.JsonB  // campos alterados { campo: { de: ..., para: ... } }
+  ip           String?
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  empresa Empresa @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+
+  @@index([empresaId, createdAt(sort: Desc)])
+  @@index([empresaId, entidade])
+  @@map("audit_log")
+  @@schema("public")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ESTEIRA DE PROPOSTAS / CRM (Sprint 12)
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum StatusProposta {
+  RASCUNHO
+  SIMULADA
+  DIGITADA
+  PENDENTE
+  APROVADA
+  REPROVADA
+  PAGA
+  CANCELADA
+
+  @@schema("public")
+}
+
+model Proposta {
+  id              String         @id @default(uuid()) @db.Uuid
+  empresaId       String         @map("empresa_id") @db.Uuid
+  bancoId         String?        @map("banco_id") @db.Uuid
+  produtoId       String?        @map("produto_id") @db.Uuid
+  convenioId      String?        @map("convenio_id") @db.Uuid
+
+  // Cliente
+  clienteNome     String         @map("cliente_nome")
+  clienteCpf      String?        @map("cliente_cpf")
+  clienteTelefone String?        @map("cliente_telefone")
+  numeroBeneficio String?        @map("numero_beneficio")
+  especieBeneficio Int?          @map("especie_beneficio")
+
+  // Operação
+  tipoOperacao    TipoOperacao   @map("tipo_operacao")
+  status          StatusProposta @default(RASCUNHO)
+  valorParcela    Float?         @map("valor_parcela")
+  valorLiberado   Float?         @map("valor_liberado")
+  prazo           Int?
+  taxaJuros       Float?         @map("taxa_juros")
+  valorComissao   Float?         @map("valor_comissao")
+
+  // Meta
+  bancoNome       String?        @map("banco_nome")
+  produtoNome     String?        @map("produto_nome")
+  convenioNome    String?        @map("convenio_nome")
+  vendedorEmail   String?        @map("vendedor_email")
+  vendedorNome    String?        @map("vendedor_nome")
+  observacoes     String?
+
+  // Datas do funil
+  digitadaEm      DateTime?      @map("digitada_em")
+  aprovadaEm      DateTime?      @map("aprovada_em")
+  pagaEm          DateTime?      @map("paga_em")
+  canceladaEm     DateTime?      @map("cancelada_em")
+
+  createdAt       DateTime       @default(now()) @map("created_at")
+  updatedAt       DateTime       @updatedAt @map("updated_at")
+
+  empresa Empresa @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+
+  @@index([empresaId, status])
+  @@index([empresaId, createdAt(sort: Desc)])
+  @@index([empresaId, vendedorEmail])
+  @@map("proposta")
+  @@schema("public")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// LEADS / CRM (Sprint 13)
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum StatusLead {
+  NOVO
+  CONTATO
+  QUALIFICADO
+  PROPOSTA
+  APROVADO
+  PAGO
+  PERDIDO
+
+  @@schema("public")
+}
+
+model Lead {
+  id              String     @id @default(uuid()) @db.Uuid
+  empresaId       String     @map("empresa_id") @db.Uuid
+
+  // Dados pessoais
+  nome            String
+  cpf             String?
+  telefone        String?
+  email           String?
+  dataNascimento  DateTime?  @map("data_nascimento") @db.Date
+  uf              String?
+  cidade          String?
+
+  // Benefício INSS
+  numeroBeneficio String?    @map("numero_beneficio")
+  especieBeneficio Int?      @map("especie_beneficio")
+  margemLivre     Float?     @map("margem_livre")
+  margemRmc       Float?     @map("margem_rmc")
+  margemRcc       Float?     @map("margem_rcc")
+
+  // Pipeline
+  status          StatusLead @default(NOVO)
+  origem          String?    // indicacao, site, whatsapp, importacao, manual
+  canalContato    String?    @map("canal_contato") // whatsapp, telefone, presencial
+  vendedorEmail   String?    @map("vendedor_email")
+  vendedorNome    String?    @map("vendedor_nome")
+
+  // Operação potencial
+  tipoOperacao    TipoOperacao? @map("tipo_operacao")
+  valorEstimado   Float?        @map("valor_estimado")
+  bancoPreferido  String?       @map("banco_preferido")
+  convenioNome    String?       @map("convenio_nome")
+
+  observacoes     String?
+  ultimoContato   DateTime?  @map("ultimo_contato")
+  proximoContato  DateTime?  @map("proximo_contato")
+  motivoPerda     String?    @map("motivo_perda")
+
+  createdAt       DateTime   @default(now()) @map("created_at")
+  updatedAt       DateTime   @updatedAt @map("updated_at")
+
+  empresa Empresa @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+
+  @@index([empresaId, status])
+  @@index([empresaId, vendedorEmail])
+  @@index([empresaId, createdAt(sort: Desc)])
+  @@map("lead")
+  @@schema("public")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// METAS (Sprint 16)
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Meta {
+  id              String   @id @default(uuid()) @db.Uuid
+  empresaId       String   @map("empresa_id") @db.Uuid
+
+  vendedorEmail   String   @map("vendedor_email")
+  vendedorNome    String?  @map("vendedor_nome")
+  mes             Int      // 1-12
+  ano             Int
+
+  // Metas
+  metaPropostas   Int?     @map("meta_propostas")    // qtd propostas pagas
+  metaVolume      Float?   @map("meta_volume")       // R$ liberado
+  metaLeads       Int?     @map("meta_leads")        // qtd leads convertidos
+  metaComissao    Float?   @map("meta_comissao")     // R$ comissão
+
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  empresa Empresa @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+
+  @@unique([empresaId, vendedorEmail, mes, ano])
+  @@index([empresaId, ano, mes])
+  @@map("meta")
+  @@schema("public")
+}
