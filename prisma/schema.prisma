@@ -49,6 +49,7 @@ model Empresa {
   propostas            Proposta[]
   leads                Lead[]
   metas                Meta[]
+  simulacoes           SimulacaoCredito[]
 
   @@index([status])
   @@map("empresa")
@@ -562,5 +563,32 @@ model Meta {
   @@unique([empresaId, vendedorEmail, mes, ano])
   @@index([empresaId, ano, mes])
   @@map("meta")
+  @@schema("public")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// INTELIGÊNCIA & SIMULADORES (Sprint 13)
+// ─────────────────────────────────────────────────────────────────────────────
+
+model SimulacaoCredito {
+  id                   String   @id @default(uuid()) @db.Uuid
+  empresaId            String   @map("empresa_id") @db.Uuid
+  clienteNome          String?  @map("cliente_nome")
+  beneficioTipo        String   @map("beneficio_tipo")
+  especieBeneficio     String?  @map("especie_beneficio")
+  idade                Int
+  valorBeneficio       Float?   @map("valor_beneficio")
+  margemDisponivel     Float?   @map("margem_disponivel")
+  valorSolicitado      Float?   @map("valor_solicitado")
+  prazoDesejado        Int?     @map("prazo_desejado")
+  melhorBanco          String?  @map("melhor_banco")
+  melhorScore          Int?     @map("melhor_score")
+  totalBancosElegiveis Int      @default(0) @map("total_bancos_elegiveis")
+  createdAt            DateTime @default(now()) @map("created_at")
+
+  empresa Empresa @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+
+  @@index([empresaId, createdAt(sort: Desc)])
+  @@map("simulacao_credito")
   @@schema("public")
 }
