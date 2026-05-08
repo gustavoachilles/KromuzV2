@@ -13,7 +13,6 @@ import {
   Search, Loader2, CheckCircle, Clock, Activity, Medal
 } from "lucide-react";
 import { toast } from "sonner";
-import { useEmpresa } from "@/components/providers/EmpresaProvider";
 
 const BENEFICIOS = ["INSS", "LOAS", "SERVIDOR", "SIAPE", "MILITAR", "FGTS"];
 const ESPECIES_INSS = [
@@ -52,8 +51,7 @@ function BarraScore({ score }: { score: number }) {
   );
 }
 
-export default function CreditBrainClient() {
-  const { empresaAtiva } = useEmpresa();
+export default function CreditBrainClient({ empresaId }: { empresaId: string }) {
   const [form, setForm] = useState({
     beneficio_tipo: "INSS", especie_beneficio: "", idade: "",
     valor_beneficio: "", margem_disponivel: "", valor_solicitado: "", prazo_desejado: "",
@@ -63,8 +61,8 @@ export default function CreditBrainClient() {
   const [loading, setLoading] = useState(false);
 
   const simular = async () => {
-    if (!empresaAtiva) {
-      toast.error("Empresa não selecionada.");
+    if (!empresaId) {
+      toast.error("Empresa não identificada.");
       return;
     }
     if (!form.beneficio_tipo || !form.idade) {
@@ -76,7 +74,7 @@ export default function CreditBrainClient() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          empresaId: empresaAtiva.id,
+          empresaId: empresaId,
           beneficioTipo: form.beneficio_tipo,
           especieBeneficio: form.especie_beneficio || null,
           idade: parseInt(form.idade),

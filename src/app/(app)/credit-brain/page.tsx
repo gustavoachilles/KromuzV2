@@ -1,8 +1,11 @@
 import { Suspense } from "react";
 import CreditBrainClient from "./CreditBrainClient";
 import { Skeleton } from "@/components/ui/skeleton";
+import { getSessionEmpresa } from "@/lib/session";
 
-export default function CreditBrainPage() {
+export default async function CreditBrainPage() {
+  const sessao = await getSessionEmpresa();
+
   return (
     <div className="flex flex-col gap-6 p-8 w-full max-w-7xl mx-auto">
       <div>
@@ -13,7 +16,7 @@ export default function CreditBrainPage() {
       </div>
 
       <Suspense fallback={<Skeleton className="w-full h-[600px] rounded-xl" />}>
-        <CreditBrainClient />
+        <CreditBrainClient empresaId={sessao.empresaId} />
       </Suspense>
     </div>
   );
