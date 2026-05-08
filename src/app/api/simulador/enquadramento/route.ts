@@ -119,7 +119,7 @@ export async function POST(req: Request) {
           banco_id: regra.bancoId,
           tipo_produto: regra.produto.nomeProduto,
           taxa_media: tabela?.taxaJurosMensal || null,
-          prazo_maximo: tabela?.prazoMaximo || null,
+          prazo_maximo: tabela?.prazo || null,
           valor_maximo: valorMaximo,
           parcela_estimada: parcelaEstimada,
           score_aprovacao: Math.max(0, Math.min(100, scoreAprovacao)),
