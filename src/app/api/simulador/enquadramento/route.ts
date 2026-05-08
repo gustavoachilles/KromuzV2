@@ -48,21 +48,30 @@ export async function POST(req: Request) {
       let elegivel = true;
       const motivosRecusa: string[] = [];
 
-      // Validar Idade
-      if (regra.idadeMin && idade < regra.idadeMin) {
-        elegivel = false;
-        motivosRecusa.push(`Idade mínima exigida: ${regra.idadeMin} anos`);
-      }
-      if (regra.idadeMax && idade > regra.idadeMax) {
-        elegivel = false;
-        motivosRecusa.push(`Idade máxima permitida: ${regra.idadeMax} anos`);
+      // Validar Idade usando faixasEtarias
+      try {
+        const faixas = regra.faixasEtarias as any[];
+        if (Array.isArray(faixas) && faixas.length > 0) {
+          const atendeAlgumaFaixa = faixas.some(f => {
+            const min = f.idadeMin || f.min || 0;
+            const max = f.idadeMax || f.max || 999;
+            return idade >= Number(min) && idade <= Number(max);
+          });
+          if (!atendeAlgumaFaixa) {
+            elegivel = false;
+            motivosRecusa.push(`Idade fora da política de crédito`);
+          }
+        }
+      } catch (e) {
+        // ignora erro de parse
       }
 
-      // Validar Convênio/Espécie (simplificado por nome do produto ou regra)
-      if (regra.especiesAceitas) {
+      // Validar Convênio/Espécie
+      if (regra.especies) {
         try {
-          const especiesStr = String(regra.especiesAceitas);
-          if (especiesStr !== "[]" && especiesStr !== "" && especieBeneficio) {
+          const especiesObj = regra.especies as any;
+          const especiesStr = JSON.stringify(especiesObj);
+          if (especiesStr !== "{}" && especiesStr !== "[]" && especiesStr !== '""' && especieBeneficio) {
              if (!especiesStr.includes(especieBeneficio)) {
                elegivel = false;
                motivosRecusa.push(`Espécie ${especieBeneficio} não permitida`);
