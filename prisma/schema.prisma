@@ -48,6 +48,7 @@ model Empresa {
   auditLogs            AuditLog[]
   propostas            Proposta[]
   leads                Lead[]
+  pipelineColunas      PipelineColuna[]
   metas                Meta[]
   simulacoes           SimulacaoCredito[]
 
@@ -474,17 +475,7 @@ model Proposta {
 // LEADS / CRM (Sprint 13)
 // ─────────────────────────────────────────────────────────────────────────────
 
-enum StatusLead {
-  NOVO
-  CONTATO
-  QUALIFICADO
-  PROPOSTA
-  APROVADO
-  PAGO
-  PERDIDO
-
-  @@schema("public")
-}
+// Status foram migrados para pipeline_coluna dinâmico
 
 model Lead {
   id              String     @id @default(uuid()) @db.Uuid
@@ -507,7 +498,7 @@ model Lead {
   margemRcc       Float?     @map("margem_rcc")
 
   // Pipeline
-  status          StatusLead @default(NOVO)
+  status          String     @default("NOVO")
   origem          String?    // indicacao, site, whatsapp, importacao, manual
   canalContato    String?    @map("canal_contato") // whatsapp, telefone, presencial
   vendedorEmail   String?    @map("vendedor_email")
@@ -535,6 +526,23 @@ model Lead {
   @@map("lead")
   @@schema("public")
 }
+
+model PipelineColuna {
+  id        String   @id @default(uuid()) @db.Uuid
+  empresaId String   @map("empresa_id") @db.Uuid
+  nome      String
+  cor       String?
+  ordem     Int      @default(0)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  empresa Empresa @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+
+  @@index([empresaId])
+  @@index([empresaId, ordem])
+  @@map("pipeline_coluna")
+  @@schema("public")
+}
+
 
 // ─────────────────────────────────────────────────────────────────────────────
 // METAS (Sprint 16)

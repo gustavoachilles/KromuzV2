@@ -23,7 +23,7 @@ const AtualizarLeadSchema = z.object({
   nome: z.string().min(2).optional(),
   telefone: z.string().optional(),
   email: z.string().email().optional().or(z.literal("")),
-  status: z.enum(["NOVO", "CONTATO", "QUALIFICADO", "PROPOSTA", "APROVADO", "PAGO", "PERDIDO"]).optional(),
+  status: z.string().optional(),
   observacoes: z.string().nullable().optional(),
   motivoPerda: z.string().nullable().optional(),
   tipoOperacao: z.enum([

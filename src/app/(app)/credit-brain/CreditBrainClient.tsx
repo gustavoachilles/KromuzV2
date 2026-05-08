@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Brain, Zap, Trophy, DollarSign, Building2,
-  Search, Loader2, CheckCircle, Clock, Activity, Medal
+  Search, Loader2, CheckCircle, Clock, Activity, Medal, FileText
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -59,6 +59,48 @@ export default function CreditBrainClient({ empresaId }: { empresaId: string }) 
   });
   const [resultado, setResultado] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+  const [importandoHiscon, setImportandoHiscon] = useState(false);
+
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const handleHiscon = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    setImportandoHiscon(true);
+    const reader = new FileReader();
+    reader.onload = async (ev) => {
+      try {
+        const arrayBuffer = ev.target?.result as ArrayBuffer;
+        const base64 = btoa(new Uint8Array(arrayBuffer).reduce((data, byte) => data + String.fromCharCode(byte), ''));
+
+        const res = await fetch("/api/simulador/extrair", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ pdfBase64: base64 }),
+        });
+        
+        const data = await res.json();
+        if (res.ok && data.cliente) {
+          setForm(f => ({
+            ...f,
+            margem_disponivel: data.cliente.margemLivre?.toString() || f.margem_disponivel,
+            especie_beneficio: data.cliente.especie?.toString() || f.especie_beneficio,
+            beneficio_tipo: "INSS"
+          }));
+          toast.success("HISCON processado! Preencha a Idade manualmente.");
+        } else {
+          toast.error(data.error || "Erro ao ler HISCON");
+        }
+      } catch (err: any) {
+        toast.error("Falha na importação");
+      } finally {
+        setImportandoHiscon(false);
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  };
+
 
   const simular = async () => {
     if (!empresaId) {
@@ -120,12 +162,24 @@ export default function CreditBrainClient({ empresaId }: { empresaId: string }) 
             {/* Formulário */}
             <div className="md:col-span-1">
               <Card>
-                <CardHeader className="pb-3">
+                <CardHeader className="pb-3 flex flex-row items-center justify-between">
                   <CardTitle className="text-base flex items-center gap-2">
                     <Search className="w-4 h-4" /> Dados do Cliente
                   </CardTitle>
+                  <button 
+                    onClick={() => fileRef.current?.click()}
+                    disabled={importandoHiscon}
+                    className="text-xs bg-violet-100 text-violet-700 px-2 py-1 rounded-md font-medium hover:bg-violet-200 transition flex items-center gap-1"
+                  >
+                    {importandoHiscon ? <Loader2 className="w-3 h-3 animate-spin"/> : <FileText className="w-3 h-3"/>}
+                    Preencher via HISCON
+                  </button>
+                  <input type="file" accept=".pdf" className="hidden" ref={fileRef} onChange={handleHiscon} />
                 </CardHeader>
                 <CardContent className="space-y-4">
+                  <div className="bg-amber-50 border border-amber-200 text-amber-800 text-xs p-2 rounded-md mb-2">
+                    Aviso: O Extrato INSS não possui Idade ou Data de Nascimento. Preencha manualmente.
+                  </div>
                   <div>
                     <Label className="text-xs">Nome do Cliente</Label>
                     <Input className="mt-1" placeholder="Opcional" value={form.cliente_nome}
