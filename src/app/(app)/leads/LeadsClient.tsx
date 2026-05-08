@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
 import {
-  Users, Plus, X, Loader2, Phone, Mail, MapPin, Clock, DollarSign, GripVertical
+  Users, Plus, X, Loader2, Phone, Mail, DollarSign, GripVertical
 } from "lucide-react";
 
 type PipelineColuna = { id: string; nome: string; cor: string | null; ordem: number; };
@@ -13,6 +13,7 @@ type Lead = {
   id: string; nome: string; cpf: string | null; telefone: string | null;
   email: string | null; uf: string | null; status: string; origem: string | null;
   tipoOperacao: string | null; valorEstimado: number | null;
+  bancoPreferido: string | null; observacoes: string | null;
   vendedorNome: string | null; createdAt: string | Date;
 };
 
@@ -41,7 +42,7 @@ export function LeadsClient({
   const [erro, setErro] = useState<string | null>(null);
 
   const [form, setForm] = useState({
-    nome: "", cpf: "", telefone: "", email: "", uf: "",
+    id: "", nome: "", cpf: "", telefone: "", email: "", uf: "",
     tipoOperacao: "", valorEstimado: "", bancoPreferido: "",
     origem: "manual", observacoes: "",
   });
@@ -50,7 +51,31 @@ export function LeadsClient({
 
   const totalAtivos = leads.length;
 
-  async function criarLead(e: React.FormEvent) {
+  const abrirModalNovo = () => {
+    setForm({ id: "", nome: "", cpf: "", telefone: "", email: "", uf: "", tipoOperacao: "", valorEstimado: "", bancoPreferido: "", origem: "manual", observacoes: "" });
+    setErro(null);
+    setModal(true);
+  };
+
+  const abrirModalEditar = (lead: Lead) => {
+    setForm({
+      id: lead.id,
+      nome: lead.nome,
+      cpf: lead.cpf || "",
+      telefone: lead.telefone || "",
+      email: lead.email || "",
+      uf: lead.uf || "",
+      tipoOperacao: lead.tipoOperacao || "",
+      valorEstimado: lead.valorEstimado ? lead.valorEstimado.toString() : "",
+      bancoPreferido: lead.bancoPreferido || "",
+      origem: lead.origem || "manual",
+      observacoes: lead.observacoes || "",
+    });
+    setErro(null);
+    setModal(true);
+  };
+
+  async function salvarLead(e: React.FormEvent) {
     e.preventDefault();
     setSalvando(true);
     setErro(null);
@@ -60,13 +85,19 @@ export function LeadsClient({
       if (payload[key] === "") payload[key] = undefined;
     });
 
-    const res = await fetch("/api/leads", {
-      method: "POST",
+    const bodyData = {
+      ...payload,
+      valorEstimado: payload.valorEstimado ? Number(payload.valorEstimado) : undefined,
+    };
+
+    const isEdit = !!form.id;
+    const url = isEdit ? `/api/leads/${form.id}` : "/api/leads";
+    const method = isEdit ? "PATCH" : "POST";
+
+    const res = await fetch(url, {
+      method,
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        ...payload,
-        valorEstimado: payload.valorEstimado ? Number(payload.valorEstimado) : undefined,
-      }),
+      body: JSON.stringify(bodyData),
     });
 
     if (!res.ok) {
@@ -76,9 +107,8 @@ export function LeadsClient({
 
     setModal(false);
     setSalvando(false);
-    setForm({ nome: "", cpf: "", telefone: "", email: "", uf: "", tipoOperacao: "", valorEstimado: "", bancoPreferido: "", origem: "manual", observacoes: "" });
     router.refresh();
-    setTimeout(() => window.location.reload(), 500); // hard refresh to get new items
+    setTimeout(() => window.location.reload(), 500);
   }
 
   async function criarColuna(e: React.FormEvent) {
@@ -103,22 +133,18 @@ export function LeadsClient({
     if (!destination) return;
     if (source.droppableId === destination.droppableId && source.index === destination.index) return;
 
-    // Local optimistic update
     const newStatus = destination.droppableId;
     setLeads(prev => prev.map(l => l.id === draggableId ? { ...l, status: newStatus } : l));
 
-    // Persist
     await fetch(`/api/leads/${draggableId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status: newStatus }),
     });
 
-    // Auto-calcula a comissão se moveu para PAGO
     if (newStatus === "PAGO" || newStatus === "Pago") {
       try {
         await fetch(`/api/leads/${draggableId}/comissao`, { method: "POST" });
-        // Opcional: mostrar um toast avisando que foi enviado para o Financeiro
       } catch (e) {}
     }
 
@@ -128,7 +154,6 @@ export function LeadsClient({
   return (
     <div className="min-h-screen bg-gradient-to-b from-zinc-50 to-white dark:from-zinc-950 dark:to-black">
       <div className="max-w-[1600px] mx-auto px-6 py-6 space-y-6">
-        {/* Header */}
         <header className="flex items-start justify-between gap-4 flex-wrap">
           <div>
             <div className="flex items-center gap-2 text-violet-600 dark:text-violet-400 mb-1">
@@ -140,13 +165,12 @@ export function LeadsClient({
               {totalAtivos} lead{totalAtivos !== 1 ? "s" : ""} no funil
             </p>
           </div>
-          <button onClick={() => setModal(true)}
+          <button onClick={abrirModalNovo}
             className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-violet-500/25 hover:opacity-95 transition">
             <Plus className="h-4 w-4" /> Novo Lead
           </button>
         </header>
 
-        {/* Kanban Board */}
         <div className="flex gap-4 overflow-x-auto pb-4 items-start min-h-[60vh]">
           <DragDropContext onDragEnd={onDragEnd}>
             {colunas.map((coluna) => {
@@ -177,13 +201,14 @@ export function LeadsClient({
                                 ref={provided.innerRef}
                                 {...provided.draggableProps}
                                 {...provided.dragHandleProps}
-                                className={`bg-white dark:bg-zinc-950 rounded-xl p-4 border border-zinc-200 dark:border-zinc-800 shadow-sm flex flex-col gap-3 transition-shadow ${snapshot.isDragging ? 'shadow-xl ring-2 ring-violet-500/50 opacity-90' : 'hover:shadow-md'}`}
+                                onClick={() => abrirModalEditar(lead)}
+                                className={`bg-white dark:bg-zinc-950 rounded-xl p-4 border border-zinc-200 dark:border-zinc-800 shadow-sm flex flex-col gap-3 transition-shadow cursor-pointer ${snapshot.isDragging ? 'shadow-xl ring-2 ring-violet-500/50 opacity-90' : 'hover:shadow-md'}`}
                               >
                                 <div className="flex items-start justify-between gap-2">
                                   <p className="font-bold text-sm leading-tight text-zinc-900 dark:text-zinc-100 line-clamp-2">
                                     {lead.nome}
                                   </p>
-                                  <GripVertical className="h-4 w-4 text-zinc-300 shrink-0 cursor-grab active:cursor-grabbing" />
+                                  <GripVertical className="h-4 w-4 text-zinc-300 shrink-0" />
                                 </div>
                                 
                                 <div className="flex flex-col gap-1.5 text-xs text-zinc-500 dark:text-zinc-400">
@@ -221,7 +246,6 @@ export function LeadsClient({
               );
             })}
             
-            {/* Botão de Nova Coluna */}
             <div className="flex-shrink-0 w-80 bg-transparent border-2 border-dashed border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 flex flex-col items-center justify-center opacity-70 hover:opacity-100 hover:border-violet-300 transition-all cursor-pointer h-32"
                  onClick={() => setModalColuna(true)}>
               <Plus className="h-6 w-6 text-zinc-400 mb-2" />
@@ -232,47 +256,93 @@ export function LeadsClient({
         </div>
       </div>
 
-      {/* Modal */}
       {modal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-2xl w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
+          <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-2xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between p-6 border-b border-zinc-100 dark:border-zinc-800 sticky top-0 bg-white dark:bg-zinc-900 z-10">
-              <h2 className="text-lg font-semibold">Novo Lead</h2>
+              <h2 className="text-lg font-semibold">{form.id ? "Editar Lead" : "Novo Lead"}</h2>
               <button onClick={() => setModal(false)} className="text-zinc-400 hover:text-zinc-600 transition"><X className="h-5 w-5" /></button>
             </div>
-            <form onSubmit={criarLead} className="p-6 space-y-4">
+            <form onSubmit={salvarLead} className="p-6 space-y-4">
               {erro && <div className="rounded-lg bg-red-50 text-red-700 px-4 py-3 text-sm">{erro}</div>}
+              
               <div className="space-y-2">
                 <label className="text-sm font-medium">Nome *</label>
                 <input required value={form.nome} onChange={e => setForm({ ...form, nome: e.target.value })}
                   className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500" />
               </div>
+              
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-zinc-500">Telefone</label>
-                  <input value={form.telefone} onChange={e => setForm({ ...form, telefone: e.target.value })}
+                  <label className="text-sm font-medium text-zinc-500">CPF</label>
+                  <input value={form.cpf} onChange={e => setForm({ ...form, cpf: e.target.value })} placeholder="000.000.000-00"
                     className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500" />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-zinc-500">E-mail</label>
-                  <input type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })}
+                  <label className="text-sm font-medium text-zinc-500">Telefone</label>
+                  <input value={form.telefone} onChange={e => setForm({ ...form, telefone: e.target.value })} placeholder="(11) 99999-0000"
                     className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500" />
                 </div>
               </div>
-              <div className="flex justify-end gap-3 pt-2">
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-zinc-500">E-mail</label>
+                  <input type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} placeholder="email@exemplo.com"
+                    className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-zinc-500">UF</label>
+                  <input value={form.uf} onChange={e => setForm({ ...form, uf: e.target.value })} placeholder="SP" maxLength={2}
+                    className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500" />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-zinc-500">Tipo de Operação</label>
+                  <select value={form.tipoOperacao} onChange={e => setForm({ ...form, tipoOperacao: e.target.value })}
+                    className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500">
+                    <option value="">—</option>
+                    <option value="EMPRESTIMO_CONSIGNADO">Margem Nova</option>
+                    <option value="REFINANCIAMENTO">Refinanciamento</option>
+                    <option value="PORTABILIDADE">Portabilidade</option>
+                    <option value="PORTABILIDADE_REFIN">Port + Refin</option>
+                    <option value="CARTAO_CONSIGNADO">Cartão RMC</option>
+                    <option value="CARTAO_BENEFICIO">Cartão RCC</option>
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-zinc-500">Valor Estimado</label>
+                  <input type="number" value={form.valorEstimado} onChange={e => setForm({ ...form, valorEstimado: e.target.value })}
+                    className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-zinc-500">Banco Preferido</label>
+                  <input value={form.bancoPreferido} onChange={e => setForm({ ...form, bancoPreferido: e.target.value })}
+                    className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500" />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-zinc-500">Observações</label>
+                <textarea value={form.observacoes} onChange={e => setForm({ ...form, observacoes: e.target.value })} rows={3}
+                  className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500" />
+              </div>
+
+              <div className="flex justify-end gap-3 pt-4 border-t border-zinc-100 dark:border-zinc-800">
                 <button type="button" onClick={() => setModal(false)} className="px-4 py-2 text-sm text-zinc-600">Cancelar</button>
                 <button type="submit" disabled={salvando}
                   className="flex items-center gap-2 rounded-xl bg-violet-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg">
-                  {salvando ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-                  {salvando ? "Criando..." : "Criar Lead"}
+                  {salvando ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                  {salvando ? "Salvando..." : (form.id ? "Salvar Alterações" : "Criar Lead")}
                 </button>
               </div>
             </form>
           </div>
         </div>
       )}
-      
-      {/* Modal Nova Coluna */}
+
       {modalColuna && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
           <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-2xl w-full max-w-sm mx-4">

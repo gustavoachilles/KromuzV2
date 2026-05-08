@@ -21,8 +21,10 @@ export async function GET(_req: NextRequest, { params }: RouteParams) {
 
 const AtualizarLeadSchema = z.object({
   nome: z.string().min(2).optional(),
+  cpf: z.string().nullable().optional(),
   telefone: z.string().optional(),
   email: z.string().email().optional().or(z.literal("")),
+  uf: z.string().max(2).nullable().optional(),
   status: z.string().optional(),
   observacoes: z.string().nullable().optional(),
   motivoPerda: z.string().nullable().optional(),
