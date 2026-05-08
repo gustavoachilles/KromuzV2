@@ -55,12 +55,17 @@ export function LeadsClient({
     setSalvando(true);
     setErro(null);
 
+    const payload: any = { ...form };
+    Object.keys(payload).forEach(key => {
+      if (payload[key] === "") payload[key] = undefined;
+    });
+
     const res = await fetch("/api/leads", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        ...form,
-        valorEstimado: form.valorEstimado ? Number(form.valorEstimado) : undefined,
+        ...payload,
+        valorEstimado: payload.valorEstimado ? Number(payload.valorEstimado) : undefined,
       }),
     });
 
