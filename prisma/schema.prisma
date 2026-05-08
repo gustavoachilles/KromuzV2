@@ -61,12 +61,20 @@ model UsuarioPerfil {
   id         String   @id @default(uuid()) @db.Uuid
   empresaId  String   @map("empresa_id") @db.Uuid
   authUserId String   @unique @map("auth_user_id") @db.Uuid
-  email      String
-  nome       String?
-  perfilSlug String   @default("vendedor") @map("perfil_slug")
-  ativo      Boolean  @default(true)
-  createdAt  DateTime @default(now()) @map("created_at")
-  updatedAt  DateTime @updatedAt @map("updated_at")
+  email               String
+  nome                String?
+  perfilSlug          String   @default("vendedor") @map("perfil_slug")
+  
+  // Regras de Remuneração
+  tipoRemuneracao     String   @default("SEM_COMISSAO") @map("tipo_remuneracao") // SEM_COMISSAO, PERCENTUAL_FIXO, FAIXAS_META
+  baseCalculoComissao String   @default("VOLUME") @map("base_calculo_comissao") // VOLUME, LUCRO_LOJA
+  salarioFixo         Float?   @map("salario_fixo")
+  percentualFixo      Float?   @map("percentual_fixo")
+  regrasFaixas        Json?    @map("regras_faixas") // Array de objetos { minVolume, percentual }
+
+  ativo               Boolean  @default(true)
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
 
   empresa Empresa @relation(fields: [empresaId], references: [id], onDelete: Cascade)
 

@@ -15,7 +15,7 @@ export function SidebarNav() {
       <NavLink href="/dashboard-financeiro" icon={<DollarSign className="h-4 w-4" />} active={pathname === "/dashboard-financeiro"}>
         Financeiro
       </NavLink>
-      <NavLink href="/dashboard-vendedores" icon={<PieChart className="h-4 w-4" />} active={pathname === "/dashboard-vendedores"}>
+      <NavLink href="/vendedores" icon={<PieChart className="h-4 w-4" />} active={pathname === "/vendedores"}>
         Vendedores
       </NavLink>
 
