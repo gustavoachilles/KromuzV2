@@ -134,7 +134,7 @@ export default function CreditBrainClient({ empresaId }: { empresaId: string }) 
                   <div>
                     <Label className="text-xs">Tipo de Benefício *</Label>
                     <Select value={form.beneficio_tipo}
-                      onValueChange={v => setForm(f => ({ ...f, beneficio_tipo: v, especie_beneficio: "" }))}>
+                      onValueChange={(v: string) => setForm(f => ({ ...f, beneficio_tipo: v, especie_beneficio: "" }))}>
                       <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                       <SelectContent>{BENEFICIOS.map(b => <SelectItem key={b} value={b}>{b}</SelectItem>)}</SelectContent>
                     </Select>
@@ -143,7 +143,7 @@ export default function CreditBrainClient({ empresaId }: { empresaId: string }) 
                     <div>
                       <Label className="text-xs">Espécie do Benefício</Label>
                       <Select value={form.especie_beneficio}
-                        onValueChange={v => setForm(f => ({ ...f, especie_beneficio: v }))}>
+                        onValueChange={(v: string) => setForm(f => ({ ...f, especie_beneficio: v }))}>
                         <SelectTrigger className="mt-1"><SelectValue placeholder="Selecione..." /></SelectTrigger>
                         <SelectContent>
                           {ESPECIES_INSS.map(e => <SelectItem key={e.value} value={e.value}>{e.label}</SelectItem>)}

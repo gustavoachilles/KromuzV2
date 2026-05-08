@@ -41,7 +41,7 @@ export async function POST(req: Request) {
       },
     });
 
-    const ranking = [];
+    const ranking: any[] = [];
 
     // 3. Processar Motor (Enquadramento Simples)
     for (const regra of regrasAtivas) {
