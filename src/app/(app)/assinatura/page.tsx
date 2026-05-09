@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { getSessionEmpresa } from "@/lib/session";
-import { CreditCard, CheckCircle2, AlertCircle, FileText, Download } from "lucide-react";
+import { CreditCard, CheckCircle2, AlertCircle, FileText, Download, Users } from "lucide-react";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
