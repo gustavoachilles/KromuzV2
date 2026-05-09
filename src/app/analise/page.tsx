@@ -26,26 +26,33 @@ export default function AnaliseIscaPage() {
     setFile(selectedFile);
     setStatus("uploading");
     
-    // Simulação de Upload
-    await new Promise(r => setTimeout(r, 1500));
-    setStatus("analyzing");
+    try {
+      const formData = new FormData();
+      formData.append("file", selectedFile);
 
-    // Simulação do Motor Interno de Cálculo (Opção A preparada para Motor Interno futuro)
-    // No futuro, podemos chamar um backend /api/motor-isca que processa o CSV.
-    // Atualmente faz um cálculo estimativo.
-    await new Promise(r => setTimeout(r, 3500));
+      setStatus("analyzing");
 
-    // Fake Result: Aproximadamente R$ 1.500,00 por linha detectada (apenas para a isca)
-    // Vamos estimar o número de linhas pelo tamanho do arquivo (ex: 50 bytes por linha)
-    const estimativaLinhas = Math.max(Math.floor(selectedFile.size / 50), 10);
-    const leadsComOportunidade = Math.floor(estimativaLinhas * 0.15); // 15% tem margem
-    const margemEstimada = leadsComOportunidade * 1250.50; // R$ 1.250 por oportunidade
+      const response = await fetch("/api/motor/isca", {
+        method: "POST",
+        body: formData
+      });
 
-    setResultado({
-      totalLeads: leadsComOportunidade,
-      margemEncontrada: margemEstimada
-    });
-    setStatus("result");
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Erro no processamento");
+      }
+
+      setResultado({
+        totalLeads: data.totalLeads,
+        margemEncontrada: data.margemEncontrada
+      });
+      setStatus("result");
+    } catch (error) {
+      console.error(error);
+      setStatus("idle");
+      alert("Houve um erro ao analisar a planilha. Tente novamente.");
+    }
   };
 
   const handleDrop = useCallback((e: React.DragEvent) => {

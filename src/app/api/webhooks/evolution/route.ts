@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { generateText } from "ai";
+import { google } from "@ai-sdk/google";
+import { sendEvolutionText } from "@/lib/evolution";
 
 export async function POST(req: Request) {
   try {
@@ -87,6 +90,64 @@ export async function POST(req: Request) {
       });
 
       // TODO: Acionar Pusher/Socket.io para atualizar o Frontend em tempo real (InboxDrawer)
+
+      // LÓGICA DE INTELIGÊNCIA ARTIFICIAL (Bot Ativo)
+      if (canal.botAtivo && canal.promptBase) {
+        try {
+          // Busca histórico recente para contexto da IA
+          const historico = await prisma.mensagem.findMany({
+            where: { conversaId: conversa.id },
+            orderBy: { createdAt: 'asc' },
+            take: 10
+          });
+
+          const messages = historico.map(m => ({
+            role: m.remetente === "LEAD" ? "user" : "assistant",
+            content: m.conteudo
+          }));
+
+          const systemPrompt = `Você é um assistente de atendimento por WhatsApp. 
+Regras base:
+${canal.promptBase}
+
+Informações do Lead:
+Nome: ${pushName}
+Número: ${remoteJid}
+Aja de forma natural e prestativa.`;
+
+          const { text: iaResponse } = await generateText({
+            model: google('models/gemini-1.5-pro-latest'),
+            system: systemPrompt,
+            messages: messages as any
+          });
+
+          if (iaResponse) {
+            // Salva a resposta da IA no banco
+            await prisma.mensagem.create({
+              data: {
+                conversaId: conversa.id,
+                remetente: "IA",
+                conteudo: iaResponse,
+                tipoConteudo: "TEXTO"
+              }
+            });
+
+            // Envia de volta para o cliente via Evolution API
+            const credenciais = canal.credenciaisApi as { apiUrl?: string, apiKey?: string };
+            if (credenciais?.apiUrl && credenciais?.apiKey) {
+              await sendEvolutionText(
+                credenciais.apiUrl, 
+                credenciais.apiKey, 
+                canal.identificador as string, 
+                remoteJid, 
+                iaResponse
+              );
+            }
+          }
+        } catch (iaError) {
+          console.error("Erro ao gerar/enviar resposta da IA:", iaError);
+        }
+      }
     }
 
     return NextResponse.json({ success: true });
