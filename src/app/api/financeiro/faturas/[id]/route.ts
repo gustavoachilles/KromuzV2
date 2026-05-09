@@ -2,16 +2,17 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSessionEmpresa } from "@/lib/session";
 
-export async function PATCH(req: Request, { params }: { params: { id: string } }) {
+export async function PATCH(req: Request, context: { params: Promise<{ id: string }> }) {
   try {
     const sessao = await getSessionEmpresa();
     if (!sessao) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
 
     const body = await req.json();
+    const { id } = await context.params;
 
     const fatura = await prisma.faturaBanco.updateMany({
       where: {
-        id: params.id,
+        id: id,
         empresaId: sessao.empresaId,
       },
       data: {
@@ -30,14 +31,16 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
   }
 }
 
-export async function DELETE(req: Request, { params }: { params: { id: string } }) {
+export async function DELETE(req: Request, context: { params: Promise<{ id: string }> }) {
   try {
     const sessao = await getSessionEmpresa();
     if (!sessao) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
 
+    const { id } = await context.params;
+
     const fatura = await prisma.faturaBanco.deleteMany({
       where: {
-        id: params.id,
+        id: id,
         empresaId: sessao.empresaId,
         status: "PENDENTE"
       }
