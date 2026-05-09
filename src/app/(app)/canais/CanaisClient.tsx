@@ -99,9 +99,35 @@ export function CanaisClient({ canais: initCanais, sessao }: { canais: Canal[], 
       {modal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
           <div className="bg-white dark:bg-zinc-900 rounded-2xl w-full max-w-lg p-6">
-            <h2 className="text-lg font-bold mb-4">Adicionar Canal</h2>
-            <p className="text-sm text-zinc-500 mb-6">Esta função será liberada em breve com a integração Z-API oficial.</p>
-            <button onClick={() => setModal(false)} className="w-full bg-zinc-100 py-2 rounded-lg text-sm font-medium">Fechar</button>
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg font-bold flex items-center gap-2">
+                <MessageSquare className="w-5 h-5 text-emerald-500" /> Conectar WhatsApp
+              </h2>
+              <button onClick={() => setModal(false)} className="text-zinc-400 hover:text-zinc-600 transition"><X className="w-5 h-5"/></button>
+            </div>
+            
+            <div className="space-y-4 mb-6">
+              <div className="bg-violet-50 dark:bg-violet-900/20 p-4 rounded-xl text-sm text-violet-800 dark:text-violet-300">
+                Para conectar, digite os dados do seu servidor <b>Evolution API</b> (EasyPanel).
+              </div>
+              
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">URL da Evolution API</label>
+                <input type="text" placeholder="https://evolution.seuservidor.com" className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-950 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500" />
+              </div>
+              
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Global API Key</label>
+                <input type="password" placeholder="Sua chave secreta" className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-950 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500" />
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 pt-4 border-t border-zinc-100 dark:border-zinc-800">
+              <button onClick={() => setModal(false)} className="px-4 py-2 text-sm font-medium text-zinc-600 hover:bg-zinc-100 rounded-lg transition">Cancelar</button>
+              <button className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2 rounded-lg text-sm font-bold shadow-lg shadow-emerald-500/30 transition">
+                Gerar QR Code
+              </button>
+            </div>
           </div>
         </div>
       )}

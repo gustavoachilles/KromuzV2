@@ -22,26 +22,25 @@ export default function CadastroPage() {
     setLoading(true);
     setError(null);
 
-    const supabase = createSupabaseBrowserClient();
-    const { error: signUpError } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          nome: nome,
-          empresa: empresa,
-        },
-      },
+    const response = await fetch("/api/auth/cadastro", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password, nome, empresa })
     });
 
-    if (signUpError) {
-      setError(signUpError.message);
+    const data = await response.json();
+
+    if (!response.ok) {
+      setError(data.error || "Erro ao criar conta");
       setLoading(false);
       return;
     }
 
-    // O Supabase, dependendo da config, pode exigir confirmação de email.
-    // Para simplificar, assumimos que o login ocorre direto ou mostramos msg de sucesso.
+    // A sessão é criada automaticamente pelo Supabase no backend
+    // ou precisamos forçar o sign in aqui se o backend não passar os cookies corretos.
+    // Para simplificar:
+    const supabase = createSupabaseBrowserClient();
+    await supabase.auth.signInWithPassword({ email, password });
     setSuccess(true);
     setLoading(false);
 
