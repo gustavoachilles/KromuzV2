@@ -14,7 +14,6 @@ import {
   User,
   Mail,
   Calendar,
-  Calendar,
   Palette,
   Network,
   Power
