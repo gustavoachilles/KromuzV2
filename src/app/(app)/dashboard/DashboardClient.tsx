@@ -31,14 +31,13 @@ type KPIs = {
   importacoesOk: number;
   totalLeads: number;
   totalPropostas: number;
-  totalPropostas: number;
   totalPropostasPagas: number;
   volumeTotal: number;
   comissaoTotal: number;
 };
 
 type FunilItem = { name: string; value: number; fill: string };
-type RankingItem = { vendedorNome: string; _sum: { valorLiberado: number; valorComissao: number } };
+type RankingItem = { vendedorNome: string | null; _sum: { valorLiberado: number | null; valorComissao: number | null } };
 
 type ImportacaoRecente = {
   id: string;

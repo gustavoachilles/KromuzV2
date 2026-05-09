@@ -46,7 +46,7 @@ export async function POST(req: Request) {
       data: {
         empresaId: sessao.empresaId,
         usuarioEmail: sessao.email,
-        usuarioNome: sessao.nome,
+        usuarioNome: sessao.nomeUsuario || "Sistema",
         acao: "importou",
         entidade: "lead",
         detalhes: { quantidade: result.count }
