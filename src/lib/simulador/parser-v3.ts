@@ -8,6 +8,14 @@ import { ExtratoHisconRaw } from "./schema-hiscon";
 export async function parseHisconPdf(buffer: Buffer): Promise<ExtratoHisconRaw> {
   console.log("🛠️ [Robô V3] Iniciando leitura local do PDF...");
   
+  // Polyfill para DOMMatrix (Evita erro "DOMMatrix is not defined" no Node/Vercel)
+  if (typeof globalThis.DOMMatrix === 'undefined') {
+    (globalThis as any).DOMMatrix = class DOMMatrix {
+      a=1; b=0; c=0; d=1; e=0; f=0;
+      constructor() {}
+    };
+  }
+
   // Importação para funcionar no Next.js (compatível com Webpack)
   const pdf = require("pdf-parse");
   const data = await pdf(buffer);
