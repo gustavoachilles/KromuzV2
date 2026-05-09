@@ -46,6 +46,12 @@ const CriarLeadSchema = z.object({
   bancoPreferido: z.string().optional(),
   convenioNome: z.string().optional(),
   observacoes: z.string().optional(),
+  arquivos: z.array(z.object({
+    nome: z.string(),
+    tipo: z.string().optional(),
+    tamanho: z.number().optional(),
+    url: z.string()
+  })).optional(),
 });
 
 // POST /api/leads
@@ -62,7 +68,7 @@ export async function POST(req: NextRequest) {
         nome: body.nome,
         cpf: body.cpf,
         telefone: body.telefone,
-        email: body.email || null,
+        email: body.email,
         uf: body.uf,
         cidade: body.cidade,
         numeroBeneficio: body.numeroBeneficio,
@@ -70,9 +76,9 @@ export async function POST(req: NextRequest) {
         margemLivre: body.margemLivre,
         margemRmc: body.margemRmc,
         margemRcc: body.margemRcc,
-        origem: body.origem || "manual",
+        origem: body.origem,
         canalContato: body.canalContato,
-        tipoOperacao: body.tipoOperacao || null,
+        tipoOperacao: body.tipoOperacao,
         valorEstimado: body.valorEstimado,
         bancoPreferido: body.bancoPreferido,
         convenioNome: body.convenioNome,
@@ -80,6 +86,14 @@ export async function POST(req: NextRequest) {
         vendedorEmail: sessao.email,
         vendedorNome: sessao.nomeUsuario,
         status: "NOVO",
+        arquivos: body.arquivos && body.arquivos.length > 0 ? {
+          create: body.arquivos.map(a => ({
+            nome: a.nome,
+            tipo: a.tipo,
+            tamanho: a.tamanho,
+            url: a.url
+          }))
+        } : undefined
       },
     });
 

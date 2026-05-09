@@ -13,6 +13,7 @@ export async function GET(_req: NextRequest, { params }: RouteParams) {
 
   const lead = await prisma.lead.findFirst({
     where: { id, empresaId: sessao.empresaId },
+    include: { arquivos: true }
   });
   if (!lead) return Response.json({ error: "Lead não encontrado" }, { status: 404 });
 
@@ -45,6 +46,12 @@ const AtualizarLeadSchema = z.object({
   margemRcc: z.number().nullable().optional(),
   ultimoContato: z.string().datetime().nullable().optional(),
   proximoContato: z.string().datetime().nullable().optional(),
+  arquivos: z.array(z.object({
+    nome: z.string(),
+    tipo: z.string().optional(),
+    tamanho: z.number().optional(),
+    url: z.string()
+  })).optional(),
 });
 
 // PATCH /api/leads/[id]
@@ -62,16 +69,43 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
   try {
     const body = AtualizarLeadSchema.parse(await req.json());
 
-    const lead = await prisma.lead.update({
+    const leadAtualizado = await prisma.lead.update({
       where: { id },
       data: {
-        ...body,
+        nome: body.nome,
+        cpf: body.cpf,
+        telefone: body.telefone,
+        email: body.email,
+        uf: body.uf,
+        cidade: body.cidade,
+        numeroBeneficio: body.numeroBeneficio,
+        especieBeneficio: body.especieBeneficio,
+        margemLivre: body.margemLivre,
+        margemRmc: body.margemRmc,
+        margemRcc: body.margemRcc,
+        origem: body.origem,
+        canalContato: body.canalContato,
+        status: body.status,
+        observacoes: body.observacoes,
+        motivoPerda: body.motivoPerda,
+        tipoOperacao: body.tipoOperacao,
+        valorEstimado: body.valorEstimado,
+        bancoPreferido: body.bancoPreferido,
+        convenioNome: body.convenioNome,
         ultimoContato: body.ultimoContato ? new Date(body.ultimoContato) : undefined,
         proximoContato: body.proximoContato ? new Date(body.proximoContato) : undefined,
+        arquivos: body.arquivos && body.arquivos.length > 0 ? {
+          create: body.arquivos.map(a => ({
+            nome: a.nome,
+            tipo: a.tipo,
+            tamanho: a.tamanho,
+            url: a.url
+          }))
+        } : undefined
       },
     });
 
-    return Response.json(lead);
+    return Response.json(leadAtualizado);
   } catch (e: any) {
     return Response.json({ error: e.message }, { status: 400 });
   }

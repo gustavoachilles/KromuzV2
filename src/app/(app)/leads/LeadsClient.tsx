@@ -1,11 +1,12 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
 import {
-  Users, Plus, X, Loader2, Phone, Mail, DollarSign, GripVertical
+  Users, Plus, X, Loader2, Phone, Mail, DollarSign, GripVertical, Paperclip, Trash2, UploadCloud, FileText
 } from "lucide-react";
+import { toast } from "sonner";
 
 type PipelineColuna = { id: string; nome: string; cor: string | null; ordem: number; };
 
@@ -18,6 +19,7 @@ type Lead = {
   tipoOperacao: string | null; valorEstimado: number | null;
   bancoPreferido: string | null; convenioNome: string | null; observacoes: string | null;
   vendedorNome: string | null; createdAt: string | Date;
+  arquivos?: { id: string; nome: string; url: string; tamanho: number | null }[];
 };
 
 type Contagem = { status: string; _count: number };
@@ -27,6 +29,19 @@ const tipoLabel: Record<string, string> = {
   PORTABILIDADE: "Port", PORTABILIDADE_REFIN: "Port+Refin",
   CARTAO_CONSIGNADO: "RMC", CARTAO_BENEFICIO: "RCC",
 };
+
+const INSS_ESPECIES = [
+  { id: 21, nome: "Pensão por Morte Previdenciária" },
+  { id: 31, nome: "Auxílio Doença Previdenciário" },
+  { id: 32, nome: "Aposentadoria por Invalidez Previdenciária" },
+  { id: 41, nome: "Aposentadoria por Idade" },
+  { id: 42, nome: "Aposentadoria por Tempo de Contribuição" },
+  { id: 46, nome: "Aposentadoria Especial" },
+  { id: 87, nome: "Amparo Social à Pessoa com Deficiência (LOAS)" },
+  { id: 88, nome: "Amparo Social ao Idoso (LOAS)" },
+  { id: 92, nome: "Aposent. Invalidez Acidente Trabalho" },
+  { id: 93, nome: "Pensão Morte Acidente Trabalho" },
+];
 
 const mascaraCpf = (v: string) => v.replace(/\D/g, '').replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d{1,2})/, '$1-$2').substring(0, 14);
 
@@ -41,11 +56,6 @@ const formatMoeda = (val: number | null | undefined) => {
   return val.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 };
 
-const limpaMoeda = (v: string) => {
-  if (!v) return undefined;
-  return Number(v.replace(/\./g, '').replace(',', '.'));
-};
-
 const formataErroZod = (errStr: string) => {
   try {
     const p = JSON.parse(errStr);
@@ -56,14 +66,27 @@ const formataErroZod = (errStr: string) => {
   return errStr;
 };
 
+const fileToBase64 = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = error => reject(error);
+  });
+};
+
 export function LeadsClient({
   leads: leadsIniciais,
   contagens,
-  colunas
+  colunas,
+  bancos = [],
+  convenios = []
 }: {
   leads: Lead[];
   contagens: Contagem[];
   colunas: PipelineColuna[];
+  bancos?: { id: string, nome: string }[];
+  convenios?: { id: string, nome: string }[];
 }) {
   const router = useRouter();
   const [leads, setLeads] = useState(leadsIniciais);
@@ -81,7 +104,31 @@ export function LeadsClient({
   
   const [novaColunaNome, setNovaColunaNome] = useState("");
 
+  // IBGE States
+  const [estadosIBGE, setEstadosIBGE] = useState<any[]>([]);
+  const [cidadesIBGE, setCidadesIBGE] = useState<any[]>([]);
+
+  // Files State
+  const [arquivosPendentes, setArquivosPendentes] = useState<File[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const totalAtivos = leads.length;
+
+  useEffect(() => {
+    fetch("https://servicodados.ibge.gov.br/api/v1/localidades/estados?orderBy=nome")
+      .then(res => res.json())
+      .then(data => setEstadosIBGE(data));
+  }, []);
+
+  useEffect(() => {
+    if (form.uf) {
+      fetch(`https://servicodados.ibge.gov.br/api/v1/localidades/estados/${form.uf}/municipios`)
+        .then(res => res.json())
+        .then(data => setCidadesIBGE(data));
+    } else {
+      setCidadesIBGE([]);
+    }
+  }, [form.uf]);
 
   const abrirModalNovo = () => {
     setForm({
@@ -90,6 +137,7 @@ export function LeadsClient({
       tipoOperacao: "", valorEstimado: "", bancoPreferido: "", convenioNome: "",
       origem: "manual", canalContato: "", observacoes: ""
     });
+    setArquivosPendentes([]);
     setErro(null);
     setModal(true);
   };
@@ -115,9 +163,22 @@ export function LeadsClient({
       origem: lead.origem || "manual",
       canalContato: lead.canalContato || "",
       observacoes: lead.observacoes || "",
+      arquivosExistem: lead.arquivos || [],
     });
+    setArquivosPendentes([]);
     setErro(null);
     setModal(true);
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const filesArr = Array.from(e.target.files);
+      setArquivosPendentes(prev => [...prev, ...filesArr]);
+    }
+  };
+
+  const removerArquivoPendente = (index: number) => {
+    setArquivosPendentes(prev => prev.filter((_, i) => i !== index));
   };
 
   async function salvarLead(e: React.FormEvent) {
@@ -126,14 +187,30 @@ export function LeadsClient({
     setErro(null);
 
     const payload: any = { ...form };
+    delete payload.arquivosExistem; // Remove auxiliary property before sending
     
-    // Limpar máscaras antes de enviar
     if (payload.cpf) payload.cpf = payload.cpf.replace(/\D/g, '');
     if (payload.telefone) payload.telefone = payload.telefone.replace(/\D/g, '');
 
     Object.keys(payload).forEach(key => {
       if (payload[key] === "") payload[key] = undefined;
     });
+
+    let base64Files: any[] = [];
+    if (arquivosPendentes.length > 0) {
+      try {
+        base64Files = await Promise.all(
+          arquivosPendentes.map(async file => {
+            const base64 = await fileToBase64(file);
+            return { nome: file.name, tipo: file.type, tamanho: file.size, url: base64 };
+          })
+        );
+      } catch (err) {
+        setErro("Erro ao ler arquivos anexados. Tente novamente.");
+        setSalvando(false);
+        return;
+      }
+    }
 
     const bodyData = {
       ...payload,
@@ -142,6 +219,7 @@ export function LeadsClient({
       margemLivre: payload.margemLivre ? Number(payload.margemLivre.replace(',','.')) : undefined,
       margemRmc: payload.margemRmc ? Number(payload.margemRmc.replace(',','.')) : undefined,
       margemRcc: payload.margemRcc ? Number(payload.margemRcc.replace(',','.')) : undefined,
+      arquivos: base64Files.length > 0 ? base64Files : undefined
     };
 
     const isEdit = !!form.id;
@@ -158,6 +236,8 @@ export function LeadsClient({
       const data = await res.json();
       setErro(formataErroZod(data.error)); setSalvando(false); return;
     }
+
+    toast.success(isEdit ? "Lead atualizado com sucesso!" : "Lead criado com sucesso!");
 
     setModal(false);
     setSalvando(false);
@@ -197,9 +277,7 @@ export function LeadsClient({
     });
 
     if (newStatus === "PAGO" || newStatus === "Pago") {
-      try {
-        await fetch(`/api/leads/${draggableId}/comissao`, { method: "POST" });
-      } catch (e) {}
+      try { await fetch(`/api/leads/${draggableId}/comissao`, { method: "POST" }); } catch (e) {}
     }
 
     router.refresh();
@@ -243,50 +321,25 @@ export function LeadsClient({
 
                   <Droppable droppableId={coluna.nome}>
                     {(provided, snapshot) => (
-                      <div
-                        ref={provided.innerRef}
-                        {...provided.droppableProps}
-                        className={`flex-1 overflow-y-auto space-y-3 p-1 transition-colors rounded-xl ${snapshot.isDraggingOver ? 'bg-violet-50 dark:bg-violet-900/20' : ''}`}
-                      >
+                      <div ref={provided.innerRef} {...provided.droppableProps} className={`flex-1 overflow-y-auto space-y-3 p-1 transition-colors rounded-xl ${snapshot.isDraggingOver ? 'bg-violet-50 dark:bg-violet-900/20' : ''}`}>
                         {items.map((lead, index) => (
                           <Draggable key={lead.id} draggableId={lead.id} index={index}>
                             {(provided, snapshot) => (
-                              <div
-                                ref={provided.innerRef}
-                                {...provided.draggableProps}
-                                {...provided.dragHandleProps}
-                                onClick={() => abrirModalEditar(lead)}
-                                className={`bg-white dark:bg-zinc-950 rounded-xl p-4 border border-zinc-200 dark:border-zinc-800 shadow-sm flex flex-col gap-3 transition-shadow cursor-pointer ${snapshot.isDragging ? 'shadow-xl ring-2 ring-violet-500/50 opacity-90' : 'hover:shadow-md'}`}
-                              >
+                              <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps} onClick={() => abrirModalEditar(lead)}
+                                className={`bg-white dark:bg-zinc-950 rounded-xl p-4 border border-zinc-200 dark:border-zinc-800 shadow-sm flex flex-col gap-3 transition-shadow cursor-pointer ${snapshot.isDragging ? 'shadow-xl ring-2 ring-violet-500/50 opacity-90' : 'hover:shadow-md'}`}>
                                 <div className="flex items-start justify-between gap-2">
-                                  <p className="font-bold text-sm leading-tight text-zinc-900 dark:text-zinc-100 line-clamp-2">
-                                    {lead.nome}
-                                  </p>
+                                  <p className="font-bold text-sm leading-tight text-zinc-900 dark:text-zinc-100 line-clamp-2">{lead.nome}</p>
                                   <GripVertical className="h-4 w-4 text-zinc-300 shrink-0" />
                                 </div>
-                                
                                 <div className="flex flex-col gap-1.5 text-xs text-zinc-500 dark:text-zinc-400">
                                   {lead.telefone && <span className="flex items-center gap-1.5"><Phone className="h-3 w-3" />{mascaraTelefone(lead.telefone)}</span>}
                                   {lead.email && <span className="flex items-center gap-1.5 truncate"><Mail className="h-3 w-3 shrink-0" /><span className="truncate">{lead.email}</span></span>}
                                 </div>
-
                                 <div className="flex items-center justify-between pt-2 border-t border-zinc-100 dark:border-zinc-800/50 mt-1">
                                   <div className="flex items-center gap-1 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
-                                    {lead.valorEstimado ? (
-                                      <>
-                                        <DollarSign className="h-3.5 w-3.5" />
-                                        {formatMoeda(lead.valorEstimado)}
-                                      </>
-                                    ) : (
-                                      <span className="text-zinc-400 font-normal">Sem valor</span>
-                                    )}
+                                    {lead.valorEstimado ? (<><DollarSign className="h-3.5 w-3.5" />{formatMoeda(lead.valorEstimado)}</>) : (<span className="text-zinc-400 font-normal">Sem valor</span>)}
                                   </div>
-                                  
-                                  {lead.tipoOperacao && (
-                                    <span className="text-[10px] bg-zinc-100 dark:bg-zinc-800 px-2 py-1 rounded text-zinc-600 dark:text-zinc-300 font-medium truncate max-w-[100px]">
-                                      {tipoLabel[lead.tipoOperacao] || lead.tipoOperacao}
-                                    </span>
-                                  )}
+                                  {lead.tipoOperacao && <span className="text-[10px] bg-zinc-100 dark:bg-zinc-800 px-2 py-1 rounded text-zinc-600 dark:text-zinc-300 font-medium truncate max-w-[100px]">{tipoLabel[lead.tipoOperacao] || lead.tipoOperacao}</span>}
                                 </div>
                               </div>
                             )}
@@ -299,20 +352,17 @@ export function LeadsClient({
                 </div>
               );
             })}
-            
-            <div className="flex-shrink-0 w-80 bg-transparent border-2 border-dashed border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 flex flex-col items-center justify-center opacity-70 hover:opacity-100 hover:border-violet-300 transition-all cursor-pointer h-32"
-                 onClick={() => setModalColuna(true)}>
+            <div className="flex-shrink-0 w-80 bg-transparent border-2 border-dashed border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 flex flex-col items-center justify-center opacity-70 hover:opacity-100 hover:border-violet-300 transition-all cursor-pointer h-32" onClick={() => setModalColuna(true)}>
               <Plus className="h-6 w-6 text-zinc-400 mb-2" />
               <p className="text-sm font-medium text-zinc-500">Adicionar Coluna</p>
             </div>
-            
           </DragDropContext>
         </div>
       </div>
 
       {modal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-2xl w-full max-w-4xl mx-4 max-h-[90vh] flex flex-col">
+          <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-2xl w-full max-w-5xl mx-4 max-h-[90vh] flex flex-col">
             <div className="flex items-center justify-between p-6 border-b border-zinc-100 dark:border-zinc-800 shrink-0">
               <h2 className="text-lg font-semibold">{form.id ? "Editar Lead" : "Novo Lead"}</h2>
               <button onClick={() => setModal(false)} className="text-zinc-400 hover:text-zinc-600 transition"><X className="h-5 w-5" /></button>
@@ -353,19 +403,25 @@ export function LeadsClient({
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Cidade</label>
-                      <input value={form.cidade} onChange={e => setForm({ ...form, cidade: e.target.value })}
-                        className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500" />
+                      <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">UF (Estado)</label>
+                      <select value={form.uf} onChange={e => setForm({ ...form, uf: e.target.value, cidade: "" })}
+                        className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500">
+                        <option value="">Selecione UF</option>
+                        {estadosIBGE.map(est => <option key={est.id} value={est.sigla}>{est.nome}</option>)}
+                      </select>
                     </div>
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">UF</label>
-                      <input value={form.uf} onChange={e => setForm({ ...form, uf: e.target.value.toUpperCase() })} placeholder="SP" maxLength={2}
-                        className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500" />
+                      <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Cidade</label>
+                      <select value={form.cidade} onChange={e => setForm({ ...form, cidade: e.target.value })} disabled={!form.uf}
+                        className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 disabled:opacity-50">
+                        <option value="">Selecione a Cidade</option>
+                        {cidadesIBGE.map(cid => <option key={cid.id} value={cid.nome}>{cid.nome}</option>)}
+                      </select>
                     </div>
                   </div>
                 </div>
 
-                {/* Coluna 2: Dados Operacionais & Benefício */}
+                {/* Coluna 2: Dados Operacionais */}
                 <div className="space-y-4">
                   <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2">Detalhes da Operação</h3>
                   
@@ -376,9 +432,12 @@ export function LeadsClient({
                         className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500" />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Espécie</label>
-                      <input type="number" value={form.especieBeneficio} onChange={e => setForm({ ...form, especieBeneficio: e.target.value })}
-                        className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500" />
+                      <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Espécie INSS</label>
+                      <select value={form.especieBeneficio} onChange={e => setForm({ ...form, especieBeneficio: e.target.value })}
+                        className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500">
+                        <option value="">Selecione...</option>
+                        {INSS_ESPECIES.map(esp => <option key={esp.id} value={esp.id}>{esp.id} - {esp.nome}</option>)}
+                      </select>
                     </div>
                   </div>
 
@@ -402,6 +461,25 @@ export function LeadsClient({
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
+                      <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Banco Preferido</label>
+                      <select value={form.bancoPreferido} onChange={e => setForm({ ...form, bancoPreferido: e.target.value })}
+                        className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500">
+                        <option value="">Selecione Banco...</option>
+                        {bancos.map(b => <option key={b.id} value={b.nome}>{b.nome}</option>)}
+                      </select>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Convênio</label>
+                      <select value={form.convenioNome} onChange={e => setForm({ ...form, convenioNome: e.target.value })}
+                        className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500">
+                        <option value="">Selecione Convênio...</option>
+                        {convenios.map(c => <option key={c.id} value={c.nome}>{c.nome}</option>)}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
                       <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Tipo de Operação</label>
                       <select value={form.tipoOperacao} onChange={e => setForm({ ...form, tipoOperacao: e.target.value })}
                         className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500">
@@ -415,34 +493,90 @@ export function LeadsClient({
                       </select>
                     </div>
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Valor Estimado (R$)</label>
+                      <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Valor Liberado (R$)</label>
                       <input type="number" step="0.01" value={form.valorEstimado} onChange={e => setForm({ ...form, valorEstimado: e.target.value })}
-                        className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500" />
+                        className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 font-bold text-emerald-700" />
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Banco Preferido</label>
-                      <input value={form.bancoPreferido} onChange={e => setForm({ ...form, bancoPreferido: e.target.value })}
-                        className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500" />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Convênio</label>
-                      <input value={form.convenioNome} onChange={e => setForm({ ...form, convenioNome: e.target.value })} placeholder="Ex: INSS"
-                        className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500" />
-                    </div>
+                  <div className="space-y-2 pt-2">
+                    <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Observações</label>
+                    <textarea value={form.observacoes} onChange={e => setForm({ ...form, observacoes: e.target.value })} rows={2}
+                      className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 resize-none" />
                   </div>
                 </div>
               </div>
 
-              <div className="space-y-2 mt-4">
-                <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Observações</label>
-                <textarea value={form.observacoes} onChange={e => setForm({ ...form, observacoes: e.target.value })} rows={3}
-                  className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 resize-none" />
+              {/* Seção de Documentos / Anexos */}
+              <div className="mt-8 pt-6 border-t border-zinc-200 dark:border-zinc-800">
+                <div className="flex items-center gap-2 mb-4">
+                  <Paperclip className="h-5 w-5 text-violet-500" />
+                  <h3 className="text-sm font-bold text-zinc-700 dark:text-zinc-300">Documentos Anexos</h3>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Área de Upload (Drag & Drop) */}
+                  <div 
+                    onClick={() => fileInputRef.current?.click()}
+                    className="border-2 border-dashed border-zinc-300 dark:border-zinc-700 rounded-xl p-6 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-900 transition"
+                  >
+                    <UploadCloud className="h-8 w-8 text-zinc-400 mb-2" />
+                    <p className="text-sm font-semibold text-zinc-600 dark:text-zinc-400">Clique para anexar arquivos</p>
+                    <p className="text-xs text-zinc-400 mt-1">PDF, JPG ou PNG (Máx 5MB)</p>
+                    <input 
+                      type="file" 
+                      multiple 
+                      className="hidden" 
+                      ref={fileInputRef} 
+                      onChange={handleFileChange}
+                      accept=".pdf,image/jpeg,image/png"
+                    />
+                  </div>
+
+                  {/* Lista de Arquivos */}
+                  <div className="space-y-2 max-h-[160px] overflow-y-auto pr-2">
+                    {(arquivosPendentes.length === 0 && (!form.arquivosExistem || form.arquivosExistem.length === 0)) ? (
+                      <div className="h-full flex items-center justify-center text-sm text-zinc-500 italic">
+                        Nenhum documento anexado.
+                      </div>
+                    ) : (
+                      <>
+                        {/* Arquivos já salvos */}
+                        {form.arquivosExistem && form.arquivosExistem.map((file, i) => (
+                          <div key={`saved-${i}`} className="flex items-center justify-between p-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-lg">
+                            <div className="flex items-center gap-3 overflow-hidden">
+                              <FileText className="h-5 w-5 text-emerald-500 flex-shrink-0" />
+                              <div className="truncate">
+                                <p className="text-xs font-semibold truncate">{file.nome}</p>
+                                <p className="text-[10px] text-zinc-500">{file.tamanho ? (file.tamanho / 1024).toFixed(1) + ' KB' : 'Salvo'}</p>
+                              </div>
+                            </div>
+                            <a href={file.url} download={file.nome} className="text-xs font-medium text-violet-600 hover:text-violet-700 bg-violet-50 hover:bg-violet-100 px-2 py-1 rounded">
+                              Baixar
+                            </a>
+                          </div>
+                        ))}
+                      arquivosPendentes.map((file, i) => (
+                        <div key={i} className="flex items-center justify-between p-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-lg">
+                          <div className="flex items-center gap-3 overflow-hidden">
+                            <FileText className="h-5 w-5 text-blue-500 flex-shrink-0" />
+                            <div className="truncate">
+                              <p className="text-xs font-semibold truncate">{file.name}</p>
+                              <p className="text-[10px] text-zinc-500">{(file.size / 1024).toFixed(1)} KB</p>
+                            </div>
+                          </div>
+                          <button type="button" onClick={() => removerArquivoPendente(i)} className="text-zinc-400 hover:text-red-500 p-1">
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
+                      ))
+                      </>
+                    )}
+                  </div>
+                </div>
               </div>
 
-              <div className="flex justify-end gap-3 pt-6 border-t border-zinc-100 dark:border-zinc-800 shrink-0">
+              <div className="flex justify-end gap-3 pt-6 shrink-0">
                 <button type="button" onClick={() => setModal(false)} className="px-5 py-2.5 text-sm font-medium text-zinc-600 hover:bg-zinc-100 rounded-xl transition">Cancelar</button>
                 <button type="submit" disabled={salvando}
                   className="flex items-center gap-2 rounded-xl bg-violet-600 px-6 py-2.5 text-sm font-semibold text-white shadow-lg shadow-violet-500/30 hover:bg-violet-700 transition">

@@ -38,7 +38,7 @@ export default async function LeadsPage() {
     });
   }
 
-  const [leads, contagens] = await Promise.all([
+  const [leads, contagens, bancos, convenios] = await Promise.all([
     prisma.lead.findMany({
       where: { empresaId: sessao.empresaId },
       orderBy: { createdAt: "desc" },
@@ -49,7 +49,17 @@ export default async function LeadsPage() {
       where: { empresaId: sessao.empresaId },
       _count: true,
     }),
+    prisma.banco.findMany({
+      where: { empresaId: sessao.empresaId, ativo: true },
+      select: { id: true, nome: true },
+      orderBy: { nome: "asc" }
+    }),
+    prisma.convenio.findMany({
+      where: { empresaId: sessao.empresaId, ativo: true },
+      select: { id: true, nome: true },
+      orderBy: { nome: "asc" }
+    })
   ]);
 
-  return <LeadsClient leads={leads} contagens={contagens} colunas={colunas} />;
+  return <LeadsClient leads={leads as any} contagens={contagens} colunas={colunas} bancos={bancos} convenios={convenios} />;
 }

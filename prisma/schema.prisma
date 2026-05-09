@@ -527,11 +527,28 @@ model Lead {
   updatedAt       DateTime   @updatedAt @map("updated_at")
 
   empresa Empresa @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  arquivos LeadArquivo[]
 
   @@index([empresaId, status])
   @@index([empresaId, vendedorEmail])
   @@index([empresaId, createdAt(sort: Desc)])
   @@map("lead")
+  @@schema("public")
+}
+
+model LeadArquivo {
+  id        String   @id @default(uuid()) @db.Uuid
+  leadId    String   @map("lead_id") @db.Uuid
+  nome      String
+  url       String
+  tipo      String?  // Ex: application/pdf, image/jpeg
+  tamanho   Int?     // bytes
+  createdAt DateTime @default(now()) @map("created_at")
+
+  lead      Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  @@index([leadId])
+  @@map("lead_arquivo")
   @@schema("public")
 }
 
