@@ -31,33 +31,54 @@ export async function getSessionEmpresa(): Promise<SessionEmpresa> {
   });
 
   if (!perfil) {
-    // Usuário autenticado mas sem perfil — cria empresa + perfil automaticamente
-    const novaEmpresa = await prisma.empresa.create({
-      data: {
-        nomeEmpresa: user.email?.split("@")[0] || "Minha Empresa",
-        status: "ativo",
-        planoSlug: "beta",
-      },
-    });
+    try {
+      // Usuário autenticado mas sem perfil — cria empresa + perfil automaticamente
+      const novaEmpresa = await prisma.empresa.create({
+        data: {
+          nomeEmpresa: user.email?.split("@")[0] || "Minha Empresa",
+          status: "ativo",
+          planoSlug: "beta",
+        },
+      });
 
-    const novoPerfil = await prisma.usuarioPerfil.create({
-      data: {
+      const novoPerfil = await prisma.usuarioPerfil.create({
+        data: {
+          empresaId: novaEmpresa.id,
+          authUserId: user.id,
+          email: user.email || "",
+          nome: user.user_metadata?.nome || user.email?.split("@")[0] || null,
+          perfilSlug: "admin",
+        },
+      });
+
+      return {
+        userId: novoPerfil.id,
+        email: novoPerfil.email,
         empresaId: novaEmpresa.id,
-        authUserId: user.id,
-        email: user.email || "",
-        nome: user.user_metadata?.nome || user.email?.split("@")[0] || null,
-        perfilSlug: "admin",
-      },
-    });
-
-    return {
-      userId: user.id,
-      email: user.email || "",
-      empresaId: novaEmpresa.id,
-      nomeEmpresa: novaEmpresa.nomeEmpresa,
-      perfilSlug: "admin",
-      nomeUsuario: novoPerfil.nome,
-    };
+        nomeEmpresa: novaEmpresa.nomeEmpresa,
+        perfilSlug: novoPerfil.perfilSlug,
+        nomeUsuario: novoPerfil.nome,
+      };
+    } catch (e: any) {
+      // Se ocorrer erro de constraint (P2002), significa que a renderização paralela já criou o perfil
+      if (e.code === "P2002") {
+        const perfilExistente = await prisma.usuarioPerfil.findUnique({
+          where: { authUserId: user.id },
+          include: { empresa: { select: { id: true, nomeEmpresa: true } } },
+        });
+        if (perfilExistente) {
+          return {
+            userId: perfilExistente.id,
+            email: perfilExistente.email,
+            empresaId: perfilExistente.empresaId,
+            nomeEmpresa: perfilExistente.empresa.nomeEmpresa,
+            perfilSlug: perfilExistente.perfilSlug,
+            nomeUsuario: perfilExistente.nome,
+          };
+        }
+      }
+      throw e;
+    }
   }
 
   return {
