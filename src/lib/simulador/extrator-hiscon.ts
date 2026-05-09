@@ -39,7 +39,7 @@ Extraia os dados do HISCON PDF em anexo e retorne EXCLUSIVAMENTE um JSON seguind
   ]
 }
 
-Considere o ano atual como 2026 para cálculos de idade. Extraia a Espécie do Benefício (apenas o número, ex: 21, 41, 32). Não adicione nenhum texto antes ou depois do JSON.`;
+Considere o ano atual como 2026. IMPORTANTE: A idade e a data de nascimento NÃO existem no HISCON. Preencha a idade com 65 e a data_nascimento com "1950-01-01" como padrão. Extraia a Espécie do Benefício (apenas o número, ex: 21, 41, 32). Não adicione nenhum texto antes ou depois do JSON.`;
 
 export async function processarHisconV3(pdfBufferBase64: string): Promise<ResultadoExtracaoHiscon> {
   const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
@@ -48,11 +48,11 @@ export async function processarHisconV3(pdfBufferBase64: string): Promise<Result
   }
 
   try {
-    console.log("🤖 [IA] Chamando Google Generative AI (Gemini 1.5 Flash)...");
+    console.log("🤖 [IA] Chamando Google Generative AI (Gemini 2.0 Flash)...");
     const ai = new GoogleGenAI({ apiKey });
 
     const response = await ai.models.generateContent({
-      model: "gemini-1.5-flash",
+      model: "gemini-2.0-flash",
       contents: [
         PROMPT_HISCON,
         {

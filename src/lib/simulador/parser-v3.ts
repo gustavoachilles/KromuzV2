@@ -8,8 +8,8 @@ import { ExtratoHisconRaw } from "./schema-hiscon";
 export async function parseHisconPdf(buffer: Buffer): Promise<ExtratoHisconRaw> {
   console.log("🛠️ [Robô V3] Iniciando leitura local do PDF...");
   
-  // Importação para funcionar no Next.js
-  const pdf = require("pdf-parse/lib/pdf-parse.js");
+  // Importação para funcionar no Next.js (compatível com Webpack)
+  const pdf = require("pdf-parse");
   const data = await pdf(buffer);
   const text = data.text;
 
