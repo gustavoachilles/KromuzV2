@@ -92,7 +92,7 @@ export async function processarHisconV3(pdfBufferBase64: string): Promise<Result
       console.log("✅ MODELOS DISPONÍVEIS NA SUA API KEY:", modelNames.join(", "));
       return { 
         ok: false, 
-        erro: `gemini-1.5-flash não encontrado. Sua chave tem acesso a: ${modelNames.slice(0, 10).join(", ")}... Olhe o terminal para a lista completa.`, 
+        erro: `Erro na IA (${error.message}). Modelos disponíveis: ${modelNames.slice(0, 5).join(", ")}...`, 
         isRetryable: false 
       };
     } catch (listError) {

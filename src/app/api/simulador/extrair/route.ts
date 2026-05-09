@@ -40,7 +40,9 @@ export async function POST(req: NextRequest) {
       
       if (!extracao.ok) {
         console.error("❌ [Simulador] IA também falhou:", extracao.erro);
-        return NextResponse.json({ error: extracao.erro }, { status: 422 });
+        return NextResponse.json({ 
+          error: `O Robô Local falhou ao ler o PDF (${e.message}) e a IA de fallback também falhou: ${extracao.erro}` 
+        }, { status: 422 });
       } else {
         hiscon = extracao.dados;
         console.log("✅ [Simulador] IA leu o PDF com sucesso!");

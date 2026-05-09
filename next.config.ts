@@ -5,7 +5,7 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
 
   // Configurações experimentais para Vercel
-  serverExternalPackages: ["@prisma/client"],
+  serverExternalPackages: ["@prisma/client", "pdf-parse"],
 
 
   // Headers de segurança
