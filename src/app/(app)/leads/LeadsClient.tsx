@@ -556,20 +556,20 @@ export function LeadsClient({
                             </a>
                           </div>
                         ))}
-                      arquivosPendentes.map((file, i) => (
-                        <div key={i} className="flex items-center justify-between p-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-lg">
-                          <div className="flex items-center gap-3 overflow-hidden">
-                            <FileText className="h-5 w-5 text-blue-500 flex-shrink-0" />
-                            <div className="truncate">
-                              <p className="text-xs font-semibold truncate">{file.name}</p>
-                              <p className="text-[10px] text-zinc-500">{(file.size / 1024).toFixed(1)} KB</p>
+                        {arquivosPendentes.map((file, i) => (
+                          <div key={i} className="flex items-center justify-between p-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-lg">
+                            <div className="flex items-center gap-3 overflow-hidden">
+                              <FileText className="h-5 w-5 text-blue-500 flex-shrink-0" />
+                              <div className="truncate">
+                                <p className="text-xs font-semibold truncate">{file.name}</p>
+                                <p className="text-[10px] text-zinc-500">{(file.size / 1024).toFixed(1)} KB</p>
+                              </div>
                             </div>
+                            <button type="button" onClick={() => removerArquivoPendente(i)} className="text-zinc-400 hover:text-red-500 p-1">
+                              <Trash2 className="h-4 w-4" />
+                            </button>
                           </div>
-                          <button type="button" onClick={() => removerArquivoPendente(i)} className="text-zinc-400 hover:text-red-500 p-1">
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                        </div>
-                      ))
+                        ))}
                       </>
                     )}
                   </div>
