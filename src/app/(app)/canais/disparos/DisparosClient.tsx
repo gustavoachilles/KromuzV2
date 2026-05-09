@@ -110,7 +110,7 @@ export function DisparosClient({ campanhas, canais, sessao }: { campanhas: any[]
                   <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Filtro da Base</label>
                   <select className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-950 px-4 py-2 text-sm focus:ring-2 focus:ring-violet-500 focus:outline-none">
                     <option value="todos">Todos os Leads</option>
-                    <option value="recusados">Apenas Recusados (> 30 dias)</option>
+                    <option value="recusados">Apenas Recusados (&gt; 30 dias)</option>
                     <option value="aprovados">Apenas Aprovados/Pagos</option>
                   </select>
                 </div>

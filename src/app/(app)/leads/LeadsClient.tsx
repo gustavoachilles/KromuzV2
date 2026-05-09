@@ -514,7 +514,6 @@ export function LeadsClient({
                         Abrir conversa vazia ↗
                       </a>
                     </div>
-                    </div>
                   </div>
                 )}
                 {form.id && (
