@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
     const targetEmpresaId = sessao.empresaId;
 
     const body = await req.json();
-    const { pdfBase64 } = body;
+    const { pdfBase64, idadeManual } = body;
 
     if (!pdfBase64) {
       return NextResponse.json({ error: "Parâmetro pdfBase64 é obrigatório." }, { status: 400 });
@@ -53,23 +53,11 @@ export async function POST(req: NextRequest) {
     let ddb = new Date(hiscon.dados_cliente.data_despacho_beneficio);
     if (isNaN(ddb.getTime())) ddb = dataAtual;
 
-    // 2. Cálculo de Idade Resiliente
-    let idade = hiscon.dados_cliente.idade;
-    // @ts-ignore - A IA pode retornar data_nascimento mesmo que não esteja no tipo estrito
-    if (hiscon.dados_cliente.data_nascimento) {
-      // @ts-ignore
-      const nasc = new Date(hiscon.dados_cliente.data_nascimento);
-      if (!isNaN(nasc.getTime())) {
-        const hoje = new Date();
-        idade = hoje.getFullYear() - nasc.getFullYear();
-        if (hoje.getMonth() < nasc.getMonth() || (hoje.getMonth() === nasc.getMonth() && hoje.getDate() < nasc.getDate())) {
-          idade--;
-        }
-      }
-    }
+    // 2. Uso da Idade Manual ou Padrão de 60 anos (pois não existe no HISCON)
+    const idade = idadeManual ? Number(idadeManual) : 60;
 
     const clienteSimulacao: ClienteSimulacao = {
-      idade: idade || 65,
+      idade: idade,
       uf: hiscon.dados_cliente.uf,
       especie: hiscon.dados_cliente.especie_beneficio,
       especieNome: (hiscon.dados_cliente as any).especie_nome ?? null,
