@@ -54,7 +54,6 @@ export function SimuladorClient({ empresaId, convenios }: { empresaId: string, c
       setIsCalculando(false);
     }
   }
-  const [resultado, setResultado] = useState<SimulacaoResult | null>(null);
 
   if (!resultado) {
     return (
