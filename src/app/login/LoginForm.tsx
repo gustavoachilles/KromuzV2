@@ -12,6 +12,8 @@ export function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isUnconfirmed, setIsUnconfirmed] = useState(false);
+  const [resendStatus, setResendStatus] = useState<"idle" | "loading" | "success">("idle");
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectTo = searchParams?.get("redirect") || "/dashboard";
@@ -28,17 +30,42 @@ export function LoginForm() {
     });
 
     if (error) {
-      setError(
-        error.message === "Invalid login credentials"
-          ? "Email ou senha incorretos."
-          : error.message
-      );
+      if (error.message === "Email not confirmed") {
+        setError("Seu e-mail ainda não foi confirmado.");
+        setIsUnconfirmed(true);
+      } else {
+        setError(
+          error.message === "Invalid login credentials"
+            ? "Email ou senha incorretos."
+            : error.message
+        );
+        setIsUnconfirmed(false);
+      }
       setLoading(false);
       return;
     }
 
     router.push(redirectTo);
     router.refresh();
+  }
+
+  async function handleResendEmail() {
+    if (!email) return;
+    setResendStatus("loading");
+    
+    const supabase = createSupabaseBrowserClient();
+    const { error } = await supabase.auth.resend({
+      type: 'signup',
+      email: email,
+    });
+
+    if (error) {
+      setError("Erro ao reenviar: " + error.message);
+      setResendStatus("idle");
+    } else {
+      setResendStatus("success");
+      setError(null);
+    }
   }
 
   return (
@@ -74,10 +101,34 @@ export function LoginForm() {
         {/* Formulário */}
         <form onSubmit={handleLogin} className="space-y-5">
           <div className="rounded-2xl border border-zinc-800/80 bg-zinc-900/60 backdrop-blur-xl p-6 space-y-4 shadow-2xl">
-            {error && (
+            {error && !isUnconfirmed && (
               <div className="rounded-lg bg-red-950/40 border border-red-900/50 px-4 py-3 text-sm text-red-300 flex items-start gap-2">
                 <span className="shrink-0 mt-0.5">⚠️</span>
                 {error}
+              </div>
+            )}
+
+            {isUnconfirmed && (
+              <div className="rounded-lg bg-amber-950/40 border border-amber-900/50 px-4 py-4 text-sm text-amber-300 flex flex-col gap-3">
+                <div className="flex items-start gap-2">
+                  <span className="shrink-0 mt-0.5">⚠️</span>
+                  <span>{error || "Seu e-mail ainda não foi confirmado."}</span>
+                </div>
+                {resendStatus === "success" ? (
+                  <div className="text-emerald-400 bg-emerald-950/50 p-2 rounded-lg text-xs font-medium border border-emerald-900/50">
+                    ✓ E-mail reenviado com sucesso! Por favor, verifique sua caixa de entrada e também a pasta de SPAM.
+                  </div>
+                ) : (
+                  <button 
+                    type="button" 
+                    onClick={handleResendEmail}
+                    disabled={resendStatus === "loading"}
+                    className="self-start text-xs font-bold bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 px-3 py-1.5 rounded-lg transition flex items-center gap-2"
+                  >
+                    {resendStatus === "loading" && <Loader2 className="w-3 h-3 animate-spin" />}
+                    Reenviar e-mail de confirmação
+                  </button>
+                )}
               </div>
             )}
 
