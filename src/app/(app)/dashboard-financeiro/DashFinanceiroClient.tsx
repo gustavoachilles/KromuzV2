@@ -1,3 +1,5 @@
+"use client";
+
 import { useState } from "react";
 import { DollarSign, TrendingUp, Building2, CheckCircle2, BarChart3, Plus, FileText, Banknote, Clock, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
