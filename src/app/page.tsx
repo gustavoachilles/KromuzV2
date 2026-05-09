@@ -15,9 +15,10 @@ import {
 export const dynamic = "force-dynamic";
 
 export default async function LandingPage() {
-  const planos = await prisma.planoSaaS.findMany({
-    orderBy: { precoMensal: 'asc' }
-  });
+  try {
+    const planos = await prisma.planoSaaS.findMany({
+      orderBy: { precoMensal: 'asc' }
+    });
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100 font-sans selection:bg-violet-500/30">
@@ -172,6 +173,15 @@ export default async function LandingPage() {
       </footer>
     </div>
   );
+  } catch (err: any) {
+    return (
+      <div className="min-h-screen bg-zinc-950 p-8 text-red-500 font-mono">
+        <h1>ERRO INTERNO DETECTADO (Landing Page):</h1>
+        <pre>{err.message || String(err)}</pre>
+        <pre className="text-xs opacity-50 mt-4">{err.stack}</pre>
+      </div>
+    );
+  }
 }
 
 function FeatureCard({ icon, title, desc }: { icon: React.ReactNode, title: string, desc: string }) {
