@@ -39,7 +39,7 @@ const AtualizarLeadSchema = z.object({
     "EMPRESTIMO_CONSIGNADO", "REFINANCIAMENTO", "PORTABILIDADE",
     "PORTABILIDADE_REFIN", "CARTAO_CONSIGNADO", "CARTAO_BENEFICIO",
   ]).nullable().optional(),
-  valorEstimado: z.number().nullable().optional(),
+  valorLiberado: z.number().nullable().optional(),
   bancoPreferido: z.string().nullable().optional(),
   margemLivre: z.number().nullable().optional(),
   margemRmc: z.number().nullable().optional(),
@@ -62,7 +62,7 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
 
   const existe = await prisma.lead.findFirst({
     where: { id, empresaId: sessao.empresaId },
-    select: { id: true },
+    select: { id: true, status: true, bancoPreferido: true },
   });
   if (!existe) return Response.json({ error: "Lead não encontrado" }, { status: 404 });
 
@@ -89,7 +89,7 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
         observacoes: body.observacoes,
         motivoPerda: body.motivoPerda,
         tipoOperacao: body.tipoOperacao,
-        valorEstimado: body.valorEstimado,
+        valorLiberado: body.valorLiberado,
         bancoPreferido: body.bancoPreferido,
         convenioNome: body.convenioNome,
         ultimoContato: body.ultimoContato ? new Date(body.ultimoContato) : undefined,
@@ -104,6 +104,63 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
         } : undefined
       },
     });
+
+    // ─── AUTOMAÇÃO BANCÁRIA (MOCK) ───
+    if (body.status && body.status !== existe.status) {
+      // Pega o nome da coluna de destino
+      const colunaDestino = await prisma.pipelineColuna.findUnique({ where: { id: body.status } });
+      
+      if (colunaDestino && colunaDestino.nome.toUpperCase() === "DIGITADA") {
+        const bancoPreferido = body.bancoPreferido || existe.bancoPreferido;
+        
+        if (bancoPreferido) {
+          // Busca se o banco tem API configurada
+          const banco = await prisma.banco.findFirst({
+            where: { empresaId: sessao.empresaId, nome: bancoPreferido }
+          });
+
+          if (banco && banco.permiteIntegracao && banco.credenciaisApi) {
+            // Log de Automação
+            await prisma.auditLog.create({
+              data: {
+                empresaId: sessao.empresaId,
+                usuarioEmail: "robo@kromuz.com",
+                usuarioNome: "Robô de Integração",
+                acao: "integrou_banco",
+                entidade: "lead",
+                entidadeId: id,
+                entidadeNome: body.nome || "Lead",
+                detalhes: {
+                  mensagem: `Proposta enviada com sucesso para a API do ${banco.nome}`,
+                  statusHttp: 200
+                }
+              }
+            });
+          }
+        }
+      }
+
+      // ─── AUTOMAÇÃO DE WHATSAPP (MOCK) ───
+      if (colunaDestino && (colunaDestino.nome.toUpperCase() === "PROPOSTA" || colunaDestino.nome.toUpperCase() === "PAGO")) {
+        if (body.telefone) {
+          await prisma.auditLog.create({
+            data: {
+              empresaId: sessao.empresaId,
+              usuarioEmail: "whatsapp@kromuz.com",
+              usuarioNome: "Robô do WhatsApp",
+              acao: "disparo_whatsapp",
+              entidade: "lead",
+              entidadeId: id,
+              entidadeNome: body.nome || "Lead",
+              detalhes: {
+                mensagem: `Mensagem enviada no WhatsApp do cliente (${body.telefone}) referente à fase ${colunaDestino.nome}`,
+                statusHttp: 200
+              }
+            }
+          });
+        }
+      }
+    }
 
     return Response.json(leadAtualizado);
   } catch (e: any) {

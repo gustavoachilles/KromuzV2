@@ -56,6 +56,19 @@ export default async function DashFinanceiroPage() {
     _count: true,
   });
 
+  // Faturas Geradas
+  const faturas = await prisma.faturaBanco.findMany({
+    where: { empresaId: eid },
+    include: { _count: { select: { propostas: true } } },
+    orderBy: { createdAt: "desc" },
+  });
+
+  // Propostas Pagas mas sem Fatura gerada (para gerar novo lote)
+  const propostasPendentes = await prisma.proposta.findMany({
+    where: { empresaId: eid, status: "PAGA", faturaBancoId: null },
+    select: { id: true, bancoNome: true, valorComissao: true },
+  });
+
   return (
     <DashFinanceiroClient
       meses={resultados}
@@ -65,6 +78,8 @@ export default async function DashFinanceiroPage() {
         comissao: totais._sum.valorComissao || 0,
         count: totais._count,
       }}
+      faturasIniciais={faturas}
+      pendentesIniciais={propostasPendentes}
     />
   );
 }

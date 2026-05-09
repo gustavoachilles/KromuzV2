@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { UploadHiscon } from "@/components/simulador/UploadHiscon";
 import { Oportunidade, ClienteSimulacao, ContratoAtivo } from "@/lib/motor-regras/simulador";
-import { RefreshCw, Wallet, CreditCard, ArrowRightLeft, UserCircle2, ArrowLeft } from "lucide-react";
+import { Calculator, FileText, RefreshCw, Wallet, CreditCard, ArrowRightLeft, UserCircle2, ArrowLeft, Search } from "lucide-react";
+import { toast } from "sonner";
 
 interface SimulacaoResult {
   cliente: ClienteSimulacao;
@@ -11,16 +12,153 @@ interface SimulacaoResult {
   oportunidades: Oportunidade[];
 }
 
-export function SimuladorClient({ empresaId }: { empresaId: string }) {
+export function SimuladorClient({ empresaId, convenios }: { empresaId: string, convenios?: { id: string, nome: string }[] }) {
+  const [tab, setTab] = useState<"hiscon" | "manual">("hiscon");
+  const [resultado, setResultado] = useState<SimulacaoResult | null>(null);
+
+  // Estados da Calculadora Manual
+  const [formManual, setFormManual] = useState({
+    convenioId: "",
+    tipoOperacao: "EMPRESTIMO_CONSIGNADO",
+    idade: "",
+    margem: ""
+  });
+  const [isCalculando, setIsCalculando] = useState(false);
+
+  async function handleSimularManual(e: React.FormEvent) {
+    e.preventDefault();
+    if (!formManual.convenioId || !formManual.margem) {
+      toast.error("Preencha o convênio e a margem disponível");
+      return;
+    }
+
+    setIsCalculando(true);
+    try {
+      const res = await fetch("/api/simulador/calcular", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          convenioId: formManual.convenioId,
+          tipoOperacao: formManual.tipoOperacao,
+          idade: formManual.idade ? Number(formManual.idade) : undefined,
+          margem: Number(formManual.margem.replace(',', '.'))
+        })
+      });
+
+      if (!res.ok) throw new Error(await res.text());
+      const data = await res.json();
+      setResultado(data);
+    } catch (err: any) {
+      toast.error(err.message || "Erro na simulação");
+    } finally {
+      setIsCalculando(false);
+    }
+  }
   const [resultado, setResultado] = useState<SimulacaoResult | null>(null);
 
   if (!resultado) {
     return (
-      <div className="p-8">
-        <UploadHiscon 
-          empresaId={empresaId} 
-          onProcessamentoCompleto={(data) => setResultado(data)} 
-        />
+      <div className="flex flex-col h-full">
+        {/* Tabs */}
+        <div className="flex bg-zinc-100 dark:bg-zinc-900 p-1 rounded-xl w-fit mx-8 mt-8">
+          <button
+            onClick={() => setTab("hiscon")}
+            className={`px-4 py-2 text-sm font-medium rounded-lg transition flex items-center gap-2 ${
+              tab === "hiscon" ? "bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 shadow-sm" : "text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"
+            }`}
+          >
+            <FileText className="w-4 h-4" /> Análise HISCON (PDF)
+          </button>
+          <button
+            onClick={() => setTab("manual")}
+            className={`px-4 py-2 text-sm font-medium rounded-lg transition flex items-center gap-2 ${
+              tab === "manual" ? "bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 shadow-sm" : "text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"
+            }`}
+          >
+            <Calculator className="w-4 h-4" /> Calculadora Manual
+          </button>
+        </div>
+
+        {tab === "hiscon" && (
+          <div className="p-8">
+            <UploadHiscon 
+              empresaId={empresaId} 
+              onProcessamentoCompleto={(data) => setResultado(data)} 
+            />
+          </div>
+        )}
+
+        {tab === "manual" && (
+          <div className="p-8 max-w-3xl">
+            <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6">
+              <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
+                <Calculator className="w-5 h-5 text-violet-500" />
+                Calculadora Rápida
+              </h2>
+              
+              <form onSubmit={handleSimularManual} className="space-y-6">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Convênio *</label>
+                    <select 
+                      value={formManual.convenioId}
+                      onChange={e => setFormManual({...formManual, convenioId: e.target.value})}
+                      className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 focus:ring-2 focus:ring-violet-500"
+                    >
+                      <option value="">Selecione...</option>
+                      {convenios?.map(c => <option key={c.id} value={c.id}>{c.nome}</option>)}
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Operação</label>
+                    <select 
+                      value={formManual.tipoOperacao}
+                      onChange={e => setFormManual({...formManual, tipoOperacao: e.target.value})}
+                      className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 focus:ring-2 focus:ring-violet-500"
+                    >
+                      <option value="EMPRESTIMO_CONSIGNADO">Margem Nova / Empréstimo</option>
+                      <option value="REFINANCIAMENTO">Refinanciamento</option>
+                      <option value="CARTAO_CONSIGNADO">Cartão Consignado (RMC)</option>
+                      <option value="CARTAO_BENEFICIO">Cartão Benefício (RCC)</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Idade Cliente (Opcional)</label>
+                    <input 
+                      type="number" 
+                      placeholder="Ex: 65"
+                      value={formManual.idade}
+                      onChange={e => setFormManual({...formManual, idade: e.target.value})}
+                      className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 focus:ring-2 focus:ring-violet-500"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Margem Disponível (R$) *</label>
+                    <input 
+                      type="number" step="0.01"
+                      placeholder="0.00"
+                      value={formManual.margem}
+                      onChange={e => setFormManual({...formManual, margem: e.target.value})}
+                      className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 focus:ring-2 focus:ring-violet-500 font-bold text-emerald-600"
+                    />
+                  </div>
+                </div>
+
+                <button 
+                  type="submit" 
+                  disabled={isCalculando}
+                  className="w-full bg-violet-600 text-white font-medium py-3 rounded-lg hover:bg-violet-700 transition flex justify-center items-center gap-2"
+                >
+                  {isCalculando ? <RefreshCw className="w-5 h-5 animate-spin" /> : <Search className="w-5 h-5" />}
+                  Procurar Oportunidades
+                </button>
+              </form>
+            </div>
+          </div>
+        )}
       </div>
     );
   }

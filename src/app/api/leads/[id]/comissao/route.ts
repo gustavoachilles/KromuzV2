@@ -34,8 +34,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     }
 
     const pctFlat = tabela?.comissaoFlatPct || 0;
-    const valorEstimado = lead.valorEstimado || 0;
-    const valorComissao = (valorEstimado * pctFlat) / 100;
+    const valorLiberado = lead.valorLiberado || 0;
+    const valorComissao = (valorLiberado * pctFlat) / 100;
 
     // Converte Lead em Proposta Paga
     const proposta = await prisma.proposta.create({
@@ -47,7 +47,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         tipoOperacao: lead.tipoOperacao || "EMPRESTIMO_CONSIGNADO",
         status: "PAGA",
         bancoNome: lead.bancoPreferido || tabela?.nome || "Banco Desconhecido",
-        valorLiberado: valorEstimado,
+        valorLiberado: valorLiberado,
         valorComissao: valorComissao,
         vendedorNome: lead.vendedorNome,
         vendedorEmail: lead.vendedorEmail,

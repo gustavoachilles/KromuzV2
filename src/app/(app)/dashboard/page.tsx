@@ -27,6 +27,8 @@ export default async function DashboardPage() {
     totalLeads,
     totalPropostas,
     totalPropostasPagas,
+    propostasStats,
+    rankingVendedores,
   ] = await Promise.all([
     prisma.banco.count({ where: { empresaId: eid, ativo: true } }),
     prisma.banco.count({ where: { empresaId: eid, ativo: true, ativoSimulacao: true } }),
@@ -56,7 +58,30 @@ export default async function DashboardPage() {
     prisma.lead.count({ where: { empresaId: eid } }),
     prisma.proposta.count({ where: { empresaId: eid } }),
     prisma.proposta.count({ where: { empresaId: eid, status: "PAGA" } }),
+    // Dados Gráficos
+    prisma.proposta.groupBy({
+      by: ["status"],
+      where: { empresaId: eid },
+      _count: true,
+      _sum: { valorLiberado: true, valorComissao: true },
+    }),
+    prisma.proposta.groupBy({
+      by: ["vendedorNome"],
+      where: { empresaId: eid, status: "PAGA" },
+      _sum: { valorLiberado: true, valorComissao: true },
+      orderBy: { _sum: { valorLiberado: "desc" } },
+      take: 5,
+    }),
   ]);
+
+  const volumeTotal = propostasStats.find(p => p.status === "PAGA")?._sum.valorLiberado || 0;
+  const comissaoTotal = propostasStats.find(p => p.status === "PAGA")?._sum.valorComissao || 0;
+  const funilData = [
+    { name: "Leads Recebidos", value: totalLeads, fill: "#8b5cf6" },
+    { name: "Propostas Digitadas", value: propostasStats.find(p => p.status === "DIGITADA")?._count || 0, fill: "#f59e0b" },
+    { name: "Propostas Aprovadas", value: propostasStats.find(p => p.status === "APROVADA")?._count || 0, fill: "#3b82f6" },
+    { name: "Propostas Pagas", value: propostasStats.find(p => p.status === "PAGA")?._count || 0, fill: "#10b981" },
+  ];
 
   return (
     <DashboardClient
@@ -76,7 +101,11 @@ export default async function DashboardPage() {
         totalLeads,
         totalPropostas,
         totalPropostasPagas,
+        volumeTotal,
+        comissaoTotal,
       }}
+      funilData={funilData}
+      rankingVendedores={rankingVendedores}
       importacoesRecentes={importacoesRecentes}
       regrasPorTipo={regrasPorTipo}
     />

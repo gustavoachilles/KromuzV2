@@ -4,9 +4,12 @@ import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
 import {
-  Users, Plus, X, Loader2, Phone, Mail, DollarSign, GripVertical, Paperclip, Trash2, UploadCloud, FileText, Building2
+  Users, Plus, X, Loader2, Phone, Mail, DollarSign, GripVertical, Paperclip, Trash2, UploadCloud, FileText, Building2, MessageCircle
 } from "lucide-react";
 import { toast } from "sonner";
+
+import { toast } from "sonner";
+import { InboxDrawer } from "./InboxDrawer";
 
 type PipelineColuna = { id: string; nome: string; cor: string | null; ordem: number; };
 
@@ -16,7 +19,7 @@ type Lead = {
   status: string; origem: string | null; canalContato: string | null;
   numeroBeneficio: string | null; especieBeneficio: number | null;
   margemLivre: number | null; margemRmc: number | null; margemRcc: number | null;
-  tipoOperacao: string | null; valorEstimado: number | null;
+  tipoOperacao: string | null; valorLiberado: number | null;
   bancoPreferido: string | null; convenioNome: string | null; observacoes: string | null;
   vendedorNome: string | null; createdAt: string | Date;
   arquivos?: { id: string; nome: string; url: string; tamanho: number | null }[];
@@ -43,6 +46,13 @@ const INSS_ESPECIES = [
   { id: 93, nome: "Pensão Morte Acidente Trabalho" },
 ];
 
+const WHATSAPP_SCRIPTS = [
+  { id: 'oferta', label: 'Nova Oferta (Isca)', template: 'Olá {nome}, vi que você tem uma margem livre interessante. Podemos fazer uma simulação rápida sem compromisso?' },
+  { id: 'aprovado', label: 'Proposta Aprovada', template: 'Boas notícias {nome}! Sua proposta no banco {banco} foi aprovada com sucesso. 🎉' },
+  { id: 'documento', label: 'Falta de Documentos', template: 'Oi {nome}, tudo bem? Para darmos andamento na sua proposta, preciso que você me envie uma foto do seu RG.' },
+  { id: 'link_dig', label: 'Link de Digitação', template: 'Olá {nome}, segue o link seguro do banco {banco} para você realizar a biometria facial e assinar o contrato digital: ' }
+];
+
 const mascaraCpf = (v: string) => v.replace(/\D/g, '').replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d{1,2})/, '$1-$2').substring(0, 14);
 
 const mascaraTelefone = (v: string) => {
@@ -54,6 +64,12 @@ const mascaraTelefone = (v: string) => {
 const formatMoeda = (val: number | null | undefined) => {
   if (val === null || val === undefined) return "";
   return val.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+};
+
+const getWhatsAppLink = (telefone: string | null, text: string = "") => {
+  if (!telefone) return "#";
+  const num = telefone.replace(/\D/g, '');
+  return `https://wa.me/55${num}?text=${encodeURIComponent(text)}`;
 };
 
 const formataErroZod = (errStr: string) => {
@@ -94,6 +110,9 @@ export function LeadsClient({
   const [leads, setLeads] = useState(leadsIniciais);
   const [modal, setModal] = useState(false);
   const [modalColuna, setModalColuna] = useState(false);
+  const [colunaNome, setColunaNome] = useState("");
+  const [colunaCor, setColunaCor] = useState("#8b5cf6");
+  const [inboxDrawerOpen, setInboxDrawerOpen] = useState(false);
   const [integracaoModal, setIntegracaoModal] = useState<{aberto: boolean, leadId: string, banco: string} | null>(null);
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
@@ -101,12 +120,38 @@ export function LeadsClient({
   const [form, setForm] = useState({
     id: "", nome: "", cpf: "", telefone: "", email: "", uf: "", cidade: "",
     numeroBeneficio: "", especieBeneficio: "", margemLivre: "", margemRmc: "", margemRcc: "",
-    tipoOperacao: "", valorEstimado: "", bancoPreferido: "", convenioNome: "",
+    tipoOperacao: "", valorLiberado: "", bancoPreferido: "", convenioNome: "",
     origem: "manual", canalContato: "", observacoes: "",
     arquivosExistem: [] as any[],
   });
   
   const [novaColunaNome, setNovaColunaNome] = useState("");
+
+  // Funções de Máscara
+  const formatCPF = (v: string) => {
+    v = v.replace(/\D/g, "");
+    if (v.length <= 11) {
+      v = v.replace(/(\d{3})(\d)/, "$1.$2");
+      v = v.replace(/(\d{3})(\d)/, "$1.$2");
+      v = v.replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+    }
+    return v;
+  };
+
+  const formatTelefone = (v: string) => {
+    v = v.replace(/\D/g, "");
+    if (v.length <= 11) {
+      v = v.replace(/^(\d{2})(\d)/g, "($1) $2");
+      v = v.replace(/(\d)(\d{4})$/, "$1-$2");
+    }
+    return v;
+  };
+
+  const formatMoedaInput = (v: string) => {
+    v = v.replace(/\D/g, "");
+    const num = (Number(v) / 100).toFixed(2);
+    return num;
+  };
 
   // IBGE States
   const [estadosIBGE, setEstadosIBGE] = useState<any[]>([]);
@@ -138,7 +183,7 @@ export function LeadsClient({
     setForm({
       id: "", nome: "", cpf: "", telefone: "", email: "", uf: "", cidade: "",
       numeroBeneficio: "", especieBeneficio: "", margemLivre: "", margemRmc: "", margemRcc: "",
-      tipoOperacao: "", valorEstimado: "", bancoPreferido: "", convenioNome: "",
+      tipoOperacao: "", valorLiberado: "", bancoPreferido: "", convenioNome: "",
       origem: "manual", canalContato: "", observacoes: "", arquivosExistem: []
     });
     setArquivosPendentes([]);
@@ -161,7 +206,7 @@ export function LeadsClient({
       margemRmc: lead.margemRmc ? lead.margemRmc.toString() : "",
       margemRcc: lead.margemRcc ? lead.margemRcc.toString() : "",
       tipoOperacao: lead.tipoOperacao || "",
-      valorEstimado: lead.valorEstimado ? lead.valorEstimado.toString() : "",
+      valorLiberado: lead.valorLiberado ? lead.valorLiberado.toString() : "",
       bancoPreferido: lead.bancoPreferido || "",
       convenioNome: lead.convenioNome || "",
       origem: lead.origem || "manual",
@@ -218,7 +263,7 @@ export function LeadsClient({
 
     const bodyData = {
       ...payload,
-      valorEstimado: payload.valorEstimado ? Number(payload.valorEstimado) : undefined,
+      valorLiberado: payload.valorLiberado ? Number(payload.valorLiberado) : undefined,
       especieBeneficio: payload.especieBeneficio ? Number(payload.especieBeneficio) : undefined,
       margemLivre: payload.margemLivre ? Number(payload.margemLivre.replace(',','.')) : undefined,
       margemRmc: payload.margemRmc ? Number(payload.margemRmc.replace(',','.')) : undefined,
@@ -396,12 +441,23 @@ export function LeadsClient({
                                   <GripVertical className="h-4 w-4 text-zinc-300 shrink-0" />
                                 </div>
                                 <div className="flex flex-col gap-1.5 text-xs text-zinc-500 dark:text-zinc-400">
-                                  {lead.telefone && <span className="flex items-center gap-1.5"><Phone className="h-3 w-3" />{mascaraTelefone(lead.telefone)}</span>}
+                                  {lead.telefone && (
+                                    <div className="flex items-center justify-between gap-2 group/btn">
+                                      <span className="flex items-center gap-1.5"><Phone className="h-3 w-3" />{mascaraTelefone(lead.telefone)}</span>
+                                      <a 
+                                        href={getWhatsAppLink(lead.telefone, "")} target="_blank" rel="noreferrer"
+                                        onClick={(e) => e.stopPropagation()}
+                                        className="opacity-0 group-hover/btn:opacity-100 flex items-center gap-1 bg-[#25D366] text-white px-2 py-0.5 rounded text-[10px] font-bold transition hover:bg-[#1DA851]"
+                                      >
+                                        <MessageCircle className="w-3 h-3" /> Chamar
+                                      </a>
+                                    </div>
+                                  )}
                                   {lead.email && <span className="flex items-center gap-1.5 truncate"><Mail className="h-3 w-3 shrink-0" /><span className="truncate">{lead.email}</span></span>}
                                 </div>
                                 <div className="flex items-center justify-between pt-2 border-t border-zinc-100 dark:border-zinc-800/50 mt-1">
                                   <div className="flex items-center gap-1 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
-                                    {lead.valorEstimado ? (<><DollarSign className="h-3.5 w-3.5" />{formatMoeda(lead.valorEstimado)}</>) : (<span className="text-zinc-400 font-normal">Sem valor</span>)}
+                                    {lead.valorLiberado ? (<><DollarSign className="h-3.5 w-3.5" />{formatMoeda(lead.valorLiberado)}</>) : (<span className="text-zinc-400 font-normal">Sem valor</span>)}
                                   </div>
                                   {lead.tipoOperacao && <span className="text-[10px] bg-zinc-100 dark:bg-zinc-800 px-2 py-1 rounded text-zinc-600 dark:text-zinc-300 font-medium truncate max-w-[100px]">{tipoLabel[lead.tipoOperacao] || lead.tipoOperacao}</span>}
                                 </div>
@@ -428,7 +484,52 @@ export function LeadsClient({
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
           <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-2xl w-full max-w-5xl mx-4 max-h-[90vh] flex flex-col">
             <div className="flex items-center justify-between p-6 border-b border-zinc-100 dark:border-zinc-800 shrink-0">
-              <h2 className="text-lg font-semibold">{form.id ? "Editar Lead" : "Novo Lead"}</h2>
+              <div className="flex items-center gap-4">
+                <h2 className="text-lg font-semibold">{form.id ? "Editar Lead" : "Novo Lead"}</h2>
+                {form.telefone && (
+                  <div className="relative group">
+                    <button type="button" className="flex items-center gap-2 bg-[#25D366] hover:bg-[#1DA851] text-white px-3 py-1.5 rounded-lg text-xs font-bold transition shadow-sm">
+                      <MessageCircle className="w-4 h-4" /> Chamar
+                    </button>
+                    {/* Dropdown Roteiros */}
+                    <div className="absolute left-0 mt-2 w-64 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 overflow-hidden">
+                      <div className="px-3 py-2 bg-zinc-50 dark:bg-zinc-900 border-b border-zinc-100 dark:border-zinc-700 text-[10px] font-bold text-zinc-500 uppercase tracking-wider">
+                        Roteiros Rápidos
+                      </div>
+                      {WHATSAPP_SCRIPTS.map(script => (
+                        <a 
+                          key={script.id}
+                          target="_blank" rel="noreferrer"
+                          href={getWhatsAppLink(form.telefone, script.template.replace('{nome}', form.nome ? form.nome.split(' ')[0] : 'Cliente').replace('{banco}', form.bancoPreferido || 'banco'))}
+                          className="block px-4 py-2.5 text-xs text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-700/50 transition border-b border-zinc-100 dark:border-zinc-700 last:border-0"
+                        >
+                          {script.label}
+                        </a>
+                      ))}
+                      <a 
+                        target="_blank" rel="noreferrer"
+                        href={getWhatsAppLink(form.telefone, "")}
+                        className="block px-4 py-2 text-xs font-semibold text-violet-600 dark:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-900/20 transition bg-zinc-50 dark:bg-zinc-900/50"
+                      >
+                        Abrir conversa vazia ↗
+                      </a>
+                    </div>
+                    </div>
+                  </div>
+                )}
+                {form.id && (
+                  <button 
+                    type="button" 
+                    onClick={() => {
+                      setModal(false);
+                      setInboxDrawerOpen(true);
+                    }}
+                    className="flex items-center gap-2 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 px-3 py-1.5 rounded-lg text-xs font-bold transition shadow-sm"
+                  >
+                    <MessageSquare className="w-4 h-4" /> Omnichannel Inbox
+                  </button>
+                )}
+              </div>
               <button onClick={() => setModal(false)} className="text-zinc-400 hover:text-zinc-600 transition"><X className="h-5 w-5" /></button>
             </div>
             
@@ -449,12 +550,12 @@ export function LeadsClient({
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">CPF</label>
-                      <input value={form.cpf} onChange={e => setForm({ ...form, cpf: mascaraCpf(e.target.value) })} placeholder="000.000.000-00"
+                      <input value={form.cpf} onChange={e => setForm({ ...form, cpf: formatCPF(e.target.value) })} placeholder="000.000.000-00" maxLength={14}
                         className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500" />
                     </div>
                     <div className="space-y-2">
                       <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Telefone</label>
-                      <input value={form.telefone} onChange={e => setForm({ ...form, telefone: mascaraTelefone(e.target.value) })} placeholder="(11) 99999-0000"
+                      <input value={form.telefone} onChange={e => setForm({ ...form, telefone: formatTelefone(e.target.value) })} placeholder="(11) 99999-0000" maxLength={15}
                         className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500" />
                     </div>
                   </div>
@@ -476,11 +577,11 @@ export function LeadsClient({
                     </div>
                     <div className="space-y-2">
                       <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Cidade</label>
-                      <select value={form.cidade} onChange={e => setForm({ ...form, cidade: e.target.value })} disabled={!form.uf}
-                        className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 disabled:opacity-50">
-                        <option value="">Selecione a Cidade</option>
-                        {cidadesIBGE.map(cid => <option key={cid.id} value={cid.nome}>{cid.nome}</option>)}
-                      </select>
+                      <input list="cidades-list" value={form.cidade} onChange={e => setForm({ ...form, cidade: e.target.value })} disabled={!form.uf} placeholder="Pesquise a cidade"
+                        className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 disabled:opacity-50" />
+                      <datalist id="cidades-list">
+                        {cidadesIBGE.map(cid => <option key={cid.id} value={cid.nome} />)}
+                      </datalist>
                     </div>
                   </div>
                 </div>
@@ -497,11 +598,11 @@ export function LeadsClient({
                     </div>
                     <div className="space-y-2">
                       <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Espécie INSS</label>
-                      <select value={form.especieBeneficio} onChange={e => setForm({ ...form, especieBeneficio: e.target.value })}
-                        className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500">
-                        <option value="">Selecione...</option>
-                        {INSS_ESPECIES.map(esp => <option key={esp.id} value={esp.id}>{esp.id} - {esp.nome}</option>)}
-                      </select>
+                      <input list="especies-list" value={form.especieBeneficio} onChange={e => setForm({ ...form, especieBeneficio: e.target.value })} placeholder="Pesquise a espécie"
+                        className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500" />
+                      <datalist id="especies-list">
+                        {INSS_ESPECIES.map(esp => <option key={esp.id} value={`${esp.id} - ${esp.nome}`} />)}
+                      </datalist>
                     </div>
                   </div>
 
@@ -558,7 +659,7 @@ export function LeadsClient({
                     </div>
                     <div className="space-y-2">
                       <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Valor Liberado (R$)</label>
-                      <input type="number" step="0.01" value={form.valorEstimado} onChange={e => setForm({ ...form, valorEstimado: e.target.value })}
+                      <input type="text" value={form.valorLiberado} onChange={e => setForm({ ...form, valorLiberado: formatMoedaInput(e.target.value) })} placeholder="0.00"
                         className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 font-bold text-emerald-700" />
                     </div>
                   </div>
@@ -642,7 +743,7 @@ export function LeadsClient({
 
               <div className="flex justify-between items-center pt-6 shrink-0 mt-4 border-t border-zinc-100 dark:border-zinc-800">
                 <div>
-                  {form.id && (perfilUsuario === "admin" || perfilUsuario === "gestor") && (
+                  {form.id && (perfilUsuario === "admin" || perfilUsuario === "gerente") && (
                     <button type="button" onClick={() => deletarLead(form.id)} disabled={salvando}
                       className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-xl transition">
                       <Trash2 className="h-4 w-4" /> Excluir Lead
@@ -721,6 +822,14 @@ export function LeadsClient({
           </div>
         </div>
       )}
+      
+      {/* Drawer Omnichannel */}
+      <InboxDrawer 
+        isOpen={inboxDrawerOpen} 
+        onClose={() => setInboxDrawerOpen(false)} 
+        lead={form} 
+        sessao={sessao} 
+      />
     </div>
   );
 }

@@ -31,8 +31,14 @@ type KPIs = {
   importacoesOk: number;
   totalLeads: number;
   totalPropostas: number;
+  totalPropostas: number;
   totalPropostasPagas: number;
+  volumeTotal: number;
+  comissaoTotal: number;
 };
+
+type FunilItem = { name: string; value: number; fill: string };
+type RankingItem = { vendedorNome: string; _sum: { valorLiberado: number; valorComissao: number } };
 
 type ImportacaoRecente = {
   id: string;
@@ -70,11 +76,15 @@ export function DashboardClient({
   kpis,
   importacoesRecentes,
   regrasPorTipo,
+  funilData,
+  rankingVendedores,
 }: {
   sessao: { nomeUsuario: string | null; nomeEmpresa: string };
   kpis: KPIs;
   importacoesRecentes: ImportacaoRecente[];
   regrasPorTipo: RegraPorTipo[];
+  funilData?: FunilItem[];
+  rankingVendedores?: RankingItem[];
 }) {
   const router = useRouter();
 
@@ -136,27 +146,85 @@ export function DashboardClient({
             onClick={() => router.push("/regras")}
           />
           <KpiCard
+            icon={<TrendingUp className="h-5 w-5" />}
+            label="Volume Liberado"
+            value={`R$ ${kpis.volumeTotal.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`}
+            color="emerald"
+          />
+          <KpiCard
             icon={<Shield className="h-5 w-5" />}
-            label="Convênios"
-            value={kpis.totalConvenios}
+            label="Comissão Paga"
+            value={`R$ ${kpis.comissaoTotal.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`}
             color="amber"
-            onClick={() => router.push("/convenios")}
           />
-          <KpiCard
-            icon={<Users className="h-5 w-5" />}
-            label="Leads"
-            value={kpis.totalLeads}
-            color="indigo"
-            onClick={() => router.push("/leads")}
-          />
-          <KpiCard
-            icon={<Kanban className="h-5 w-5" />}
-            label="Propostas"
-            value={kpis.totalPropostas}
-            sub={`${kpis.totalPropostasPagas} pagas`}
-            color="fuchsia"
-            onClick={() => router.push("/esteira")}
-          />
+        </div>
+
+        {/* Funil e Ranking */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h2 className="text-lg font-semibold">Funil de Vendas</h2>
+                <p className="text-xs text-zinc-500 mt-0.5">Conversão do Lead até o Pagamento</p>
+              </div>
+              <BarChart3 className="h-5 w-5 text-zinc-400" />
+            </div>
+            
+            <div className="space-y-4">
+              {funilData?.map((item, index) => {
+                const max = Math.max(...(funilData.map(f => f.value) || [1]));
+                const pct = Math.max((item.value / max) * 100, 5);
+                return (
+                  <div key={item.name}>
+                    <div className="flex justify-between text-xs mb-1">
+                      <span className="font-medium text-zinc-700 dark:text-zinc-300">{item.name}</span>
+                      <span className="font-bold tabular-nums">{item.value}</span>
+                    </div>
+                    <div className="h-4 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
+                      <div className="h-full rounded-full transition-all duration-1000" style={{ width: `${pct}%`, backgroundColor: item.fill }} />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h2 className="text-lg font-semibold">Top Vendedores</h2>
+                <p className="text-xs text-zinc-500 mt-0.5">Ranking por volume liberado</p>
+              </div>
+              <Users className="h-5 w-5 text-zinc-400" />
+            </div>
+
+            <div className="space-y-4">
+              {rankingVendedores?.length === 0 ? (
+                <div className="text-center py-8 text-zinc-400">
+                  <p className="text-sm">Nenhuma venda registrada.</p>
+                </div>
+              ) : (
+                rankingVendedores?.map((v, i) => (
+                  <div key={v.vendedorNome} className="flex items-center gap-4">
+                    <div className="w-8 h-8 rounded-full bg-violet-100 dark:bg-violet-900/30 flex items-center justify-center font-bold text-violet-600 dark:text-violet-400 text-sm">
+                      {i + 1}
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">{v.vendedorNome || "Desconhecido"}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400">
+                        R$ {(v._sum.valorLiberado || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                      </p>
+                      <p className="text-[10px] text-zinc-500">
+                        R$ {(v._sum.valorComissao || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })} comissão
+                      </p>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -290,7 +358,7 @@ function KpiCard({
 }: {
   icon: React.ReactNode;
   label: string;
-  value: number;
+  value: number | string;
   sub?: string;
   color: string;
   onClick?: () => void;
@@ -314,7 +382,9 @@ function KpiCard({
         {icon}
       </div>
       <div>
-        <p className="text-2xl font-bold tabular-nums">{value.toLocaleString("pt-BR")}</p>
+        <p className="text-2xl font-bold tabular-nums">
+          {typeof value === "number" ? value.toLocaleString("pt-BR") : value}
+        </p>
         <p className="text-xs text-zinc-500 uppercase tracking-wider">{label}</p>
         {sub && <p className="text-[10px] text-zinc-400 mt-0.5">{sub}</p>}
       </div>

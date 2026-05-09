@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
         numeroBeneficio: lead.numeroBeneficio,
         especieBeneficio: lead.especieBeneficio,
         tipoOperacao: (lead.tipoOperacao as any) || "EMPRESTIMO_CONSIGNADO",
-        valorLiberado: lead.valorEstimado,
+        valorLiberado: lead.valorLiberado,
         status: "DIGITADA", // Proposta que vai para o banco entra como DIGITADA
         vendedorEmail: sessao.email,
         vendedorNome: sessao.nomeUsuario,

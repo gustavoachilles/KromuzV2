@@ -14,8 +14,19 @@ import {
   User,
   Mail,
   Calendar,
+  Calendar,
   Palette,
+  Network,
+  Power
 } from "lucide-react";
+
+type BancoConfig = {
+  id: string;
+  nome: string;
+  logoUrl: string | null;
+  permiteIntegracao: boolean;
+  credenciaisApi: any;
+};
 
 type Empresa = {
   id: string;
@@ -67,14 +78,16 @@ const statusLabels: Record<string, { label: string; color: string }> = {
 export function ConfiguracoesClient({
   empresa,
   usuarios,
+  bancos = [],
   sessao,
 }: {
   empresa: Empresa;
   usuarios: Usuario[];
+  bancos?: BancoConfig[];
   sessao: { userId: string; perfilSlug: string };
 }) {
   const router = useRouter();
-  const [tab, setTab] = useState<"empresa" | "equipe">("empresa");
+  const [tab, setTab] = useState<"empresa" | "equipe" | "integracoes">("empresa");
   const isAdmin = sessao.perfilSlug === "admin";
 
   return (
@@ -111,14 +124,25 @@ export function ConfiguracoesClient({
           </button>
           <button
             onClick={() => setTab("equipe")}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2 ${
               tab === "equipe"
                 ? "bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 shadow-sm"
-                : "text-zinc-500 hover:text-zinc-700"
+                : "text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"
             }`}
           >
-            <Users className="h-4 w-4 inline mr-1.5 -mt-0.5" />
+            <Users className="h-4 w-4" />
             Equipe ({usuarios.length})
+          </button>
+          <button
+            onClick={() => setTab("integracoes")}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2 ${
+              tab === "integracoes"
+                ? "bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 shadow-sm"
+                : "text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"
+            }`}
+          >
+            <Network className="h-4 w-4" />
+            Integrações Bancárias
           </button>
         </div>
 
@@ -130,6 +154,11 @@ export function ConfiguracoesClient({
         {/* Tab: Equipe */}
         {tab === "equipe" && (
           <EquipeTab usuarios={usuarios} isAdmin={isAdmin} />
+        )}
+
+        {/* Tab: Integrações */}
+        {tab === "integracoes" && (
+          <IntegracoesTab bancos={bancos} isAdmin={isAdmin} />
         )}
       </div>
     </div>
@@ -428,6 +457,112 @@ function EquipeTab({ usuarios, isAdmin }: { usuarios: Usuario[]; isAdmin: boolea
             })}
           </tbody>
         </table>
+      </div>
+    </div>
+  );
+}
+
+// ─── Integrações Tab ───────────────────────────────────────────
+
+function IntegracoesTab({ bancos, isAdmin }: { bancos: BancoConfig[]; isAdmin: boolean }) {
+  const router = useRouter();
+  const [salvando, setSalvando] = useState<string | null>(null);
+
+  async function toggleIntegracao(id: string, permiteIntegracao: boolean) {
+    if (!isAdmin) return;
+    setSalvando(id);
+    await fetch("/api/bancos", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, permiteIntegracao }),
+    });
+    setSalvando(null);
+    router.refresh();
+  }
+
+  async function salvarApiKey(id: string, token: string) {
+    if (!isAdmin) return;
+    setSalvando(id);
+    await fetch("/api/bancos", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, credenciaisApi: { token } }),
+    });
+    setSalvando(null);
+    router.refresh();
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-lg font-semibold flex items-center gap-2">
+            <Network className="h-5 w-5 text-violet-600" />
+            Automação Bancária (APIs)
+          </h2>
+          <p className="text-sm text-zinc-500 mt-1">
+            Configure os tokens de integração para que as propostas sejam digitadas automaticamente ao entrarem em "DIGITADA".
+          </p>
+        </div>
+      </div>
+
+      {!isAdmin && (
+        <div className="rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 px-4 py-3 text-sm text-amber-700 dark:text-amber-300">
+          ⚠️ Apenas administradores podem configurar APIs bancárias.
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {bancos.map((b) => (
+          <div key={b.id} className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 p-6 flex flex-col transition hover:shadow-lg">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center font-bold text-zinc-400">
+                  {b.nome.substring(0,2).toUpperCase()}
+                </div>
+                <h3 className="font-bold text-lg">{b.nome}</h3>
+              </div>
+              
+              <button
+                disabled={!isAdmin || salvando === b.id}
+                onClick={() => toggleIntegracao(b.id, !b.permiteIntegracao)}
+                className={`p-2 rounded-full transition ${b.permiteIntegracao ? 'bg-emerald-100 text-emerald-600' : 'bg-zinc-100 text-zinc-400'}`}
+                title={b.permiteIntegracao ? "Desativar Integração" : "Ativar Integração"}
+              >
+                {salvando === b.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Power className="w-4 h-4" />}
+              </button>
+            </div>
+
+            <div className="space-y-2 flex-1">
+              <label className="text-sm font-medium text-zinc-500">API Token / Chave Webhook</label>
+              <div className="flex gap-2">
+                <input 
+                  type="password"
+                  disabled={!isAdmin || !b.permiteIntegracao}
+                  placeholder={b.permiteIntegracao ? "Colar Token do Banco..." : "Ative a integração primeiro"}
+                  defaultValue={b.credenciaisApi?.token || ""}
+                  onBlur={(e) => {
+                    if (e.target.value !== (b.credenciaisApi?.token || "")) {
+                      salvarApiKey(b.id, e.target.value);
+                    }
+                  }}
+                  className="flex-1 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/50 transition disabled:opacity-50"
+                />
+              </div>
+            </div>
+
+            {b.permiteIntegracao && b.credenciaisApi?.token && (
+              <div className="mt-4 flex items-center gap-2 text-xs font-medium text-emerald-600 bg-emerald-50 dark:bg-emerald-900/10 px-3 py-2 rounded-lg">
+                <CheckCircle2 className="w-4 h-4" /> Integração configurada e ativa
+              </div>
+            )}
+          </div>
+        ))}
+        {bancos.length === 0 && (
+          <div className="col-span-full text-center py-12 text-zinc-500">
+            Nenhum banco cadastrado. Vá em Bancos/Convênios para adicionar o primeiro.
+          </div>
+        )}
       </div>
     </div>
   );

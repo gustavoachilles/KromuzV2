@@ -12,7 +12,7 @@ export const metadata = {
 export default async function ConfiguracoesPage() {
   const sessao = await getSessionEmpresa();
 
-  const [empresa, usuarios] = await Promise.all([
+  const [empresa, usuarios, bancos] = await Promise.all([
     prisma.empresa.findUnique({
       where: { id: sessao.empresaId },
       select: {
@@ -41,12 +41,24 @@ export default async function ConfiguracoesPage() {
       },
       orderBy: [{ ativo: "desc" }, { nome: "asc" }],
     }),
+    prisma.banco.findMany({
+      where: { empresaId: sessao.empresaId },
+      select: {
+        id: true,
+        nome: true,
+        logoUrl: true,
+        permiteIntegracao: true,
+        credenciaisApi: true
+      },
+      orderBy: { nome: "asc" }
+    })
   ]);
 
   return (
     <ConfiguracoesClient
       empresa={empresa!}
       usuarios={usuarios}
+      bancos={bancos}
       sessao={{
         userId: sessao.userId,
         perfilSlug: sessao.perfilSlug,

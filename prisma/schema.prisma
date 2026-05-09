@@ -51,6 +51,7 @@ model Empresa {
   pipelineColunas      PipelineColuna[]
   metas                Meta[]
   simulacoes           SimulacaoCredito[]
+  faturasBanco         FaturaBanco[]
 
   @@index([status])
   @@map("empresa")
@@ -351,6 +352,7 @@ model RoteiroOperacional {
   status          String   @default("rascunho")
   arquivoPdfUrl   String?  @map("arquivo_pdf_url")
   regrasExtraidas Int      @default(0) @map("regras_extraidas")
+
   createdAt       DateTime @default(now()) @map("created_at")
   updatedAt       DateTime @updatedAt @map("updated_at")
 
@@ -359,6 +361,36 @@ model RoteiroOperacional {
 
   @@index([empresaId, bancoId])
   @@map("roteiro_operacional")
+  @@schema("public")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// FINANCEIRO / FATURAMENTO (Sprint 17)
+// ─────────────────────────────────────────────────────────────────────────────
+
+model FaturaBanco {
+  id              String   @id @default(uuid()) @db.Uuid
+  empresaId       String   @map("empresa_id") @db.Uuid
+  bancoNome       String   @map("banco_nome")
+  
+  codigoLote      String   @unique @map("codigo_lote") // Ex: LOTE-PAN-001
+  status          String   @default("PENDENTE") // PENDENTE, PAGA, CANCELADA
+  
+  dataEmissao     DateTime @default(now()) @map("data_emissao")
+  dataVencimento  DateTime? @map("data_vencimento")
+  dataPagamento   DateTime? @map("data_pagamento")
+  
+  valorTotal      Float    @map("valor_total")
+  observacoes     String?
+  
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  propostas       Proposta[]
+  empresa         Empresa  @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+
+  @@index([empresaId, bancoNome, status])
+  @@map("fatura_banco")
   @@schema("public")
 }
 
@@ -475,6 +507,10 @@ model Proposta {
   createdAt       DateTime       @default(now()) @map("created_at")
   updatedAt       DateTime       @updatedAt @map("updated_at")
 
+  // Links Financeiros
+  faturaBancoId   String?        @map("fatura_banco_id") @db.Uuid
+  faturaBanco     FaturaBanco?   @relation(fields: [faturaBancoId], references: [id])
+
   empresa Empresa @relation(fields: [empresaId], references: [id], onDelete: Cascade)
 
   @@index([empresaId, status])
@@ -519,7 +555,7 @@ model Lead {
 
   // Operação potencial
   tipoOperacao    TipoOperacao? @map("tipo_operacao")
-  valorEstimado   Float?        @map("valor_estimado")
+  valorLiberado   Float?        @map("valor_liberado")
   bancoPreferido  String?       @map("banco_preferido")
   convenioNome    String?       @map("convenio_nome")
 
@@ -628,5 +664,107 @@ model SimulacaoCredito {
 
   @@index([empresaId, createdAt(sort: Desc)])
   @@map("simulacao_credito")
+  @@schema("public")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// OMNICHANNEL & AUTOMAÇÃO DE IA (Sprint 18)
+// ─────────────────────────────────────────────────────────────────────────────
+
+model CanalComunicacao {
+  id              String   @id @default(uuid()) @db.Uuid
+  empresaId       String   @map("empresa_id") @db.Uuid
+  tipo            String   // WHATSAPP, INSTAGRAM, FACEBOOK
+  nomeCanal       String   @map("nome_canal") // Ex: "WhatsApp Principal"
+  identificador   String?  // Número ou @ do insta
+  credenciaisApi  Json     @default("{}") @map("credenciais_api") @db.JsonB
+  ativo           Boolean  @default(true)
+  
+  // Configurações de IA
+  botAtivo        Boolean  @default(false) @map("bot_ativo")
+  promptBase      String?  @map("prompt_base") @db.Text
+  
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  conversas       Conversa[]
+  empresa         Empresa  @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+
+  @@index([empresaId, tipo])
+  @@map("canal_comunicacao")
+  @@schema("public")
+}
+
+model Conversa {
+  id              String   @id @default(uuid()) @db.Uuid
+  empresaId       String   @map("empresa_id") @db.Uuid
+  canalId         String   @map("canal_id") @db.Uuid
+  leadId          String?  @map("lead_id") @db.Uuid
+  
+  clienteNome     String   @map("cliente_nome")
+  clienteContato  String   @map("cliente_contato") // número de telefone ou ID social
+  
+  status          String   @default("AGUARDANDO_IA") // AGUARDANDO_IA, ABERTO, FECHADO
+  vendedorId      String?  @map("vendedor_id") @db.Uuid
+  
+  ultimaMensagem  String?  @map("ultima_mensagem")
+  lida            Boolean  @default(false)
+  
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  mensagens       Mensagem[]
+  canal           CanalComunicacao @relation(fields: [canalId], references: [id], onDelete: Cascade)
+  lead            Lead?            @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  vendedor        UsuarioPerfil?   @relation(fields: [vendedorId], references: [id], onDelete: SetNull)
+  empresa         Empresa          @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+
+  @@index([empresaId, status])
+  @@index([empresaId, canalId])
+  @@map("conversa")
+  @@schema("public")
+}
+
+model Mensagem {
+  id              String   @id @default(uuid()) @db.Uuid
+  conversaId      String   @map("conversa_id") @db.Uuid
+  
+  remetente       String   // LEAD, VENDEDOR, IA, SISTEMA
+  conteudo        String   @db.Text
+  tipoConteudo    String   @default("TEXTO") @map("tipo_conteudo") // TEXTO, IMAGEM, AUDIO, ARQUIVO
+  urlMidia        String?  @map("url_midia")
+  
+  lida            Boolean  @default(false)
+  
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  conversa        Conversa @relation(fields: [conversaId], references: [id], onDelete: Cascade)
+
+  @@index([conversaId, createdAt])
+  @@map("mensagem")
+  @@schema("public")
+}
+
+model CampanhaDisparo {
+  id              String   @id @default(uuid()) @db.Uuid
+  empresaId       String   @map("empresa_id") @db.Uuid
+  canalId         String   @map("canal_id") @db.Uuid
+  
+  nome            String
+  mensagemTemplate String  @map("mensagem_template") @db.Text
+  status          String   @default("AGENDADA") // AGENDADA, EXECUTANDO, CONCLUIDA, CANCELADA
+  
+  dataAgendamento DateTime? @map("data_agendamento")
+  filtrosDeBase   Json     @default("{}") @map("filtros_de_base") @db.JsonB
+  
+  leadsAtingidos  Int      @default(0) @map("leads_atingidos")
+  
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  empresa         Empresa  @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+
+  @@index([empresaId, status])
+  @@map("campanha_disparo")
   @@schema("public")
 }

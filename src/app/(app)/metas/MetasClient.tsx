@@ -23,11 +23,13 @@ const meses = ["", "Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set"
 export function MetasClient({
   metas: metasIniciais,
   equipe,
+  producao,
   mesAtual,
   anoAtual,
 }: {
   metas: MetaRow[];
   equipe: Membro[];
+  producao: Record<number, Record<string, { propostas: number; volume: number }>>;
   mesAtual: number;
   anoAtual: number;
 }) {
@@ -113,7 +115,7 @@ export function MetasClient({
           ))}
         </div>
 
-        {/* Tabela */}
+        {/* Gamification Cards */}
         {metasFiltradas.length === 0 ? (
           <div className="text-center py-20">
             <Target className="h-12 w-12 text-zinc-300 mx-auto mb-4" />
@@ -121,33 +123,73 @@ export function MetasClient({
             <p className="text-sm text-zinc-400 mt-1">Clique em &quot;Definir Meta&quot; para começar.</p>
           </div>
         ) : (
-          <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 overflow-hidden">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-zinc-100 dark:border-zinc-800">
-                  <th className="text-left px-5 py-3 text-xs text-zinc-500 font-medium">Vendedor</th>
-                  <th className="text-right px-5 py-3 text-xs text-zinc-500 font-medium">Propostas</th>
-                  <th className="text-right px-5 py-3 text-xs text-zinc-500 font-medium">Volume (R$)</th>
-                  <th className="text-right px-5 py-3 text-xs text-zinc-500 font-medium">Leads</th>
-                  <th className="text-right px-5 py-3 text-xs text-zinc-500 font-medium">Comissão (R$)</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
-                {metasFiltradas.map((m) => (
-                  <tr key={m.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/30 transition">
-                    <td className="px-5 py-3 font-medium">{m.vendedorNome || m.vendedorEmail}</td>
-                    <td className="px-5 py-3 text-right tabular-nums">{m.metaPropostas ?? "—"}</td>
-                    <td className="px-5 py-3 text-right tabular-nums">
-                      {m.metaVolume ? `R$ ${m.metaVolume.toLocaleString("pt-BR")}` : "—"}
-                    </td>
-                    <td className="px-5 py-3 text-right tabular-nums">{m.metaLeads ?? "—"}</td>
-                    <td className="px-5 py-3 text-right tabular-nums">
-                      {m.metaComissao ? `R$ ${m.metaComissao.toLocaleString("pt-BR")}` : "—"}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {metasFiltradas.map((m) => {
+              const prod = producao[m.mes]?.[m.vendedorEmail] || { propostas: 0, volume: 0 };
+              
+              // Cálculos
+              const pctVolume = m.metaVolume && m.metaVolume > 0 ? (prod.volume / m.metaVolume) * 100 : 0;
+              
+              // Gamification Níveis
+              let badge = { nome: "Iniciante", cor: "bg-slate-100 text-slate-600", borda: "border-slate-200" };
+              if (pctVolume >= 150) badge = { nome: "Diamante", cor: "bg-cyan-100 text-cyan-700", borda: "border-cyan-300 shadow-[0_0_15px_rgba(34,211,238,0.4)]" };
+              else if (pctVolume >= 100) badge = { nome: "Ouro", cor: "bg-yellow-100 text-yellow-700", borda: "border-yellow-400 shadow-[0_0_10px_rgba(250,204,21,0.3)]" };
+              else if (pctVolume >= 80) badge = { nome: "Prata", cor: "bg-zinc-200 text-zinc-700", borda: "border-zinc-400" };
+              else if (pctVolume >= 50) badge = { nome: "Bronze", cor: "bg-orange-100 text-orange-800", borda: "border-orange-300" };
+
+              return (
+                <div key={m.id} className={`bg-white dark:bg-zinc-900 rounded-2xl border-2 ${badge.borda} p-6 relative overflow-hidden transition hover:-translate-y-1 hover:shadow-xl`}>
+                  {/* Badge */}
+                  <div className={`absolute top-4 right-4 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${badge.cor}`}>
+                    {badge.nome}
+                  </div>
+
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="h-10 w-10 bg-zinc-100 dark:bg-zinc-800 rounded-full flex items-center justify-center font-bold text-zinc-500">
+                      {(m.vendedorNome || m.vendedorEmail).charAt(0).toUpperCase()}
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-zinc-900 dark:text-zinc-100">{m.vendedorNome || m.vendedorEmail}</h3>
+                      <p className="text-xs text-zinc-500">{m.vendedorEmail}</p>
+                    </div>
+                  </div>
+
+                  {/* Volume Progresso */}
+                  <div className="space-y-2 mb-5">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-zinc-500">Volume Liberado</span>
+                      <span className="font-bold text-emerald-600 dark:text-emerald-400">
+                        R$ {prod.volume.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                      </span>
+                    </div>
+                    <div className="h-3 w-full bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 transition-all duration-1000 ease-out"
+                        style={{ width: `${Math.min(pctVolume, 100)}%` }}
+                      />
+                    </div>
+                    <div className="flex justify-between text-[10px] text-zinc-400 font-medium">
+                      <span>{pctVolume.toFixed(1)}% atingido</span>
+                      <span>Meta: R$ {m.metaVolume?.toLocaleString("pt-BR") || "—"}</span>
+                    </div>
+                  </div>
+
+                  {/* Propostas */}
+                  {m.metaPropostas ? (
+                    <div className="flex justify-between text-xs p-3 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl">
+                      <span className="text-zinc-500">Propostas Pagas</span>
+                      <div className="font-bold">
+                        <span className={prod.propostas >= m.metaPropostas ? "text-emerald-500" : "text-zinc-700 dark:text-zinc-300"}>
+                          {prod.propostas}
+                        </span>
+                        <span className="text-zinc-400 mx-1">/</span>
+                        <span className="text-zinc-400">{m.metaPropostas}</span>
+                      </div>
+                    </div>
+                  ) : null}
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
