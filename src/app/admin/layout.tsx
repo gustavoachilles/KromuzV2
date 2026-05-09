@@ -33,7 +33,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             <Crown className="w-4 h-4" /> Dashboard (MRR)
           </Link>
           <Link href="/admin/empresas" className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900 transition">
-            <Building2 className="w-4 h-4" /> Gestão de Corretoras
+            <Building2 className="w-4 h-4" /> Gestão de Corbans
           </Link>
           <Link href="/admin/planos" className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900 transition">
             <CreditCard className="w-4 h-4" /> Planos SaaS

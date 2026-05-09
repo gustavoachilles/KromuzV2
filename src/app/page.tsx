@@ -1,164 +1,187 @@
 import Link from "next/link";
-import {
-  Brain,
-  ArrowRight,
-  Sparkles,
-  Database,
-  Layers,
-  BarChart3,
-  Calculator,
-  BookOpen,
-  FileText,
-  Settings,
-  Shield,
+import { prisma } from "@/lib/prisma";
+import { 
+  ArrowRight, 
+  Brain, 
+  BarChart3, 
+  MessageSquare, 
+  Calculator, 
+  ShieldCheck, 
+  Rocket, 
+  CheckCircle2, 
+  FileText
 } from "lucide-react";
 
-export default function Home() {
-  return (
-    <div className="min-h-screen bg-gradient-to-b from-zinc-50 via-white to-violet-50/40 dark:from-black dark:via-zinc-950 dark:to-violet-950/20">
-      <main className="max-w-5xl mx-auto px-6 py-20 md:py-28 space-y-16">
-        <header className="space-y-6">
-          <div className="inline-flex items-center gap-2 rounded-full border border-violet-200 bg-violet-50/60 px-3 py-1 text-xs font-medium text-violet-700 dark:border-violet-900/40 dark:bg-violet-950/40 dark:text-violet-300">
-            <Sparkles className="h-3.5 w-3.5" /> Plataforma Completa · Sprints 1–6
-          </div>
-          <h1 className="text-4xl md:text-6xl font-bold tracking-tight">
-            Kromuz <span className="bg-gradient-to-tr from-violet-600 to-fuchsia-500 bg-clip-text text-transparent">V2</span>
-          </h1>
-          <p className="text-xl text-zinc-600 dark:text-zinc-400 max-w-2xl">
-            Plataforma SaaS premium de crédito consignado, reconstruída do zero com Next.js,
-            Supabase, Prisma e LLMs de última geração.
-          </p>
-          <div className="flex flex-wrap gap-3">
-            <Link
-              href="/dashboard"
-              className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-tr from-violet-600 to-fuchsia-500 px-5 py-3 text-white font-medium shadow-lg shadow-violet-500/25 hover:opacity-95 transition"
-            >
-              <BarChart3 className="h-4 w-4" /> Acessar Dashboard <ArrowRight className="h-4 w-4" />
-            </Link>
-            <Link
-              href="/login"
-              className="inline-flex items-center gap-2 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-5 py-3 text-zinc-700 dark:text-zinc-300 font-medium hover:bg-zinc-50 dark:hover:bg-zinc-800 transition"
-            >
-              Fazer Login
-            </Link>
-          </div>
-        </header>
+export const dynamic = "force-dynamic";
 
-        <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Feature
-            icon={<BarChart3 className="h-5 w-5" />}
-            titulo="Dashboard Inteligente"
-            sub="KPIs em tempo real, gráfico de regras por tipo, importações recentes e ações rápidas."
-            ativo
-          />
-          <Feature
-            icon={<Brain className="h-5 w-5" />}
-            titulo="Motor de Regras V2"
-            sub="Lê PDFs de roteiros operacionais e extrai regras via Gemini + Claude com IA generativa."
-            ativo
-          />
-          <Feature
-            icon={<Calculator className="h-5 w-5" />}
-            titulo="Simulador HISCON"
-            sub="Upload de extrato INSS para análise de oportunidades de crédito em tempo real."
-            ativo
-          />
-          <Feature
-            icon={<FileText className="h-5 w-5" />}
-            titulo="Roteiros Operacionais"
-            sub="Histórico completo de importações com status, modelo IA e navegação para regras."
-            ativo
-          />
-          <Feature
-            icon={<BookOpen className="h-5 w-5" />}
-            titulo="Regras Editáveis"
-            sub="Edição inline campo a campo com filtros por banco, tipo e busca textual."
-            ativo
-          />
-          <Feature
-            icon={<Layers className="h-5 w-5" />}
-            titulo="Bancos & Tabelas"
-            sub="CRUD completo de bancos, produtos e tabelas de coeficientes com modal de criação."
-            ativo
-          />
-          <Feature
-            icon={<Settings className="h-5 w-5" />}
-            titulo="Configurações"
-            sub="Gestão de dados da empresa, cor primária, equipe e controle de perfis (Admin/Gerente/Vendedor)."
-            ativo
-          />
-          <Feature
-            icon={<Shield className="h-5 w-5" />}
-            titulo="Multi-Tenant Nativo"
-            sub="PostgreSQL com empresaId em cada query. Isolamento total de dados entre empresas."
-            ativo
-          />
-          <Feature
-            icon={<Database className="h-5 w-5" />}
-            titulo="Esteira & CRM"
-            sub="Funil, propostas, comissões com SLA, rede Kromuz."
-          />
+export default async function LandingPage() {
+  const planos = await prisma.planoSaaS.findMany({
+    orderBy: { precoMensal: 'asc' }
+  });
+
+  return (
+    <div className="min-h-screen bg-zinc-950 text-zinc-100 font-sans selection:bg-violet-500/30">
+      
+      {/* Navbar */}
+      <nav className="fixed top-0 w-full border-b border-zinc-800 bg-zinc-950/80 backdrop-blur-md z-50">
+        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="h-8 w-8 rounded-lg bg-gradient-to-tr from-violet-600 to-fuchsia-500 flex items-center justify-center text-white font-bold shadow-lg shadow-violet-500/25">
+              K
+            </div>
+            <span className="font-bold text-xl tracking-tight">Kromuz V2</span>
+          </div>
+          <div className="flex items-center gap-4">
+            <Link href="/login" className="text-sm font-medium text-zinc-400 hover:text-white transition">Login</Link>
+            <Link href="/cadastro" className="text-sm font-medium bg-white text-zinc-950 px-4 py-2 rounded-full hover:bg-zinc-200 transition">
+              Criar Conta
+            </Link>
+          </div>
+        </div>
+      </nav>
+
+      <main>
+        {/* Hero Section */}
+        <section className="relative pt-32 pb-20 md:pt-48 md:pb-32 overflow-hidden">
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-violet-600/20 rounded-full blur-[120px] pointer-events-none" />
+          
+          <div className="max-w-5xl mx-auto px-6 text-center relative z-10 space-y-8">
+            <div className="inline-flex items-center gap-2 rounded-full border border-violet-500/30 bg-violet-500/10 px-4 py-1.5 text-sm font-medium text-violet-300">
+              <Rocket className="w-4 h-4" /> A nova era para Corbans e Promotoras
+            </div>
+            <h1 className="text-5xl md:text-7xl font-black tracking-tight text-white leading-tight">
+              A inteligência que <span className="bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-transparent">multiplica</span> suas comissões.
+            </h1>
+            <p className="text-xl text-zinc-400 max-w-2xl mx-auto leading-relaxed">
+              Descubra quanto dinheiro está dormindo na sua base de clientes. CRM, Motor de Regras e WhatsApp Automático em um único sistema SaaS.
+            </p>
+            
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
+              <Link href="/analise" className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-violet-600 to-fuchsia-600 px-8 py-4 text-white font-bold text-lg shadow-xl shadow-violet-600/30 hover:shadow-violet-600/50 hover:scale-105 transition-all">
+                Analisar minha base Grátis <ArrowRight className="w-5 h-5" />
+              </Link>
+              <Link href="/cadastro" className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full border border-zinc-700 bg-zinc-900 px-8 py-4 text-white font-bold text-lg hover:bg-zinc-800 transition">
+                Teste por 14 dias
+              </Link>
+            </div>
+          </div>
         </section>
 
-        <section className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-6 space-y-4">
-          <h2 className="text-lg font-semibold">Stack tecnológica</h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 text-xs font-medium">
-            {[
-              "Next.js 16",
-              "TypeScript 5",
-              "Tailwind 4",
-              "Supabase Postgres",
-              "Prisma 7",
-              "Vercel AI SDK 6",
-              "Gemini 3.1 Pro",
-              "Claude Sonnet 4.6",
-              "Lucide Icons",
-              "Zod 4",
-              "Multi-Tenant",
-              "RBAC (Admin/Gerente/Vendedor)",
-            ].map((s) => (
-              <span
-                key={s}
-                className="px-3 py-1.5 rounded-full bg-zinc-100 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 text-center"
-              >
-                {s}
-              </span>
-            ))}
+        {/* Features */}
+        <section className="py-24 bg-zinc-900 border-y border-zinc-800">
+          <div className="max-w-7xl mx-auto px-6">
+            <div className="text-center mb-16">
+              <h2 className="text-3xl font-bold text-white mb-4">Tudo que o seu Corban precisa</h2>
+              <p className="text-zinc-400 max-w-2xl mx-auto">Substitua até 4 ferramentas diferentes por uma plataforma única desenhada para alta performance em crédito consignado.</p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <FeatureCard 
+                icon={<Brain />}
+                title="Motor de Regras Inteligente"
+                desc="A Inteligência Artificial lê PDFs de regras bancárias e diz exatamente qual banco aprova o cliente na hora."
+              />
+              <FeatureCard 
+                icon={<MessageSquare />}
+                title="WhatsApp Omnichannel"
+                desc="Atendimento centralizado no CRM. Seus corretores conversam com os leads sem sair da esteira de vendas."
+              />
+              <FeatureCard 
+                icon={<Calculator />}
+                title="Simulador HISCON"
+                desc="Upload de extrato do INSS que cruza dados com todos os bancos e entrega a simulação perfeita em segundos."
+              />
+              <FeatureCard 
+                icon={<BarChart3 />}
+                title="Gestão de Comissões"
+                desc="Controle total sobre o que foi pago, pendente e as regras de repasse para seus vendedores."
+              />
+              <FeatureCard 
+                icon={<FileText />}
+                title="Funil de Vendas (Kanban)"
+                desc="Acompanhe o status de cada contrato em tempo real, desde a prospecção até a formalização digital."
+              />
+              <FeatureCard 
+                icon={<ShieldCheck />}
+                title="Segurança e Isolamento"
+                desc="Seus dados estão protegidos em um banco de dados Multi-Tenant, garantindo isolamento total da sua carteira."
+              />
+            </div>
+          </div>
+        </section>
+
+        {/* Pricing */}
+        <section className="py-24 bg-zinc-950">
+          <div className="max-w-7xl mx-auto px-6">
+            <div className="text-center mb-16">
+              <h2 className="text-3xl font-bold text-white mb-4">Planos simples e transparentes</h2>
+              <p className="text-zinc-400">Escolha o plano ideal para o tamanho da sua operação.</p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+              {planos.map((plano) => (
+                <div key={plano.id} className="bg-zinc-900 border border-zinc-800 rounded-3xl p-8 flex flex-col hover:border-violet-500/50 transition">
+                  <h3 className="text-xl font-bold text-white mb-2">{plano.nome}</h3>
+                  <div className="flex items-end gap-1 mb-6">
+                    <span className="text-4xl font-black text-white">
+                      {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(plano.precoMensal)}
+                    </span>
+                    <span className="text-zinc-500 mb-1">/mês</span>
+                  </div>
+                  
+                  <div className="space-y-4 mb-8 flex-1">
+                    <div className="flex items-center gap-3 text-zinc-300">
+                      <CheckCircle2 className="w-5 h-5 text-violet-500 shrink-0" />
+                      <span>Até <b>{plano.limiteUsuarios}</b> usuários</span>
+                    </div>
+                    <div className="flex items-center gap-3 text-zinc-300">
+                      <CheckCircle2 className="w-5 h-5 text-violet-500 shrink-0" />
+                      <span>Até <b>{plano.limiteLeads}</b> leads na base</span>
+                    </div>
+                    <div className="flex items-center gap-3 text-zinc-300">
+                      <CheckCircle2 className="w-5 h-5 text-violet-500 shrink-0" />
+                      <span>CRM e Funil de Vendas</span>
+                    </div>
+                    <div className="flex items-center gap-3 text-zinc-300">
+                      <CheckCircle2 className="w-5 h-5 text-violet-500 shrink-0" />
+                      <span>{plano.limiteDisparos > 0 ? `Até ${plano.limiteDisparos} disparos/mês` : 'Sem disparos em massa'}</span>
+                    </div>
+                  </div>
+
+                  <Link href="/cadastro" className="w-full text-center bg-violet-600 hover:bg-violet-700 text-white font-bold py-3 rounded-xl transition">
+                    Começar Trial
+                  </Link>
+                </div>
+              ))}
+              {planos.length === 0 && (
+                <div className="col-span-3 text-center py-12 text-zinc-500">
+                  Planos não configurados. Entre em contato com o suporte.
+                </div>
+              )}
+            </div>
           </div>
         </section>
       </main>
+
+      <footer className="border-t border-zinc-800 bg-zinc-950 py-12 text-center text-zinc-500">
+        <div className="flex items-center justify-center gap-2 mb-4">
+          <div className="h-6 w-6 rounded flex items-center justify-center bg-violet-600 text-white font-bold text-xs">K</div>
+          <span className="font-bold text-white">Kromuz</span>
+        </div>
+        <p>© {new Date().getFullYear()} Kromuz Tecnologia. Todos os direitos reservados.</p>
+      </footer>
     </div>
   );
 }
 
-function Feature({
-  icon,
-  titulo,
-  sub,
-  ativo,
-}: {
-  icon: React.ReactNode;
-  titulo: string;
-  sub: string;
-  ativo?: boolean;
-}) {
+function FeatureCard({ icon, title, desc }: { icon: React.ReactNode, title: string, desc: string }) {
   return (
-    <div
-      className={
-        "rounded-2xl border p-5 space-y-2 " +
-        (ativo
-          ? "border-violet-200 bg-gradient-to-br from-violet-50/60 to-fuchsia-50/40 dark:border-violet-900/40 dark:from-violet-950/30 dark:to-fuchsia-950/20"
-          : "border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950")
-      }
-    >
-      <div className="flex items-center gap-2 text-violet-600 dark:text-violet-400">
+    <div className="bg-zinc-950 border border-zinc-800 p-6 rounded-2xl hover:border-violet-500/30 transition group">
+      <div className="w-12 h-12 bg-zinc-900 rounded-xl border border-zinc-800 flex items-center justify-center text-violet-400 mb-6 group-hover:scale-110 group-hover:bg-violet-500/10 transition">
         {icon}
-        <span className="text-xs uppercase tracking-widest font-semibold">
-          {ativo ? "Disponível" : "Próximas sprints"}
-        </span>
       </div>
-      <p className="text-base font-semibold">{titulo}</p>
-      <p className="text-sm text-zinc-600 dark:text-zinc-400">{sub}</p>
+      <h3 className="text-xl font-bold text-white mb-3">{title}</h3>
+      <p className="text-zinc-400 leading-relaxed">{desc}</p>
     </div>
   );
 }

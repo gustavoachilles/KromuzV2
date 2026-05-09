@@ -23,7 +23,7 @@ export default async function AdminEmpresasPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-white flex items-center gap-2">
-            <Building2 className="w-6 h-6 text-violet-500" /> Gestão de Corretoras
+            <Building2 className="w-6 h-6 text-violet-500" /> Gestão de Corbans
           </h1>
           <p className="text-zinc-400 mt-1">Gerencie as assinaturas e bloqueios das {empresas.length} empresas cadastradas.</p>
         </div>
@@ -32,7 +32,7 @@ export default async function AdminEmpresasPage() {
             <Search className="w-4 h-4 text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2" />
             <input 
               type="text" 
-              placeholder="Buscar corretora..." 
+              placeholder="Buscar Corban..." 
               className="bg-zinc-900 border border-zinc-800 text-sm rounded-lg pl-9 pr-4 py-2 focus:ring-2 focus:ring-violet-500 focus:outline-none w-64 text-zinc-100 placeholder:text-zinc-600"
             />
           </div>
