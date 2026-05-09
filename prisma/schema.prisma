@@ -33,6 +33,9 @@ model Empresa {
   nivelPlataforma String    @default("inicio") @map("nivel_plataforma")
   logoUrl         String?   @map("logo_url")
   corPrimaria     String?   @map("cor_primaria")
+  asaasCustomerId String?   @map("asaas_customer_id")
+  statusAssinatura String   @default("ACTIVE") @map("status_assinatura")
+  planoSaasId     String?   @map("plano_saas_id") @db.Uuid
   createdAt       DateTime  @default(now()) @map("created_at")
   updatedAt       DateTime  @updatedAt @map("updated_at")
 
@@ -56,6 +59,9 @@ model Empresa {
   canais               CanalComunicacao[]
   conversas            Conversa[]
   campanhas            CampanhaDisparo[]
+  
+  planoSaaS            PlanoSaaS? @relation(fields: [planoSaasId], references: [id])
+  faturasSaaS          FaturaSaaS[]
 
   @@index([status])
   @@map("empresa")
@@ -69,6 +75,7 @@ model UsuarioPerfil {
   email               String
   nome                String?
   perfilSlug          String   @default("vendedor") @map("perfil_slug")
+  isSuperAdmin        Boolean  @default(false) @map("is_super_admin")
   
   // Regras de Remuneração
   tipoRemuneracao     String   @default("SEM_COMISSAO") @map("tipo_remuneracao") // SEM_COMISSAO, PERCENTUAL_FIXO, FAIXAS_META
@@ -772,5 +779,46 @@ model CampanhaDisparo {
 
   @@index([empresaId, status])
   @@map("campanha_disparo")
+  @@schema("public")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SAAS BILLING E SUPER-ADMIN
+// ─────────────────────────────────────────────────────────────────────────────
+
+model PlanoSaaS {
+  id              String   @id @default(uuid()) @db.Uuid
+  nome            String
+  precoMensal     Float    @map("preco_mensal")
+  limiteUsuarios  Int      @default(5) @map("limite_usuarios")
+  limiteLeads     Int      @default(1000) @map("limite_leads")
+  limiteDisparos  Int      @default(0) @map("limite_disparos")
+  
+  empresas        Empresa[]
+
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  @@map("plano_saas")
+  @@schema("public")
+}
+
+model FaturaSaaS {
+  id              String   @id @default(uuid()) @db.Uuid
+  empresaId       String   @map("empresa_id") @db.Uuid
+  asaasInvoiceId  String?  @map("asaas_invoice_id")
+  valor           Float
+  status          String   @default("PENDING") // PENDING, PAID, OVERDUE
+  vencimento      DateTime @db.Date
+  linkPagamento   String?  @map("link_pagamento")
+  
+  empresa         Empresa  @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  @@index([empresaId])
+  @@index([status])
+  @@map("fatura_saas")
   @@schema("public")
 }
