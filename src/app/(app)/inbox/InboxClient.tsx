@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { MessageSquare, Instagram, Facebook, Bot, Send, Search, CheckCircle2, Clock } from "lucide-react";
+import { MessageSquare, Camera, ThumbsUp, Bot, Send, Search, CheckCircle2, Clock } from "lucide-react";
 
 export function InboxClient({ conversas: initConversas, sessao }: { conversas: any[], sessao: any }) {
   const [conversas, setConversas] = useState(initConversas);
@@ -11,8 +11,8 @@ export function InboxClient({ conversas: initConversas, sessao }: { conversas: a
 
   const getIcon = (tipo: string) => {
     if (tipo === "WHATSAPP") return <MessageSquare className="w-4 h-4 text-emerald-500" />;
-    if (tipo === "INSTAGRAM") return <Instagram className="w-4 h-4 text-pink-500" />;
-    if (tipo === "FACEBOOK") return <Facebook className="w-4 h-4 text-blue-500" />;
+    if (tipo === "INSTAGRAM") return <Camera className="w-4 h-4 text-pink-500" />;
+    if (tipo === "FACEBOOK") return <ThumbsUp className="w-4 h-4 text-blue-500" />;
     return <MessageSquare className="w-4 h-4 text-zinc-500" />;
   };
 

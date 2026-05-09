@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { MessageSquare, Instagram, Facebook, Bot, Send, CheckCircle2, X } from "lucide-react";
+import { MessageSquare, Bot, Send, CheckCircle2, X } from "lucide-react";
 
 export function InboxDrawer({ isOpen, onClose, lead, sessao }: { isOpen: boolean, onClose: () => void, lead: any, sessao: any }) {
   const [mensagens, setMensagens] = useState<any[]>([]);
