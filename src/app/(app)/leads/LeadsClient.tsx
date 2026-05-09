@@ -100,6 +100,7 @@ export function LeadsClient({
     numeroBeneficio: "", especieBeneficio: "", margemLivre: "", margemRmc: "", margemRcc: "",
     tipoOperacao: "", valorEstimado: "", bancoPreferido: "", convenioNome: "",
     origem: "manual", canalContato: "", observacoes: "",
+    arquivosExistem: [] as any[],
   });
   
   const [novaColunaNome, setNovaColunaNome] = useState("");
@@ -135,7 +136,8 @@ export function LeadsClient({
       id: "", nome: "", cpf: "", telefone: "", email: "", uf: "", cidade: "",
       numeroBeneficio: "", especieBeneficio: "", margemLivre: "", margemRmc: "", margemRcc: "",
       tipoOperacao: "", valorEstimado: "", bancoPreferido: "", convenioNome: "",
-      origem: "manual", canalContato: "", observacoes: ""
+      tipoOperacao: "", valorEstimado: "", bancoPreferido: "", convenioNome: "",
+      origem: "manual", canalContato: "", observacoes: "", arquivosExistem: []
     });
     setArquivosPendentes([]);
     setErro(null);
