@@ -7,16 +7,6 @@ const nextConfig: NextConfig = {
   // Configurações experimentais para Vercel
   serverExternalPackages: ["@prisma/client"],
 
-  // Redirecionamentos
-  async redirects() {
-    return [
-      {
-        source: "/",
-        destination: "/dashboard",
-        permanent: false,
-      },
-    ];
-  },
 
   // Headers de segurança
   async headers() {
