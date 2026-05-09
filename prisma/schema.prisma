@@ -106,6 +106,8 @@ model Banco {
   parcelasMinimasSrcc     Int      @default(0) @map("parcelas_minimas_srcc")
   observacoes             String?
   logoUrl                 String?  @map("logo_url")
+  permiteIntegracao       Boolean  @default(false) @map("permite_integracao")
+  credenciaisApi          Json?    @map("credenciais_api")
   createdAt               DateTime @default(now()) @map("created_at")
   updatedAt               DateTime @updatedAt @map("updated_at")
 
@@ -436,6 +438,7 @@ model Proposta {
   bancoId         String?        @map("banco_id") @db.Uuid
   produtoId       String?        @map("produto_id") @db.Uuid
   convenioId      String?        @map("convenio_id") @db.Uuid
+  leadId          String?        @map("lead_id") @db.Uuid
 
   // Cliente
   clienteNome     String         @map("cliente_nome")
@@ -447,6 +450,8 @@ model Proposta {
   // Operação
   tipoOperacao    TipoOperacao   @map("tipo_operacao")
   status          StatusProposta @default(RASCUNHO)
+  integradaBanco  Boolean        @default(false) @map("integrada_banco")
+  codigoPropostaBanco String?    @map("codigo_proposta_banco")
   valorParcela    Float?         @map("valor_parcela")
   valorLiberado   Float?         @map("valor_liberado")
   prazo           Int?

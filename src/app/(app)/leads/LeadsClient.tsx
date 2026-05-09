@@ -94,6 +94,7 @@ export function LeadsClient({
   const [leads, setLeads] = useState(leadsIniciais);
   const [modal, setModal] = useState(false);
   const [modalColuna, setModalColuna] = useState(false);
+  const [integracaoModal, setIntegracaoModal] = useState<{aberto: boolean, leadId: string, banco: string} | null>(null);
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
 
@@ -300,12 +301,51 @@ export function LeadsClient({
       body: JSON.stringify({ status: newStatus }),
     });
 
+    if (newStatus.toUpperCase() === "VENDIDO" || newStatus.toUpperCase() === "GANHO") {
+      const lead = leads.find(l => l.id === draggableId);
+      if (lead?.bancoPreferido) {
+        setIntegracaoModal({ aberto: true, leadId: draggableId, banco: lead.bancoPreferido });
+      } else {
+        toast.info("Lead movido para VENDIDO. Atribua um banco para gerar a proposta na Esteira.");
+      }
+    }
+
     if (newStatus === "PAGO" || newStatus === "Pago") {
       try { await fetch(`/api/leads/${draggableId}/comissao`, { method: "POST" }); } catch (e) {}
     }
 
     router.refresh();
   };
+
+  async function handleIntegracaoConfirm(integrar: boolean) {
+    if (!integracaoModal) return;
+    setSalvando(true);
+    
+    try {
+      const res = await fetch("/api/propostas/integrar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ leadId: integracaoModal.leadId })
+      });
+      
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data.error || "Erro ao processar integração.");
+      } else {
+        if (data.integrada) {
+          toast.success(`Proposta criada na Esteira e ENVIADA com sucesso para o banco ${integracaoModal.banco}!`);
+        } else {
+          toast.success(`Proposta criada na Esteira para o banco ${integracaoModal.banco}.`);
+        }
+      }
+    } catch (e) {
+      toast.error("Erro de conexão ao integrar proposta.");
+    } finally {
+      setSalvando(false);
+      setIntegracaoModal(null);
+      router.refresh();
+    }
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-zinc-50 to-white dark:from-zinc-950 dark:to-black">
@@ -645,6 +685,39 @@ export function LeadsClient({
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Integração Automática */}
+      {integracaoModal?.aberto && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-2xl w-full max-w-md mx-4 overflow-hidden">
+            <div className="p-6 text-center">
+              <div className="w-16 h-16 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Building2 className="w-8 h-8" />
+              </div>
+              <h2 className="text-xl font-bold mb-2">Integração Bancária</h2>
+              <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-6">
+                Este Lead foi movido para VENDIDO. Deseja enviar a proposta automaticamente via API/Robô para o <strong>{integracaoModal.banco}</strong>?
+              </p>
+              <div className="flex flex-col gap-3">
+                <button
+                  onClick={() => handleIntegracaoConfirm(true)}
+                  disabled={salvando}
+                  className="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 text-white font-bold shadow-lg shadow-emerald-500/30 hover:opacity-90 transition disabled:opacity-50"
+                >
+                  {salvando ? "Processando..." : `Sim, enviar para o ${integracaoModal.banco}`}
+                </button>
+                <button
+                  onClick={() => handleIntegracaoConfirm(false)}
+                  disabled={salvando}
+                  className="w-full py-3 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 font-bold hover:bg-zinc-200 dark:hover:bg-zinc-700 transition disabled:opacity-50"
+                >
+                  {salvando ? "Processando..." : "Não, apenas registrar na Esteira Interna"}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

@@ -52,6 +52,8 @@ const AtualizarBancoSchema = z.object({
   multiplicadorMaxParcela: z.number().nullable().optional(),
   prazoMaximo: z.number().int().nullable().optional(),
   observacoes: z.string().nullable().optional(),
+  permiteIntegracao: z.boolean().optional(),
+  credenciaisApi: z.any().optional(),
 });
 
 // PATCH /api/bancos/[id] — edita banco

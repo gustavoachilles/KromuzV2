@@ -47,6 +47,8 @@ type BancoCompleto = {
   ativo: boolean;
   ativoSimulacao: boolean;
   observacoes: string | null;
+  permiteIntegracao: boolean;
+  credenciaisApi: any;
   fatorSaldo: number | null;
   prazoMaximo: number | null;
   produtosCredito: Produto[];
@@ -62,7 +64,7 @@ export function BancoDetalheClient({
   empresaId: string;
 }) {
   const router = useRouter();
-  const [tab, setTab] = useState<"tabelas" | "regras">("tabelas");
+  const [tab, setTab] = useState<"tabelas" | "regras" | "integracao">("tabelas");
   const [modalTabela, setModalTabela] = useState(false);
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
@@ -75,6 +77,40 @@ export function BancoDetalheClient({
     comissaoFlatPct: "",
     comissaoRepassePct: "",
   });
+
+  const [formIntegracao, setFormIntegracao] = useState({
+    permiteIntegracao: banco.permiteIntegracao || false,
+    credenciaisApi: banco.credenciaisApi ? JSON.stringify(banco.credenciaisApi, null, 2) : "{\n  \"client_id\": \"\",\n  \"client_secret\": \"\"\n}",
+  });
+  const [salvandoIntegracao, setSalvandoIntegracao] = useState(false);
+
+  async function salvarIntegracao(e: React.FormEvent) {
+    e.preventDefault();
+    setSalvandoIntegracao(true);
+    setErro(null);
+    try {
+      const parsedCredenciais = JSON.parse(formIntegracao.credenciaisApi);
+      const res = await fetch(`/api/bancos/${banco.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          permiteIntegracao: formIntegracao.permiteIntegracao,
+          credenciaisApi: parsedCredenciais,
+        }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        setErro(data.error);
+      } else {
+        alert("Configurações de integração salvas com sucesso!");
+        router.refresh();
+      }
+    } catch (err) {
+      setErro("Formato JSON inválido para as credenciais.");
+    } finally {
+      setSalvandoIntegracao(false);
+    }
+  }
 
   async function criarTabela(e: React.FormEvent) {
     e.preventDefault();
@@ -201,7 +237,69 @@ export function BancoDetalheClient({
             <BookOpen className="h-4 w-4 inline mr-1.5 -mt-0.5" />
             Regras Operacionais
           </button>
+          <button
+            onClick={() => setTab("integracao")}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
+              tab === "integracao"
+                ? "bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 shadow-sm"
+                : "text-zinc-500 hover:text-zinc-700"
+            }`}
+          >
+            Integração API
+          </button>
         </div>
+
+        {/* Tab: Integração API */}
+        {tab === "integracao" && (
+          <form onSubmit={salvarIntegracao} className="space-y-6 max-w-2xl bg-white dark:bg-zinc-900 p-6 rounded-2xl border border-zinc-200 dark:border-zinc-800">
+            <div>
+              <h2 className="text-lg font-semibold mb-1">Configurações de Integração (Robô/API)</h2>
+              <p className="text-sm text-zinc-500">Configure as credenciais deste banco para permitir a digitação automática de propostas na esteira.</p>
+            </div>
+
+            {erro && tab === "integracao" && (
+              <div className="rounded-lg bg-red-50 dark:bg-red-950/30 border border-red-200 p-4 text-sm text-red-700">
+                {erro}
+              </div>
+            )}
+
+            <label className="flex items-center gap-3 cursor-pointer">
+              <input type="checkbox" className="w-5 h-5 rounded border-zinc-300 text-violet-600 focus:ring-violet-500" 
+                checked={formIntegracao.permiteIntegracao} 
+                onChange={e => setFormIntegracao({...formIntegracao, permiteIntegracao: e.target.checked})} 
+              />
+              <span className="text-sm font-medium">Ativar digitação automática para este banco</span>
+            </label>
+
+            {formIntegracao.permiteIntegracao && (
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                  Credenciais da API (Formato JSON)
+                </label>
+                <textarea
+                  required
+                  rows={6}
+                  value={formIntegracao.credenciaisApi}
+                  onChange={(e) => setFormIntegracao({ ...formIntegracao, credenciaisApi: e.target.value })}
+                  className="w-full font-mono text-sm rounded-lg border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-950 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-violet-500/50"
+                  placeholder='{ "client_id": "...", "client_secret": "..." }'
+                />
+                <p className="text-xs text-zinc-500 mt-1">Insira as chaves fornecidas pelo banco. O formato deve ser um JSON válido.</p>
+              </div>
+            )}
+
+            <div className="pt-2">
+              <button
+                type="submit"
+                disabled={salvandoIntegracao}
+                className="flex items-center gap-2 rounded-xl bg-violet-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-violet-700 disabled:opacity-50 transition"
+              >
+                {salvandoIntegracao ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                Salvar Credenciais
+              </button>
+            </div>
+          </form>
+        )}
 
         {/* Tab: Tabelas */}
         {tab === "tabelas" && (
