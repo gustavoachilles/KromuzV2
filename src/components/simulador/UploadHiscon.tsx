@@ -62,6 +62,16 @@ export function UploadHiscon({ onProcessamentoCompleto, empresaId }: UploadHisco
           setFile(null);
         }
       };
+
+      reader.onerror = () => {
+        setError("Erro ao ler o arquivo no navegador.");
+        setLoading(false);
+      };
+    } catch (err: any) {
+      setError(err.message || "Ocorreu um erro inesperado.");
+      setLoading(false);
+      setFile(null);
+    }
   };
 
   return (
