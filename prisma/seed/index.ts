@@ -141,7 +141,96 @@ async function main() {
   }
   console.log(`   ✓ ${BANCOS.length} bancos + ${BANCOS.length * PRODUTOS_PADRAO.length} produtos`);
 
-  console.log("✅ Seed concluído.");
+  // --- MÓDULO DE REGRAS OPERACIONAIS E COEFICIENTES ---
+  console.log("🌱 Seed Kromuz V2 — Injetando Regras Operacionais e Coeficientes...");
+  
+  const BANCOS_LEGADOS = [
+    { nome: "Daycoval", minPag: 12, minRest: 12, minParc: 100, port: true, refin: true, portRefin: true, fatorSaldo: 0.85 },
+    { nome: "BMG", minPag: 12, minRest: 12, minParc: 80, port: true, refin: true, portRefin: true, fatorSaldo: 0.72 },
+    { nome: "PAN", minPag: 12, minRest: 12, minParc: 80, port: true, refin: true, portRefin: true, fatorSaldo: 0.74 },
+    { nome: "Facta", minPag: 12, minRest: 12, minParc: 80, port: true, refin: true, portRefin: true, fatorSaldo: 0.73 },
+    { nome: "Itaú", minPag: 15, minRest: 12, minParc: 150, port: true, refin: true, portRefin: false, fatorSaldo: 0.75 },
+    { nome: "Bradesco", minPag: 15, minRest: 12, minParc: 150, port: true, refin: true, portRefin: false, fatorSaldo: 0.75 },
+    { nome: "Caixa", minPag: 15, minRest: 18, minParc: 100, port: true, refin: true, portRefin: false, fatorSaldo: 0.73 },
+    { nome: "Banco do Brasil", minPag: 15, minRest: 12, minParc: 100, port: true, refin: true, portRefin: false, fatorSaldo: 0.72 },
+    { nome: "Santander", minPag: 12, minRest: 12, minParc: 100, port: true, refin: true, portRefin: true, fatorSaldo: 0.72 },
+    { nome: "Safra", minPag: 12, minRest: 12, minParc: 80, port: true, refin: true, portRefin: true, fatorSaldo: 0.72 },
+    { nome: "C6 Bank", minPag: 12, minRest: 12, minParc: 80, port: true, refin: true, portRefin: true, fatorSaldo: 0.73 },
+    { nome: "Banrisul", minPag: 12, minRest: 12, minParc: 80, port: true, refin: true, portRefin: false, fatorSaldo: 0.72 },
+    { nome: "Sicoob", minPag: 12, minRest: 12, minParc: 80, port: true, refin: true, portRefin: false, fatorSaldo: 0.72 },
+  ];
+
+  for (const b of BANCOS_LEGADOS) {
+    const bancoDb = await prisma.banco.findFirst({
+      where: { empresaId: empresa.id, nome: b.nome }
+    });
+
+    if (!bancoDb) continue;
+    
+    await prisma.banco.update({
+      where: { id: bancoDb.id },
+      data: { fatorSaldo: b.fatorSaldo }
+    });
+
+    const produtos = await prisma.produtoCredito.findMany({
+      where: { bancoId: bancoDb.id }
+    });
+
+    for (const prod of produtos) {
+      // Cria a tabela padrão 84x
+      const tabelaExistente = await prisma.tabelaCoeficiente.findFirst({
+        where: { bancoId: bancoDb.id, produtoId: prod.id, prazo: 84 }
+      });
+
+      if (!tabelaExistente) {
+        await prisma.tabelaCoeficiente.create({
+          data: {
+            empresaId: empresa.id,
+            bancoId: bancoDb.id,
+            produtoId: prod.id,
+            convenioId: inss?.id,
+            nome: `Tabela Padrão INSS 84x (${b.nome})`,
+            prazo: 84,
+            taxaJurosMensal: 1.66,
+            coeficiente: 0.0225, // Fator aproximado
+            ativo: true
+          }
+        });
+      }
+
+      // Cria as regras para o produto
+      const regraExistente = await prisma.regraProdutoCredito.findFirst({
+        where: { bancoId: bancoDb.id, produtoId: prod.id }
+      });
+
+      if (!regraExistente) {
+        await prisma.regraProdutoCredito.create({
+          data: {
+            empresaId: empresa.id,
+            bancoId: bancoDb.id,
+            bancoNome: bancoDb.nome,
+            produtoId: prod.id,
+            produtoNome: prod.nomeProduto,
+            tipoOperacao: prod.tipoProduto,
+            ativa: true,
+            prioridade: 1,
+            taxaMinimaAm: 1.0,
+            taxaMaximaAm: 1.66,
+            trocoMinimoLiberado: 100,
+            portPermitido: prod.tipoProduto === "PORTABILIDADE" ? b.port : undefined,
+            portParcelasMinPagas: prod.tipoProduto === "PORTABILIDADE" ? b.minPag : undefined,
+            refinPermitido: prod.tipoProduto === "REFINANCIAMENTO" ? b.refin : undefined,
+            refinParcelasMinPagas: prod.tipoProduto === "REFINANCIAMENTO" ? b.minPag : undefined,
+            refinValorMin: b.minParc,
+            faixasEtarias: [{ idade_min: 21, idade_max: 73 }],
+            especies: { aceitas: [21, 32, 41, 42, 46, 92] }
+          }
+        });
+      }
+    }
+  }
+
+  console.log("✅ Seed concluído com Regras Operacionais e Tabelas de Coeficientes!");
 }
 
 main()
