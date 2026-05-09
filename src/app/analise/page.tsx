@@ -122,6 +122,19 @@ export default function AnaliseIscaPage() {
                 <ShieldCheck className="w-4 h-4 text-emerald-500" />
                 Seus dados são processados e deletados imediatamente (LGPD)
               </div>
+
+              {/* Aggressive CTA Section */}
+              <div className="pt-10 mt-10 border-t border-zinc-800/50">
+                <div className="bg-gradient-to-r from-violet-900/40 to-fuchsia-900/40 border border-violet-500/20 rounded-3xl p-8 flex flex-col md:flex-row items-center justify-between gap-6 hover:border-violet-500/40 transition">
+                  <div className="text-left space-y-2">
+                    <h3 className="text-xl font-bold text-white">Pronto para dominar o mercado?</h3>
+                    <p className="text-sm text-zinc-400 max-w-sm">Não quer esperar a análise? Pule esta etapa e comece agora o seu Trial de 14 dias para acessar o CRM e o Motor de Regras completos.</p>
+                  </div>
+                  <Link href="/cadastro" className="w-full md:w-auto flex items-center justify-center gap-2 rounded-xl bg-white text-zinc-950 px-8 py-4 text-sm font-bold shadow-xl hover:bg-zinc-200 hover:scale-105 transition-all whitespace-nowrap">
+                    Testar o Kromuz Grátis <ArrowRight className="w-4 h-4" />
+                  </Link>
+                </div>
+              </div>
             </div>
           )}
 
