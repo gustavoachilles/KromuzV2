@@ -10,10 +10,11 @@ export const metadata = {
 };
 
 export default async function DashboardPage() {
-  const sessao = await getSessionEmpresa();
-  const eid = sessao.empresaId;
+  try {
+    const sessao = await getSessionEmpresa();
+    const eid = sessao.empresaId;
 
-  const [
+    const [
     totalBancos,
     totalBancosSimulacao,
     totalProdutos,
@@ -110,4 +111,16 @@ export default async function DashboardPage() {
       regrasPorTipo={regrasPorTipo}
     />
   );
+  } catch (err: any) {
+    if (err.message && err.message.includes("NEXT_REDIRECT")) {
+      throw err; // Allow redirect to work
+    }
+    return (
+      <div className="p-8 text-red-500 font-mono">
+        <h1>ERRO INTERNO DETECTADO:</h1>
+        <pre>{err.message || String(err)}</pre>
+        <pre className="text-xs opacity-50 mt-4">{err.stack}</pre>
+      </div>
+    );
+  }
 }

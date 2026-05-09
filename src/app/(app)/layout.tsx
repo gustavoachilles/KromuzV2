@@ -4,7 +4,8 @@ import { SidebarNav } from "@/components/layout/SidebarNav";
 import { getSessionEmpresa } from "@/lib/session";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
-  const sessao = await getSessionEmpresa();
+  try {
+    const sessao = await getSessionEmpresa();
 
   return (
     <div className="min-h-screen flex">
@@ -33,4 +34,16 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <main className="flex-1 min-w-0 h-screen overflow-y-auto">{children}</main>
     </div>
   );
+  } catch (err: any) {
+    if (err.message && err.message.includes("NEXT_REDIRECT")) {
+      throw err; // Allow redirect to work
+    }
+    return (
+      <div className="min-h-screen bg-zinc-950 p-8 text-red-500 font-mono">
+        <h1>ERRO INTERNO DETECTADO (Layout):</h1>
+        <pre>{err.message || String(err)}</pre>
+        <pre className="text-xs opacity-50 mt-4">{err.stack}</pre>
+      </div>
+    );
+  }
 }
