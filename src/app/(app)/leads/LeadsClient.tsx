@@ -80,7 +80,8 @@ export function LeadsClient({
   contagens,
   colunas,
   bancos = [],
-  convenios = []
+  convenios = [],
+  perfilUsuario
 }: {
   leads: Lead[];
   contagens: Contagem[];
