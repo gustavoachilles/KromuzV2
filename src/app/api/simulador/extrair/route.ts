@@ -28,21 +28,23 @@ export async function POST(req: NextRequest) {
 
     const buffer = Buffer.from(pdfBase64, "base64");
 
-    // 1. Tenta extrair dados via Robô (Parser)
-    console.log("📄 [Simulador] Iniciando extração do PDF com o Robô...");
+    // 1. Tenta extrair dados via Robô (Parser Local)
+    console.log("📄 [Simulador] Iniciando extração do PDF com o Robô Local...");
     let hiscon;
     try {
       hiscon = await parseHisconPdf(buffer);
       console.log("✅ [Simulador] Robô leu o PDF com sucesso!");
     } catch (e: any) {
-      console.warn("⚠️ [Simulador] Robô falhou, tentando via IA...", e.message);
+      console.warn("⚠️ [Simulador] Robô falhou, tentando via IA como fallback...", e.message);
       const extracao = await processarHisconV3(pdfBase64);
+      
       if (!extracao.ok) {
+        console.error("❌ [Simulador] IA também falhou:", extracao.erro);
         return NextResponse.json({ error: extracao.erro }, { status: 422 });
+      } else {
+        hiscon = extracao.dados;
+        console.log("✅ [Simulador] IA leu o PDF com sucesso!");
       }
-      hiscon = extracao.dados;
-      console.log("✅ [Simulador] IA leu o PDF com sucesso!");
-      console.log("📦 [Debug] DADOS BRUTOS DA IA:", JSON.stringify(hiscon, null, 2));
     }
 
     // 2. Mapeia para os tipos do simulador
