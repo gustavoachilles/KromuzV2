@@ -5,6 +5,9 @@ import { calcularOportunidades, ClienteSimulacao, ContratoAtivo } from "@/lib/mo
 import { prisma } from "@/lib/prisma";
 import { getSessionEmpresaApi } from "@/lib/session";
 
+export const maxDuration = 60; // 60 segundos (limite para Vercel Pro)
+export const dynamic = "force-dynamic";
+
 export async function POST(req: NextRequest) {
   try {
     console.log("🚀 [Simulador] Recebendo requisição...");

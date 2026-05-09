@@ -29,33 +29,39 @@ export function UploadHiscon({ onProcessamentoCompleto, empresaId }: UploadHisco
       reader.readAsDataURL(selectedFile);
       
       reader.onload = async () => {
-        const base64 = (reader.result as string).split(",")[1];
-        
-        const response = await fetch("/api/simulador/extrair", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ pdfBase64: base64, empresaId }),
-        });
+        try {
+          const base64 = (reader.result as string).split(",")[1];
+          
+          const response = await fetch("/api/simulador/extrair", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ pdfBase64: base64, empresaId }),
+          });
 
-        const data = await response.json();
+          // Trata Timeout (504) ou erros do servidor que retornam HTML em vez de JSON
+          const contentType = response.headers.get("content-type");
+          if (!contentType || !contentType.includes("application/json")) {
+            if (response.status === 504) {
+              throw new Error("O servidor demorou muito para responder (Timeout). O PDF pode ser muito grande ou a IA está congestionada.");
+            }
+            throw new Error(`Erro inesperado do servidor (Status ${response.status}).`);
+          }
 
-        if (!response.ok) {
-          throw new Error(data.error || "Erro ao processar o extrato.");
+          const data = await response.json();
+
+          if (!response.ok) {
+            throw new Error(data.error || "Erro ao processar o extrato.");
+          }
+
+          onProcessamentoCompleto(data);
+          setLoading(false);
+        } catch (err: any) {
+          console.error("Erro no processamento do HISCON:", err);
+          setError(err.message || "Falha ao ler o PDF. Tente novamente.");
+          setLoading(false);
+          setFile(null);
         }
-
-        onProcessamentoCompleto(data);
-        setLoading(false);
       };
-      
-      reader.onerror = () => {
-        throw new Error("Erro ao ler o arquivo no navegador.");
-      };
-
-    } catch (err: any) {
-      setError(err.message || "Ocorreu um erro inesperado.");
-      setLoading(false);
-      setFile(null);
-    }
   };
 
   return (
