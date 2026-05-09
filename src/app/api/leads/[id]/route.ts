@@ -115,6 +115,11 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
 export async function DELETE(_req: NextRequest, { params }: RouteParams) {
   const sessao = await getSessionEmpresaApi();
   if (!sessao) return Response.json({ error: "Não autorizado" }, { status: 401 });
+
+  if (sessao.perfilSlug === "vendedor") {
+    return Response.json({ error: "Acesso negado: Vendedores não podem excluir leads." }, { status: 403 });
+  }
+
   const { id } = await params;
 
   const existe = await prisma.lead.findFirst({

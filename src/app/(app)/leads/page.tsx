@@ -61,5 +61,5 @@ export default async function LeadsPage() {
     })
   ]);
 
-  return <LeadsClient leads={leads as any} contagens={contagens} colunas={colunas} bancos={bancos} convenios={convenios} />;
+  return <LeadsClient leads={leads as any} contagens={contagens} colunas={colunas} bancos={bancos} convenios={convenios} perfilUsuario={sessao.perfilSlug} />;
 }

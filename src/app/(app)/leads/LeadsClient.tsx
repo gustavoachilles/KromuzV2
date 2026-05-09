@@ -87,6 +87,7 @@ export function LeadsClient({
   colunas: PipelineColuna[];
   bancos?: { id: string, nome: string }[];
   convenios?: { id: string, nome: string }[];
+  perfilUsuario?: string;
 }) {
   const router = useRouter();
   const [leads, setLeads] = useState(leadsIniciais);
@@ -240,6 +241,27 @@ export function LeadsClient({
 
     toast.success(isEdit ? "Lead atualizado com sucesso!" : "Lead criado com sucesso!");
 
+    setModal(false);
+    setSalvando(false);
+    router.refresh();
+    setTimeout(() => window.location.reload(), 500);
+  }
+
+  async function deletarLead(id: string) {
+    if (!confirm("Tem certeza que deseja excluir permanentemente este lead?")) return;
+    
+    setSalvando(true);
+    setErro(null);
+    
+    const res = await fetch(`/api/leads/${id}`, { method: "DELETE" });
+    if (!res.ok) {
+      const data = await res.json();
+      setErro(data.error || "Erro ao excluir lead");
+      setSalvando(false);
+      return;
+    }
+    
+    toast.success("Lead excluído com sucesso!");
     setModal(false);
     setSalvando(false);
     router.refresh();
@@ -577,13 +599,23 @@ export function LeadsClient({
                 </div>
               </div>
 
-              <div className="flex justify-end gap-3 pt-6 shrink-0">
-                <button type="button" onClick={() => setModal(false)} className="px-5 py-2.5 text-sm font-medium text-zinc-600 hover:bg-zinc-100 rounded-xl transition">Cancelar</button>
-                <button type="submit" disabled={salvando}
-                  className="flex items-center gap-2 rounded-xl bg-violet-600 px-6 py-2.5 text-sm font-semibold text-white shadow-lg shadow-violet-500/30 hover:bg-violet-700 transition">
-                  {salvando ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-                  {salvando ? "Salvando..." : (form.id ? "Salvar Alterações" : "Criar Lead")}
-                </button>
+              <div className="flex justify-between items-center pt-6 shrink-0 mt-4 border-t border-zinc-100 dark:border-zinc-800">
+                <div>
+                  {form.id && (perfilUsuario === "admin" || perfilUsuario === "gestor") && (
+                    <button type="button" onClick={() => deletarLead(form.id)} disabled={salvando}
+                      className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-xl transition">
+                      <Trash2 className="h-4 w-4" /> Excluir Lead
+                    </button>
+                  )}
+                </div>
+                <div className="flex gap-3">
+                  <button type="button" onClick={() => setModal(false)} className="px-5 py-2.5 text-sm font-medium text-zinc-600 hover:bg-zinc-100 rounded-xl transition">Cancelar</button>
+                  <button type="submit" disabled={salvando}
+                    className="flex items-center gap-2 rounded-xl bg-violet-600 px-6 py-2.5 text-sm font-semibold text-white shadow-lg shadow-violet-500/30 hover:bg-violet-700 transition">
+                    {salvando ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                    {salvando ? "Salvando..." : (form.id ? "Salvar Alterações" : "Criar Lead")}
+                  </button>
+                </div>
               </div>
             </form>
           </div>
