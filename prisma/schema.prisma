@@ -53,6 +53,10 @@ model Empresa {
   simulacoes           SimulacaoCredito[]
   faturasBanco         FaturaBanco[]
 
+  canais               CanalComunicacao[]
+  conversas            Conversa[]
+  campanhas            CampanhaDisparo[]
+
   @@index([status])
   @@map("empresa")
   @@schema("public")
@@ -78,6 +82,7 @@ model UsuarioPerfil {
   updatedAt           DateTime @updatedAt @map("updated_at")
 
   empresa Empresa @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  conversas Conversa[]
 
   @@index([empresaId])
   @@index([authUserId])
@@ -569,6 +574,7 @@ model Lead {
 
   empresa Empresa @relation(fields: [empresaId], references: [id], onDelete: Cascade)
   arquivos LeadArquivo[]
+  conversas Conversa[]
 
   @@index([empresaId, status])
   @@index([empresaId, vendedorEmail])
