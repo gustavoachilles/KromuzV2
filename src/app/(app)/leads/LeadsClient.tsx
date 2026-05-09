@@ -136,7 +136,6 @@ export function LeadsClient({
       id: "", nome: "", cpf: "", telefone: "", email: "", uf: "", cidade: "",
       numeroBeneficio: "", especieBeneficio: "", margemLivre: "", margemRmc: "", margemRcc: "",
       tipoOperacao: "", valorEstimado: "", bancoPreferido: "", convenioNome: "",
-      tipoOperacao: "", valorEstimado: "", bancoPreferido: "", convenioNome: "",
       origem: "manual", canalContato: "", observacoes: "", arquivosExistem: []
     });
     setArquivosPendentes([]);
