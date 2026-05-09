@@ -22,6 +22,9 @@ export const ExtratoHisconSchema = z.object({
     especie_beneficio: z.number().describe("Código da espécie do benefício INSS (ex: 41, 42, 32, 21)"),
     possui_representante_legal: z.boolean().describe("Se o benefício é gerido por tutor, curador ou procurador"),
     data_despacho_beneficio: z.string().describe("Data de início do benefício ou DDB (YYYY-MM-DD)"),
+    data_nascimento: z.string().optional().describe("Data de nascimento se disponível"),
+    especie_nome: z.string().optional().describe("Nome da espécie se disponível"),
+    numero_beneficio: z.string().optional().describe("Número do benefício se disponível"),
     
     margens: z.object({
       emprestimo_livre: z.number().describe("Valor de margem disponível para novo empréstimo"),
