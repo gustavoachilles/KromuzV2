@@ -2,25 +2,25 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
 const BANCOS_LEGADOS = [
-  { nome: "Daycoval", minPag: 12, minParc: 20, port: true, refin: true, portRefin: true, fatorSaldo: 0.85, valorMinimo: 500, trocoMin: 100 },
-  { nome: "BMG", minPag: 12, minParc: 20, port: true, refin: true, portRefin: true, fatorSaldo: 0.72, valorMinimo: 500, trocoMin: 100 },
-  { nome: "PAN", minPag: 12, minParc: 20, port: true, refin: true, portRefin: true, fatorSaldo: 0.74, valorMinimo: 500, trocoMin: 100 },
-  { nome: "Facta", minPag: 12, minParc: 20, port: true, refin: true, portRefin: true, fatorSaldo: 0.73, valorMinimo: 500, trocoMin: 100 },
-  { nome: "Safra", minPag: 12, minParc: 20, port: true, refin: true, portRefin: true, fatorSaldo: 0.72, valorMinimo: 500, trocoMin: 100 },
-  { nome: "C6 Bank", minPag: 12, minParc: 20, port: true, refin: true, portRefin: true, fatorSaldo: 0.73, valorMinimo: 500, trocoMin: 100 },
-  { nome: "Banrisul", minPag: 12, minParc: 20, port: true, refin: true, portRefin: false, fatorSaldo: 0.72, valorMinimo: 500, trocoMin: 100 },
-  { nome: "Amigoz", minPag: 12, minParc: 20, port: true, refin: true, portRefin: true, fatorSaldo: 0.72, valorMinimo: 500, trocoMin: 100 },
-  { nome: "BRB", minPag: 12, minParc: 20, port: true, refin: true, portRefin: true, fatorSaldo: 0.72, valorMinimo: 500, trocoMin: 100 },
-  { nome: "Digio", minPag: 12, minParc: 20, port: true, refin: true, portRefin: true, fatorSaldo: 0.72, valorMinimo: 500, trocoMin: 100 },
-  { nome: "Finanto Bank", minPag: 12, minParc: 20, port: true, refin: true, portRefin: true, fatorSaldo: 0.72, valorMinimo: 500, trocoMin: 100 },
-  { nome: "iCred", minPag: 12, minParc: 20, port: true, refin: true, portRefin: true, fatorSaldo: 0.72, valorMinimo: 500, trocoMin: 100 },
-  { nome: "Mais BB", minPag: 12, minParc: 20, port: true, refin: true, portRefin: true, fatorSaldo: 0.72, valorMinimo: 500, trocoMin: 100 },
-  { nome: "Mercantil", minPag: 12, minParc: 20, port: true, refin: true, portRefin: true, fatorSaldo: 0.72, valorMinimo: 500, trocoMin: 100 },
-  { nome: "PicPay", minPag: 12, minParc: 20, port: true, refin: true, portRefin: true, fatorSaldo: 0.72, valorMinimo: 500, trocoMin: 100 },
-  { nome: "Presença Bank", minPag: 12, minParc: 20, port: true, refin: true, portRefin: true, fatorSaldo: 0.72, valorMinimo: 500, trocoMin: 100 },
-  { nome: "Quero Mais", minPag: 12, minParc: 20, port: true, refin: true, portRefin: true, fatorSaldo: 0.72, valorMinimo: 500, trocoMin: 100 },
-  { nome: "Total Cash", minPag: 12, minParc: 20, port: true, refin: true, portRefin: true, fatorSaldo: 0.72, valorMinimo: 500, trocoMin: 100 },
-  { nome: "VCTEX", minPag: 12, minParc: 20, port: true, refin: true, portRefin: true, fatorSaldo: 0.72, valorMinimo: 500, trocoMin: 100 },
+  { nome: "Daycoval", minPag: 12, minParc: 20, port: true, refin: true, portRefin: true, fatorSaldo: 0.85, valorMinimo: 500, trocoMin: 100, coeficiente: 0.01712, hasEmprestimo: true, hasCartao: true },
+  { nome: "BMG", minPag: 12, minParc: 20, port: true, refin: true, portRefin: true, fatorSaldo: 0.72, valorMinimo: 500, trocoMin: 100, coeficiente: 0.01730, hasEmprestimo: true, hasCartao: true },
+  { nome: "PAN", minPag: 12, minParc: 20, port: true, refin: true, portRefin: true, fatorSaldo: 0.74, valorMinimo: 500, trocoMin: 100, coeficiente: 0.01725, hasEmprestimo: true, hasCartao: true },
+  { nome: "Facta", minPag: 12, minParc: 20, port: true, refin: true, portRefin: true, fatorSaldo: 0.73, valorMinimo: 500, trocoMin: 100, coeficiente: 0.01740, hasEmprestimo: true, hasCartao: true },
+  { nome: "Safra", minPag: 12, minParc: 20, port: true, refin: true, portRefin: true, fatorSaldo: 0.72, valorMinimo: 500, trocoMin: 100, coeficiente: 0.01715, hasEmprestimo: true, hasCartao: false },
+  { nome: "C6 Bank", minPag: 12, minParc: 20, port: true, refin: true, portRefin: true, fatorSaldo: 0.73, valorMinimo: 500, trocoMin: 100, coeficiente: 0.01715, hasEmprestimo: true, hasCartao: false },
+  { nome: "Banrisul", minPag: 12, minParc: 20, port: true, refin: true, portRefin: false, fatorSaldo: 0.72, valorMinimo: 500, trocoMin: 100, coeficiente: 0.01712, hasEmprestimo: true, hasCartao: false },
+  { nome: "Amigoz", minPag: 12, minParc: 20, port: false, refin: false, portRefin: false, fatorSaldo: 1.00, valorMinimo: 500, trocoMin: 100, coeficiente: 0.04100, hasEmprestimo: false, hasCartao: true },
+  { nome: "BRB", minPag: 12, minParc: 20, port: true, refin: true, portRefin: true, fatorSaldo: 0.72, valorMinimo: 500, trocoMin: 100, coeficiente: 0.01725, hasEmprestimo: true, hasCartao: true },
+  { nome: "Digio", minPag: 12, minParc: 20, port: true, refin: true, portRefin: true, fatorSaldo: 0.72, valorMinimo: 500, trocoMin: 100, coeficiente: 0.01720, hasEmprestimo: true, hasCartao: false },
+  { nome: "Finanto Bank", minPag: 12, minParc: 20, port: true, refin: true, portRefin: true, fatorSaldo: 0.72, valorMinimo: 500, trocoMin: 100, coeficiente: 0.01722, hasEmprestimo: true, hasCartao: false },
+  { nome: "iCred", minPag: 12, minParc: 20, port: true, refin: true, portRefin: true, fatorSaldo: 0.72, valorMinimo: 500, trocoMin: 100, coeficiente: 0.01735, hasEmprestimo: true, hasCartao: false },
+  { nome: "Mais BB", minPag: 12, minParc: 20, port: true, refin: true, portRefin: true, fatorSaldo: 0.72, valorMinimo: 500, trocoMin: 100, coeficiente: 0.01715, hasEmprestimo: true, hasCartao: false },
+  { nome: "Mercantil", minPag: 12, minParc: 20, port: false, refin: false, portRefin: false, fatorSaldo: 1.00, valorMinimo: 500, trocoMin: 100, coeficiente: 0.04100, hasEmprestimo: false, hasCartao: true },
+  { nome: "PicPay", minPag: 12, minParc: 20, port: true, refin: true, portRefin: true, fatorSaldo: 0.72, valorMinimo: 500, trocoMin: 100, coeficiente: 0.01718, hasEmprestimo: true, hasCartao: true },
+  { nome: "Presença Bank", minPag: 12, minParc: 20, port: true, refin: true, portRefin: true, fatorSaldo: 0.72, valorMinimo: 500, trocoMin: 100, coeficiente: 0.01728, hasEmprestimo: true, hasCartao: true },
+  { nome: "Quero Mais", minPag: 12, minParc: 20, port: true, refin: true, portRefin: true, fatorSaldo: 0.72, valorMinimo: 500, trocoMin: 100, coeficiente: 0.01730, hasEmprestimo: true, hasCartao: true },
+  { nome: "Total Cash", minPag: 12, minParc: 20, port: true, refin: true, portRefin: true, fatorSaldo: 0.72, valorMinimo: 500, trocoMin: 100, coeficiente: 0.01740, hasEmprestimo: true, hasCartao: false },
+  { nome: "VCTEX", minPag: 12, minParc: 20, port: true, refin: true, portRefin: true, fatorSaldo: 0.72, valorMinimo: 500, trocoMin: 100, coeficiente: 0.01720, hasEmprestimo: true, hasCartao: false },
 ];
 
 export async function GET() {
@@ -77,12 +77,19 @@ export async function GET() {
         logs.push(`Banco Atualizado: ${b.nome}`);
       }
 
-      const produtosProps = [
-        { tipo: "EMPRESTIMO_CONSIGNADO", nome: "Empréstimo Consignado Novo" },
-        { tipo: "PORTABILIDADE", nome: "Portabilidade" },
-        { tipo: "REFINANCIAMENTO", nome: "Refinanciamento" },
-        ...(b.portRefin ? [{ tipo: "PORTABILIDADE_REFIN", nome: "Portabilidade + Refin" }] : [])
-      ];
+      const produtosProps = [];
+      if (b.hasEmprestimo) {
+        produtosProps.push({ tipo: "EMPRESTIMO_CONSIGNADO", nome: "Empréstimo Consignado Novo" });
+        produtosProps.push({ tipo: "PORTABILIDADE", nome: "Portabilidade" });
+        produtosProps.push({ tipo: "REFINANCIAMENTO", nome: "Refinanciamento" });
+        if (b.portRefin) {
+          produtosProps.push({ tipo: "PORTABILIDADE_REFIN", nome: "Portabilidade + Refin" });
+        }
+      }
+      if (b.hasCartao) {
+        produtosProps.push({ tipo: "CARTAO_CONSIGNADO", nome: "Cartão Consignado" });
+        produtosProps.push({ tipo: "CARTAO_BENEFICIO", nome: "Cartão Benefício" });
+      }
 
       for (const prodProp of produtosProps) {
         let produto = await prisma.produtoCredito.findFirst({
@@ -116,7 +123,7 @@ export async function GET() {
               nome: `Tabela Padrão INSS 84x (${b.nome})`,
               prazo: 84,
               taxaJurosMensal: 1.66,
-              coeficiente: 0.01715,
+              coeficiente: b.coeficiente,
               ativo: true
             }
           });
