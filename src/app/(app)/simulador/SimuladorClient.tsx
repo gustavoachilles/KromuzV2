@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { UploadHiscon } from "@/components/simulador/UploadHiscon";
 import { Oportunidade, ClienteSimulacao, ContratoAtivo } from "@/lib/motor-regras/simulador";
-import { ContratoCard } from "@/components/simulador/ContratoCard";
+import { SimuladorTable } from "@/components/simulador/SimuladorTable";
 import { Calculator, FileText, RefreshCw, Wallet, CreditCard, ArrowRightLeft, UserCircle2, ArrowLeft, Search, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -268,19 +268,7 @@ export function SimuladorClient({ empresaId, convenios }: { empresaId: string, c
           </div>
 
           <div className="space-y-4">
-            {contratos.map((contrato) => (
-              <ContratoCard 
-                key={contrato.id} 
-                contrato={contrato} 
-                oportunidades={oportunidades} 
-              />
-            ))}
-            
-            {contratos.length > 0 && oportunidades.filter(op => op.tipo !== "EMPRESTIMO_CONSIGNADO").length === 0 && (
-              <p className="text-slate-500 text-sm italic p-4 bg-slate-50 rounded-xl border border-dashed">
-                Nenhum dos contratos ativos qualificou para portabilidade ou refinanciamento.
-              </p>
-            )}
+            <SimuladorTable contratos={contratos} oportunidades={oportunidades} />
           </div>
         </div>
 

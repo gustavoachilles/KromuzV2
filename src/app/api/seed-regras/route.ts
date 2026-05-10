@@ -18,7 +18,7 @@ const BANCOS_LEGADOS = [
   { nome: "Mercantil", minPag: 12, minParc: 20, port: false, refin: false, portRefin: false, fatorSaldo: 1.0, valorMinimo: 500, trocoMin: 100, hasEmprestimo: false, hasCartao: true },
   { nome: "PicPay", minPag: 12, minParc: 20, port: true, refin: true, portRefin: true, fatorSaldo: 1.0, valorMinimo: 500, trocoMin: 100, hasEmprestimo: true, hasCartao: true },
   { nome: "Presença Bank", minPag: 12, minParc: 20, port: true, refin: true, portRefin: true, fatorSaldo: 1.0, valorMinimo: 500, trocoMin: 100, hasEmprestimo: true, hasCartao: true },
-  { nome: "Quero Mais", minPag: 12, minParc: 20, port: true, refin: true, portRefin: true, fatorSaldo: 1.0, valorMinimo: 500, trocoMin: 100, hasEmprestimo: true, hasCartao: true },
+  { nome: "Quero Mais", minPag: 12, minParc: 20, port: false, refin: false, portRefin: false, fatorSaldo: 1.0, valorMinimo: 500, trocoMin: 100, hasEmprestimo: true, hasCartao: true },
   { nome: "Total Cash", minPag: 12, minParc: 20, port: true, refin: true, portRefin: true, fatorSaldo: 1.0, valorMinimo: 500, trocoMin: 100, hasEmprestimo: true, hasCartao: false },
   { nome: "VCTEX", minPag: 12, minParc: 20, port: true, refin: true, portRefin: true, fatorSaldo: 1.0, valorMinimo: 500, trocoMin: 100, hasEmprestimo: true, hasCartao: false },
 ];
