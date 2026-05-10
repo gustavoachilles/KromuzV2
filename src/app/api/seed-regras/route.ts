@@ -19,18 +19,21 @@ const BANCOS_LEGADOS = [
 
 export async function GET() {
   try {
-    const empresa = await prisma.empresa.findFirst();
-    if (!empresa) {
+    const empresas = await prisma.empresa.findMany();
+    if (empresas.length === 0) {
       return NextResponse.json({ error: "Nenhuma empresa encontrada" }, { status: 400 });
     }
 
-    const inss = await prisma.convenio.findFirst({
-      where: { empresaId: empresa.id, slug: "inss" }
-    });
-
     let logs = [];
 
-    for (const b of BANCOS_LEGADOS) {
+    for (const empresa of empresas) {
+      logs.push(`Processando regras para a empresa: ${empresa.nomeEmpresa || empresa.id}`);
+      
+      const inss = await prisma.convenio.findFirst({
+        where: { empresaId: empresa.id, slug: "inss" }
+      });
+
+      for (const b of BANCOS_LEGADOS) {
       let bancoDb = await prisma.banco.findFirst({
         where: { empresaId: empresa.id, nome: b.nome }
       });
