@@ -324,9 +324,27 @@ export function calcularOportunidades(
 
     // --- PORTABILIDADE + REFIN ---
     if (regra.tipoOperacao === "PORTABILIDADE_REFIN") {
+      const RESTRICOES_ORIGEM: Record<string, string[]> = {
+        "C6": ["AGIPLAN", "CETELEM", "FACTA", "DAYCOVAL", "PAN", "MERCANTIL", "BANCO OBM", "BANCO BMG"],
+        "DAYCOVAL": ["FACTA", "C6", "SAFRA", "PAN", "BMG", "MERCANTIL", "AGIPLAN"],
+        "BANRISUL": [],
+        "BRB": [],
+        "FACTA": ["CETELEM", "AGIPLAN"],
+        "ICRED": []
+      };
+
       for (const contrato of contratos) {
         // Regra de Ouro: Portabilidade requer troca de banco
         if (isMesmoBanco(contrato.bancoNome, regra.bancoNome)) continue;
+
+        // Regra de Ouro 2: Bloqueio de Origem (Ex: C6 não compra de Facta)
+        const blacklist = Object.keys(RESTRICOES_ORIGEM).find(k => isMesmoBanco(k, regra.bancoNome));
+        if (blacklist) {
+          const isBloqueado = RESTRICOES_ORIGEM[blacklist].some(bloqueado => 
+            contrato.bancoNome.toUpperCase().includes(bloqueado)
+          );
+          if (isBloqueado) continue;
+        }
 
         if (regra.portParcelasMinPagas && contrato.parcelasPagas < regra.portParcelasMinPagas) continue;
         if (regra.taxaMinimaAm && contrato.taxaJuros < regra.taxaMinimaAm) continue;
@@ -348,8 +366,14 @@ export function calcularOportunidades(
           const novoLiberado = contrato.valorParcela / tab.coeficiente;
           
           const trocoBruto = novoLiberado - saldoParaQuitacao;
-          const iof = trocoBruto > 0 ? trocoBruto * 0.013 : 0;
+          // IOF ajustado (aproximadamente 3.14% apenas sobre o valor do troco novo)
+          const iof = trocoBruto > 0 ? trocoBruto * 0.0314 : 0;
           const trocoLiquido = trocoBruto - iof;
+          
+          // Taxa Ponderada = Média ponderada entre a dívida velha (taxa original) e o dinheiro novo (taxa nova)
+          const taxaPonderada = trocoBruto > 0 
+            ? ((saldoParaQuitacao * contrato.taxaJuros) + (trocoBruto * tab.taxaJurosMensal)) / novoLiberado
+            : tab.taxaJurosMensal;
 
           if (trocoLiquido >= (regra.trocoMinimoLiberado ?? 0)) {
             // Pontua mais alto se a taxa de origem for maior que a destino
@@ -366,14 +390,14 @@ export function calcularOportunidades(
               valorParcela: contrato.valorParcela,
               valorLiberado: novoLiberado,
               prazo: tab.prazo,
-              taxaJuros: tab.taxaJurosMensal,
+              taxaJuros: taxaPonderada,
               contratoOriginalId: contrato.id,
               trocoEstimado: trocoLiquido,
               reducaoParcela: contrato.valorParcela - (novoLiberado * tab.coeficiente),
               score: score,
               mensagens: [
                 `Port+Refin com troco de R$ ${trocoLiquido.toFixed(2)}`,
-                taxaReduzida ? `Redução de Taxa: de ${contrato.taxaJuros}% para ${tab.taxaJurosMensal}%` : `Taxa de ${tab.taxaJurosMensal}%`
+                `Taxa Ponderada: ${taxaPonderada.toFixed(2)}% a.m.`
               ],
             });
           }
