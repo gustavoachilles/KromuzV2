@@ -95,11 +95,13 @@ export function calcularOportunidades(
     // Espécies Aceitas
     const especiesAceitas = (regra.especies as any)?.aceitas as number[] ?? [];
     const especiesBloqueadas = (regra.especies as any)?.bloqueadas as number[] ?? [];
-    if (especiesAceitas.length > 0 && !especiesAceitas.includes(cliente.especie)) {
-      continue;
-    }
-    if (especiesBloqueadas.includes(cliente.especie)) {
-      continue;
+    if (cliente.especie !== 0) {
+      if (especiesAceitas.length > 0 && !especiesAceitas.includes(cliente.especie)) {
+        continue;
+      }
+      if (especiesBloqueadas.includes(cliente.especie)) {
+        continue;
+      }
     }
 
     // Representante Legal
