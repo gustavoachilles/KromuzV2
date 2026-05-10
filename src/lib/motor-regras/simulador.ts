@@ -353,33 +353,6 @@ export function calcularOportunidades(
     }
   }
 
-  // Deduplicar: Manter apenas a MELHOR oportunidade (maior troco/score) para cada contrato e tipo
-  // Para operações sem contrato (Novo Empréstimo/Cartões), agrupa por tipo.
-  const melhoresOportunidades = new Map<string, Oportunidade>();
-
-  for (const op of oportunidades) {
-    const chave = op.contratoOriginalId 
-      ? `${op.contratoOriginalId}-${op.tipo}` 
-      : `${op.tipo}-${op.produtoId}`;
-    
-    if (!melhoresOportunidades.has(chave)) {
-      melhoresOportunidades.set(chave, op);
-    } else {
-      const existente = melhoresOportunidades.get(chave)!;
-      const valorOp = op.trocoEstimado ?? op.valorLiberado;
-      const valorExistente = existente.trocoEstimado ?? existente.valorLiberado;
-      
-      // Substitui se a nova tiver um score maior, ou se o score for igual, um valor financeiro maior
-      if (
-        op.score > existente.score || 
-        (op.score === existente.score && valorOp > valorExistente)
-      ) {
-        melhoresOportunidades.set(chave, op);
-      }
-    }
-  }
-
-  // Ordenar as melhores por score desc, depois valor liberado desc
-  return Array.from(melhoresOportunidades.values())
-    .sort((a, b) => b.score - a.score || (b.valorLiberado || 0) - (a.valorLiberado || 0));
+  // Ordenar por score desc, depois valor liberado desc
+  return oportunidades.sort((a, b) => b.score - a.score || (b.valorLiberado || 0) - (a.valorLiberado || 0));
 }
