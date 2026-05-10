@@ -84,19 +84,22 @@ export async function POST(req: NextRequest) {
 
     // 3. Busca Regras e Tabelas do Banco de Dados
     console.log("🗄️ [Simulador] Buscando regras e tabelas no banco de dados...");
-    const [regras, tabelas] = await Promise.all([
+    const [regras, tabelas, bancos] = await Promise.all([
       prisma.regraProdutoCredito.findMany({
         where: { empresaId: targetEmpresaId, ativa: true },
       }),
       prisma.tabelaCoeficiente.findMany({
         where: { empresaId: targetEmpresaId, ativo: true },
+      }),
+      prisma.banco.findMany({
+        where: { empresaId: targetEmpresaId, status: "ativo" },
       })
     ]);
-    console.log(`✅ [Simulador] Banco respondeu: ${regras.length} regras e ${tabelas.length} tabelas encontradas.`);
+    console.log(`✅ [Simulador] Banco respondeu: ${regras.length} regras, ${tabelas.length} tabelas e ${bancos.length} bancos encontrados.`);
 
     // 4. Calcula Oportunidades
     console.log("⚖️ [Simulador] Calculando oportunidades...");
-    const oportunidades = calcularOportunidades(clienteSimulacao, contratosAtivos, regras, tabelas);
+    const oportunidades = calcularOportunidades(clienteSimulacao, contratosAtivos, regras, tabelas, bancos);
     console.log("🏁 [Simulador] Simulação concluída!");
 
     return NextResponse.json({

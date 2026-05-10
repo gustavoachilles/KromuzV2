@@ -98,7 +98,7 @@ export async function GET() {
               nome: `Tabela Padrão INSS 84x (${b.nome})`,
               prazo: 84,
               taxaJurosMensal: 1.66,
-              coeficiente: 0.0225,
+              coeficiente: 0.01715,
               ativo: true
             }
           });

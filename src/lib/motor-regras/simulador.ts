@@ -1,4 +1,4 @@
-import { TipoOperacao } from "@prisma/client";
+import { TipoOperacao, Banco } from "@prisma/client";
 
 export interface ClienteSimulacao {
   nome?: string;
@@ -57,7 +57,8 @@ export function calcularOportunidades(
   cliente: ClienteSimulacao,
   contratos: ContratoAtivo[],
   regras: any[], // RegraProdutoCredito[] do Prisma
-  tabelas: any[] // TabelaCoeficiente[] do Prisma
+  tabelas: any[], // TabelaCoeficiente[] do Prisma
+  bancos: Banco[] = []
 ): Oportunidade[] {
   const oportunidades: Oportunidade[] = [];
 
@@ -149,10 +150,25 @@ export function calcularOportunidades(
         );
 
         if (tabPort) {
+          // Busca fator_saldo do banco de origem
+          const bancoOrigem = bancos.find(b => 
+            contrato.bancoNome.toUpperCase().includes(b.nome.toUpperCase()) ||
+            b.nome.toUpperCase().includes(contrato.bancoNome.toUpperCase())
+          );
+          const fatorSaldo = bancoOrigem?.fatorSaldo ?? 1.0;
+          
+          const saldoParaQuitacao = contrato.saldoDevedorEstimado * fatorSaldo;
           const novoValorLiberado = contrato.valorParcela / tabPort.coeficiente;
-          const troco = novoValorLiberado - contrato.saldoDevedorEstimado;
+          
+          const trocoBruto = novoValorLiberado - saldoParaQuitacao;
+          const iof = trocoBruto > 0 ? trocoBruto * 0.013 : 0;
+          const trocoLiquido = trocoBruto - iof;
 
-          if (troco >= (regra.trocoMinimoLiberado ?? 0)) {
+          if (trocoLiquido >= (regra.trocoMinimoLiberado ?? 0)) {
+            // Pontua mais alto se a taxa de origem for maior que a destino
+            const taxaReduzida = contrato.taxaJuros > tabPort.taxaJurosMensal;
+            const score = taxaReduzida ? 100 : 80;
+
             oportunidades.push({
               tipo: "PORTABILIDADE",
               bancoId: regra.bancoId,
@@ -165,9 +181,12 @@ export function calcularOportunidades(
               prazo: tabPort.prazo,
               taxaJuros: tabPort.taxaJurosMensal,
               contratoOriginalId: contrato.id,
-              trocoEstimado: troco,
-              score: 90,
-              mensagens: [`Portabilidade com troco de R$ ${troco.toFixed(2)}`]
+              trocoEstimado: trocoLiquido,
+              score: score,
+              mensagens: [
+                `Portabilidade com troco de R$ ${trocoLiquido.toFixed(2)}`,
+                taxaReduzida ? `Redução de Taxa: de ${contrato.taxaJuros}% para ${tabPort.taxaJurosMensal}%` : `Taxa de ${tabPort.taxaJurosMensal}%`
+              ]
             });
           }
         }
@@ -188,11 +207,22 @@ export function calcularOportunidades(
         for (const tab of tabelasRefin) {
           if (!tab.ativo) continue;
 
-          // Refin: quita saldo devedor + libera troco com novo prazo
-          const novoLiberado = contrato.valorParcela / tab.coeficiente;
-          const troco = novoLiberado - contrato.saldoDevedorEstimado;
+          // Busca fator_saldo do banco de origem
+          const bancoOrigem = bancos.find(b => 
+            contrato.bancoNome.toUpperCase().includes(b.nome.toUpperCase()) ||
+            b.nome.toUpperCase().includes(contrato.bancoNome.toUpperCase())
+          );
+          const fatorSaldo = bancoOrigem?.fatorSaldo ?? 1.0;
 
-          if (troco < (regra.refinTrocoMin ?? 0)) continue;
+          // Refin: quita saldo devedor com desconto + libera troco com novo prazo
+          const saldoParaQuitacao = contrato.saldoDevedorEstimado * fatorSaldo;
+          const novoLiberado = contrato.valorParcela / tab.coeficiente;
+          
+          const trocoBruto = novoLiberado - saldoParaQuitacao;
+          const iof = trocoBruto > 0 ? trocoBruto * 0.013 : 0;
+          const trocoLiquido = trocoBruto - iof;
+
+          if (trocoLiquido < (regra.refinTrocoMin ?? 0)) continue;
           if (novoLiberado < (regra.refinValorMin ?? 0)) continue;
 
           // Agrega margem livre se regra permitir
@@ -211,10 +241,10 @@ export function calcularOportunidades(
             prazo: tab.prazo,
             taxaJuros: tab.taxaJurosMensal,
             contratoOriginalId: contrato.id,
-            trocoEstimado: troco,
+            trocoEstimado: trocoLiquido,
             score: 85,
             mensagens: [
-              `Refinanciamento com troco de R$ ${troco.toFixed(2)}`,
+              `Refinanciamento com troco de R$ ${trocoLiquido.toFixed(2)}`,
               ...(regra.refinAgregaMargem && margemAgregada > 0
                 ? [`Margem livre agregada: R$ ${margemAgregada.toFixed(2)}`]
                 : []),
@@ -237,10 +267,24 @@ export function calcularOportunidades(
         );
 
         if (tab) {
-          const novoLiberado = contrato.valorParcela / tab.coeficiente;
-          const troco = novoLiberado - contrato.saldoDevedorEstimado;
+          const bancoOrigem = bancos.find(b => 
+            contrato.bancoNome.toUpperCase().includes(b.nome.toUpperCase()) ||
+            b.nome.toUpperCase().includes(contrato.bancoNome.toUpperCase())
+          );
+          const fatorSaldo = bancoOrigem?.fatorSaldo ?? 1.0;
 
-          if (troco >= (regra.trocoMinimoLiberado ?? 0)) {
+          const saldoParaQuitacao = contrato.saldoDevedorEstimado * fatorSaldo;
+          const novoLiberado = contrato.valorParcela / tab.coeficiente;
+          
+          const trocoBruto = novoLiberado - saldoParaQuitacao;
+          const iof = trocoBruto > 0 ? trocoBruto * 0.013 : 0;
+          const trocoLiquido = trocoBruto - iof;
+
+          if (trocoLiquido >= (regra.trocoMinimoLiberado ?? 0)) {
+            // Pontua mais alto se a taxa de origem for maior que a destino
+            const taxaReduzida = contrato.taxaJuros > tab.taxaJurosMensal;
+            const score = taxaReduzida ? 100 : 85;
+
             oportunidades.push({
               tipo: "PORTABILIDADE_REFIN",
               bancoId: regra.bancoId,
@@ -253,10 +297,13 @@ export function calcularOportunidades(
               prazo: tab.prazo,
               taxaJuros: tab.taxaJurosMensal,
               contratoOriginalId: contrato.id,
-              trocoEstimado: troco,
+              trocoEstimado: trocoLiquido,
               reducaoParcela: contrato.valorParcela - (novoLiberado * tab.coeficiente),
-              score: 95,
-              mensagens: [`Port+Refin com troco de R$ ${troco.toFixed(2)}`],
+              score: score,
+              mensagens: [
+                `Port+Refin com troco de R$ ${trocoLiquido.toFixed(2)}`,
+                taxaReduzida ? `Redução de Taxa: de ${contrato.taxaJuros}% para ${tab.taxaJurosMensal}%` : `Taxa de ${tab.taxaJurosMensal}%`
+              ],
             });
           }
         }
