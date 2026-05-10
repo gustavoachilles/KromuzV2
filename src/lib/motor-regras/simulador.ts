@@ -81,7 +81,7 @@ export function calcularOportunidades(
   regras: RegraProdutoCredito[],
   tabelas: TabelaCoeficiente[],
   bancos: Banco[] // Injetamos a lista de bancos para puxar o fatorSaldo
-): Oportunidade[] {
+): { oportunidades: Oportunidade[]; contratosAtualizados: ContratoAtivo[] } {
   const oportunidades: Oportunidade[] = [];
 
   // Pré-processamento: Garante que o Saldo Devedor não seja R$ 0.00
@@ -425,5 +425,7 @@ export function calcularOportunidades(
   }
 
   // Ordenar por score desc, depois valor liberado desc
-  return oportunidades.sort((a, b) => b.score - a.score || (b.valorLiberado || 0) - (a.valorLiberado || 0));
+  const oportunidadesOrdenadas = oportunidades.sort((a, b) => b.score - a.score || (b.valorLiberado || 0) - (a.valorLiberado || 0));
+  
+  return { oportunidades: oportunidadesOrdenadas, contratosAtualizados: contratos };
 }

@@ -99,7 +99,7 @@ export async function POST(req: NextRequest) {
 
     // 4. Calcula Oportunidades
     console.log("⚖️ [Simulador] Calculando oportunidades...");
-    const oportunidades = calcularOportunidades(clienteSimulacao, contratosAtivos, regras, tabelas, bancos);
+    const { oportunidades, contratosAtualizados } = calcularOportunidades(clienteSimulacao, contratosAtivos, regras, tabelas, bancos);
     console.log("🏁 [Simulador] Simulação concluída!");
 
     return NextResponse.json({
@@ -107,7 +107,7 @@ export async function POST(req: NextRequest) {
         ...clienteSimulacao,
         nome: hiscon.dados_cliente.nome
       },
-      contratos: contratosAtivos,
+      contratos: contratosAtualizados,
       oportunidades
     });
 

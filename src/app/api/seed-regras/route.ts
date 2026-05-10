@@ -135,24 +135,28 @@ export async function GET() {
           });
         }
 
-        const tabelaExistente = await prisma.tabelaCoeficiente.findFirst({
-          where: { bancoId: bancoDb.id, produtoId: produto.id, prazo: 84 }
-        });
-
-        if (!tabelaExistente) {
-          await prisma.tabelaCoeficiente.create({
-            data: {
-              empresaId: empresa.id,
-              bancoId: bancoDb.id,
-              produtoId: produto.id,
-              convenioId: inss?.id,
-              nome: `Tabela Padrão INSS 84x (${b.nome})`,
-              prazo: 84,
-              taxaJurosMensal: 1.66,
-              coeficiente: 0.01715,
-              ativo: true
-            }
+        const prazos = [84, 96, 108];
+        for (const prazo of prazos) {
+          const tabelaExistente = await prisma.tabelaCoeficiente.findFirst({
+            where: { bancoId: bancoDb.id, produtoId: produto.id, prazo: prazo }
           });
+
+          if (!tabelaExistente) {
+            await prisma.tabelaCoeficiente.create({
+              data: {
+                empresaId: empresa.id,
+                bancoId: bancoDb.id,
+                produtoId: produto.id,
+                convenioId: inss?.id,
+                nome: `Tabela Padrão INSS ${prazo}x (${b.nome})`,
+                prazo: prazo,
+                taxaJurosMensal: 1.66,
+                // Coeficientes aproximados para 1.66% a.m.
+                coeficiente: prazo === 84 ? 0.01715 : prazo === 96 ? 0.0209 : 0.0231,
+                ativo: true
+              }
+            });
+          }
         }
 
         const regraExistente = await prisma.regraProdutoCredito.findFirst({
