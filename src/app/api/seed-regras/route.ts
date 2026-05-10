@@ -2,25 +2,25 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
 const BANCOS_LEGADOS = [
-  { nome: "Daycoval", minPag: 12, minParc: 20, port: true, refin: true, portRefin: true, fatorSaldo: 0.85, valorMinimo: 500, trocoMin: 100, hasEmprestimo: true, hasCartao: true },
-  { nome: "BMG", minPag: 12, minParc: 20, port: true, refin: true, portRefin: true, fatorSaldo: 0.72, valorMinimo: 500, trocoMin: 100, hasEmprestimo: true, hasCartao: true },
-  { nome: "PAN", minPag: 12, minParc: 20, port: true, refin: true, portRefin: true, fatorSaldo: 0.74, valorMinimo: 500, trocoMin: 100, hasEmprestimo: true, hasCartao: true },
-  { nome: "Facta", minPag: 12, minParc: 20, port: true, refin: true, portRefin: true, fatorSaldo: 0.73, valorMinimo: 500, trocoMin: 100, hasEmprestimo: true, hasCartao: true },
-  { nome: "Safra", minPag: 12, minParc: 20, port: true, refin: true, portRefin: true, fatorSaldo: 0.72, valorMinimo: 500, trocoMin: 100, hasEmprestimo: true, hasCartao: false },
-  { nome: "C6 Bank", minPag: 12, minParc: 20, port: true, refin: true, portRefin: true, fatorSaldo: 0.73, valorMinimo: 500, trocoMin: 100, hasEmprestimo: true, hasCartao: false },
-  { nome: "Banrisul", minPag: 12, minParc: 20, port: true, refin: true, portRefin: false, fatorSaldo: 0.72, valorMinimo: 500, trocoMin: 100, hasEmprestimo: true, hasCartao: false },
-  { nome: "Amigoz", minPag: 12, minParc: 20, port: false, refin: false, portRefin: false, fatorSaldo: 1.00, valorMinimo: 500, trocoMin: 100, hasEmprestimo: false, hasCartao: true },
-  { nome: "BRB", minPag: 12, minParc: 20, port: true, refin: true, portRefin: true, fatorSaldo: 0.72, valorMinimo: 500, trocoMin: 100, hasEmprestimo: true, hasCartao: true },
-  { nome: "Digio", minPag: 12, minParc: 20, port: true, refin: true, portRefin: true, fatorSaldo: 0.72, valorMinimo: 500, trocoMin: 100, hasEmprestimo: true, hasCartao: false },
-  { nome: "Finanto Bank", minPag: 12, minParc: 20, port: true, refin: true, portRefin: true, fatorSaldo: 0.72, valorMinimo: 500, trocoMin: 100, hasEmprestimo: true, hasCartao: false },
-  { nome: "iCred", minPag: 12, minParc: 20, port: true, refin: true, portRefin: true, fatorSaldo: 0.72, valorMinimo: 500, trocoMin: 100, hasEmprestimo: true, hasCartao: false },
-  { nome: "Mais BB", minPag: 12, minParc: 20, port: true, refin: true, portRefin: true, fatorSaldo: 0.72, valorMinimo: 500, trocoMin: 100, hasEmprestimo: true, hasCartao: false },
-  { nome: "Mercantil", minPag: 12, minParc: 20, port: false, refin: false, portRefin: false, fatorSaldo: 1.00, valorMinimo: 500, trocoMin: 100, hasEmprestimo: false, hasCartao: true },
-  { nome: "PicPay", minPag: 12, minParc: 20, port: true, refin: true, portRefin: true, fatorSaldo: 0.72, valorMinimo: 500, trocoMin: 100, hasEmprestimo: true, hasCartao: true },
-  { nome: "Presença Bank", minPag: 12, minParc: 20, port: true, refin: true, portRefin: true, fatorSaldo: 0.72, valorMinimo: 500, trocoMin: 100, hasEmprestimo: true, hasCartao: true },
-  { nome: "Quero Mais", minPag: 12, minParc: 20, port: true, refin: true, portRefin: true, fatorSaldo: 0.72, valorMinimo: 500, trocoMin: 100, hasEmprestimo: true, hasCartao: true },
-  { nome: "Total Cash", minPag: 12, minParc: 20, port: true, refin: true, portRefin: true, fatorSaldo: 0.72, valorMinimo: 500, trocoMin: 100, hasEmprestimo: true, hasCartao: false },
-  { nome: "VCTEX", minPag: 12, minParc: 20, port: true, refin: true, portRefin: true, fatorSaldo: 0.72, valorMinimo: 500, trocoMin: 100, hasEmprestimo: true, hasCartao: false },
+  { nome: "Daycoval", minPag: 12, minParc: 20, port: true, refin: true, portRefin: true, fatorSaldo: 1.0, valorMinimo: 500, trocoMin: 100, hasEmprestimo: true, hasCartao: true },
+  { nome: "BMG", minPag: 12, minParc: 20, port: true, refin: true, portRefin: true, fatorSaldo: 1.0, valorMinimo: 500, trocoMin: 100, hasEmprestimo: true, hasCartao: true },
+  { nome: "PAN", minPag: 12, minParc: 20, port: true, refin: true, portRefin: true, fatorSaldo: 1.0, valorMinimo: 500, trocoMin: 100, hasEmprestimo: true, hasCartao: true },
+  { nome: "Facta", minPag: 12, minParc: 20, port: true, refin: true, portRefin: true, fatorSaldo: 1.0, valorMinimo: 500, trocoMin: 100, hasEmprestimo: true, hasCartao: true },
+  { nome: "Safra", minPag: 12, minParc: 20, port: true, refin: true, portRefin: true, fatorSaldo: 1.0, valorMinimo: 500, trocoMin: 100, hasEmprestimo: true, hasCartao: false },
+  { nome: "C6 Bank", minPag: 12, minParc: 20, port: true, refin: true, portRefin: true, fatorSaldo: 1.0, valorMinimo: 500, trocoMin: 100, hasEmprestimo: true, hasCartao: false },
+  { nome: "Banrisul", minPag: 12, minParc: 20, port: true, refin: true, portRefin: false, fatorSaldo: 1.0, valorMinimo: 500, trocoMin: 100, hasEmprestimo: true, hasCartao: false },
+  { nome: "Amigoz", minPag: 12, minParc: 20, port: false, refin: false, portRefin: false, fatorSaldo: 1.0, valorMinimo: 500, trocoMin: 100, hasEmprestimo: false, hasCartao: true },
+  { nome: "BRB", minPag: 12, minParc: 20, port: true, refin: true, portRefin: true, fatorSaldo: 1.0, valorMinimo: 500, trocoMin: 100, hasEmprestimo: true, hasCartao: true },
+  { nome: "Digio", minPag: 12, minParc: 20, port: true, refin: true, portRefin: true, fatorSaldo: 1.0, valorMinimo: 500, trocoMin: 100, hasEmprestimo: true, hasCartao: false },
+  { nome: "Finanto Bank", minPag: 12, minParc: 20, port: true, refin: true, portRefin: true, fatorSaldo: 1.0, valorMinimo: 500, trocoMin: 100, hasEmprestimo: true, hasCartao: false },
+  { nome: "iCred", minPag: 12, minParc: 20, port: true, refin: true, portRefin: true, fatorSaldo: 1.0, valorMinimo: 500, trocoMin: 100, hasEmprestimo: true, hasCartao: false },
+  { nome: "Mais BB", minPag: 12, minParc: 20, port: true, refin: true, portRefin: true, fatorSaldo: 1.0, valorMinimo: 500, trocoMin: 100, hasEmprestimo: true, hasCartao: false },
+  { nome: "Mercantil", minPag: 12, minParc: 20, port: false, refin: false, portRefin: false, fatorSaldo: 1.0, valorMinimo: 500, trocoMin: 100, hasEmprestimo: false, hasCartao: true },
+  { nome: "PicPay", minPag: 12, minParc: 20, port: true, refin: true, portRefin: true, fatorSaldo: 1.0, valorMinimo: 500, trocoMin: 100, hasEmprestimo: true, hasCartao: true },
+  { nome: "Presença Bank", minPag: 12, minParc: 20, port: true, refin: true, portRefin: true, fatorSaldo: 1.0, valorMinimo: 500, trocoMin: 100, hasEmprestimo: true, hasCartao: true },
+  { nome: "Quero Mais", minPag: 12, minParc: 20, port: true, refin: true, portRefin: true, fatorSaldo: 1.0, valorMinimo: 500, trocoMin: 100, hasEmprestimo: true, hasCartao: true },
+  { nome: "Total Cash", minPag: 12, minParc: 20, port: true, refin: true, portRefin: true, fatorSaldo: 1.0, valorMinimo: 500, trocoMin: 100, hasEmprestimo: true, hasCartao: false },
+  { nome: "VCTEX", minPag: 12, minParc: 20, port: true, refin: true, portRefin: true, fatorSaldo: 1.0, valorMinimo: 500, trocoMin: 100, hasEmprestimo: true, hasCartao: false },
 ];
 
 export async function GET() {
@@ -151,8 +151,8 @@ export async function GET() {
                 nome: `Tabela Padrão INSS ${prazo}x (${b.nome})`,
                 prazo: prazo,
                 taxaJurosMensal: 1.66,
-                // Coeficientes aproximados para 1.66% a.m.
-                coeficiente: prazo === 84 ? 0.01715 : prazo === 96 ? 0.0209 : 0.0231,
+                // Coeficientes exatos do Promosys (Base Daycoval)
+                coeficiente: prazo === 84 ? 0.023105 : prazo === 96 ? 0.0206 : 0.0191,
                 ativo: true
               }
             });

@@ -220,9 +220,9 @@ export function calcularOportunidades(
             const novoValorLiberado = contrato.valorParcela / tabPort.coeficiente;
             
             const trocoBruto = novoValorLiberado - saldoParaQuitacao;
-            // IOF ajustado (aproximadamente 3.14% apenas sobre o valor do troco novo)
-            const iof = trocoBruto > 0 ? trocoBruto * 0.0314 : 0;
-            const trocoLiquido = trocoBruto - iof;
+            // O Promosys já embute IOF e taxas no coeficiente do banco (Ex: 0.023105)
+            // Portanto, o Troco é exatamente Bruto - Saldo.
+            const trocoLiquido = trocoBruto;
             
             // Taxa Ponderada = Média ponderada entre a dívida velha (taxa original) e o dinheiro novo (taxa nova)
             const taxaPonderada = trocoBruto > 0 
@@ -366,9 +366,9 @@ export function calcularOportunidades(
           const novoLiberado = contrato.valorParcela / tab.coeficiente;
           
           const trocoBruto = novoLiberado - saldoParaQuitacao;
-          // IOF ajustado (aproximadamente 3.14% apenas sobre o valor do troco novo)
-          const iof = trocoBruto > 0 ? trocoBruto * 0.0314 : 0;
-          const trocoLiquido = trocoBruto - iof;
+          // O Promosys já embute IOF e taxas no coeficiente do banco (Ex: 0.023105)
+          // Portanto, o Troco é exatamente Bruto - Saldo.
+          const trocoLiquido = trocoBruto;
           
           // Taxa Ponderada = Média ponderada entre a dívida velha (taxa original) e o dinheiro novo (taxa nova)
           const taxaPonderada = trocoBruto > 0 
