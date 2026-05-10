@@ -137,6 +137,7 @@ export async function GET() {
 
         const prazos = [84, 96, 108];
         for (const prazo of prazos) {
+          const coefExato = prazo === 84 ? 0.023105 : prazo === 96 ? 0.0206 : 0.0191;
           const tabelaExistente = await prisma.tabelaCoeficiente.findFirst({
             where: { bancoId: bancoDb.id, produtoId: produto.id, prazo: prazo }
           });
@@ -151,9 +152,16 @@ export async function GET() {
                 nome: `Tabela Padrão INSS ${prazo}x (${b.nome})`,
                 prazo: prazo,
                 taxaJurosMensal: 1.66,
-                // Coeficientes exatos do Promosys (Base Daycoval)
-                coeficiente: prazo === 84 ? 0.023105 : prazo === 96 ? 0.0206 : 0.0191,
+                coeficiente: coefExato,
                 ativo: true
+              }
+            });
+          } else {
+            await prisma.tabelaCoeficiente.update({
+              where: { id: tabelaExistente.id },
+              data: {
+                coeficiente: coefExato,
+                taxaJurosMensal: 1.66
               }
             });
           }
