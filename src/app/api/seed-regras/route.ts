@@ -133,6 +133,7 @@ export async function GET() {
           });
         }
       }
+      }
     }
 
     return NextResponse.json({ success: true, message: "Regras inseridas com sucesso!", logs });
