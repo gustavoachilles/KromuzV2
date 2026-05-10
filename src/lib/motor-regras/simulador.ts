@@ -132,7 +132,7 @@ export function calcularOportunidades(
         if (!tab.ativo) continue;
 
         const valorLiberado = cliente.margemLivre / tab.coeficiente;
-        if (valorLiberado < (regra.valorMinimo ?? 500)) continue;
+        if (valorLiberado < (regra.margemNovaValorMin ?? 500)) continue;
 
         oportunidades.push({
           tipo: "EMPRESTIMO_CONSIGNADO",
