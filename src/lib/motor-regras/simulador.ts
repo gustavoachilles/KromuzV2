@@ -61,44 +61,17 @@ function isMesmoBanco(nome1: string | undefined | null, nome2: string | undefine
 }
 
 /**
- * Dicionário para normalizar nomes esquisitos vindos do HISCON
- */
-const DICIONARIO_NORMALIZACAO: Record<string, string> = {
-  "ADE DE CREDITO": "Facta",
-  "SOCIEDADE DE CREDITO DIRETO": "Facta",
-  "SCD": "Facta",
-  "BANCO C6 CONSIGNADO": "C6 Bank",
-  "BCO DAYCOVAL": "Daycoval",
-  "BANCO DAYCOVAL": "Daycoval",
-  "BCO BMG": "BMG",
-  "BANCO BMG": "BMG",
-  "BCO PAN": "PAN",
-  "BANCO PAN": "PAN",
-};
-
-/**
  * Cérebro do Motor de Regras:
  * Cruza os dados do cliente (HISCON) com as regras dos bancos para gerar oportunidades.
  */
 export function calcularOportunidades(
   cliente: ClienteSimulacao,
-  contratosRaw: ContratoAtivo[],
+  contratos: ContratoAtivo[],
   regras: RegraProdutoCredito[],
   tabelas: TabelaCoeficiente[],
   bancos: Banco[] // Injetamos a lista de bancos para puxar o fatorSaldo
 ): Oportunidade[] {
   const oportunidades: Oportunidade[] = [];
-  
-  // Normaliza nomes dos bancos dos contratos para bater com as regras
-  const contratos = contratosRaw.map(c => {
-    let nomeNormalizado = c.bancoNome.toUpperCase();
-    for (const [padrao, oficial] of Object.entries(DICIONARIO_NORMALIZACAO)) {
-      if (nomeNormalizado.includes(padrao.toUpperCase())) {
-        return { ...c, bancoNome: oficial };
-      }
-    }
-    return c;
-  });
 
   for (const regra of regras) {
     if (!regra.ativa) continue;
@@ -120,8 +93,8 @@ export function calcularOportunidades(
     }
 
     // Espécies Aceitas
-    const especiesAceitas = regra.especies?.aceitas as number[] ?? [];
-    const especiesBloqueadas = regra.especies?.bloqueadas as number[] ?? [];
+    const especiesAceitas = (regra.especies as any)?.aceitas as number[] ?? [];
+    const especiesBloqueadas = (regra.especies as any)?.bloqueadas as number[] ?? [];
     if (especiesAceitas.length > 0 && !especiesAceitas.includes(cliente.especie)) {
       continue;
     }
