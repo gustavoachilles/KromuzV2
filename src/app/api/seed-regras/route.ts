@@ -2,19 +2,25 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
 const BANCOS_LEGADOS = [
-  { nome: "Daycoval", minPag: 12, minRest: 12, minParc: 100, port: true, refin: true, portRefin: true, fatorSaldo: 0.85 },
-  { nome: "BMG", minPag: 12, minRest: 12, minParc: 80, port: true, refin: true, portRefin: true, fatorSaldo: 0.72 },
-  { nome: "PAN", minPag: 12, minRest: 12, minParc: 80, port: true, refin: true, portRefin: true, fatorSaldo: 0.74 },
-  { nome: "Facta", minPag: 12, minRest: 12, minParc: 80, port: true, refin: true, portRefin: true, fatorSaldo: 0.73 },
-  { nome: "Itaú", minPag: 15, minRest: 12, minParc: 150, port: true, refin: true, portRefin: false, fatorSaldo: 0.75 },
-  { nome: "Bradesco", minPag: 15, minRest: 12, minParc: 150, port: true, refin: true, portRefin: false, fatorSaldo: 0.75 },
-  { nome: "Caixa", minPag: 15, minRest: 18, minParc: 100, port: true, refin: true, portRefin: false, fatorSaldo: 0.73 },
-  { nome: "Banco do Brasil", minPag: 15, minRest: 12, minParc: 100, port: true, refin: true, portRefin: false, fatorSaldo: 0.72 },
-  { nome: "Santander", minPag: 12, minRest: 12, minParc: 100, port: true, refin: true, portRefin: true, fatorSaldo: 0.72 },
-  { nome: "Safra", minPag: 12, minRest: 12, minParc: 80, port: true, refin: true, portRefin: true, fatorSaldo: 0.72 },
-  { nome: "C6 Bank", minPag: 12, minRest: 12, minParc: 80, port: true, refin: true, portRefin: true, fatorSaldo: 0.73 },
-  { nome: "Banrisul", minPag: 12, minRest: 12, minParc: 80, port: true, refin: true, portRefin: false, fatorSaldo: 0.72 },
-  { nome: "Sicoob", minPag: 12, minRest: 12, minParc: 80, port: true, refin: true, portRefin: false, fatorSaldo: 0.72 },
+  { nome: "Daycoval", minPag: 12, minParc: 20, port: true, refin: true, portRefin: true, fatorSaldo: 0.85, valorMinimo: 500, trocoMin: 100 },
+  { nome: "BMG", minPag: 12, minParc: 20, port: true, refin: true, portRefin: true, fatorSaldo: 0.72, valorMinimo: 500, trocoMin: 100 },
+  { nome: "PAN", minPag: 12, minParc: 20, port: true, refin: true, portRefin: true, fatorSaldo: 0.74, valorMinimo: 500, trocoMin: 100 },
+  { nome: "Facta", minPag: 12, minParc: 20, port: true, refin: true, portRefin: true, fatorSaldo: 0.73, valorMinimo: 500, trocoMin: 100 },
+  { nome: "Safra", minPag: 12, minParc: 20, port: true, refin: true, portRefin: true, fatorSaldo: 0.72, valorMinimo: 500, trocoMin: 100 },
+  { nome: "C6 Bank", minPag: 12, minParc: 20, port: true, refin: true, portRefin: true, fatorSaldo: 0.73, valorMinimo: 500, trocoMin: 100 },
+  { nome: "Banrisul", minPag: 12, minParc: 20, port: true, refin: true, portRefin: false, fatorSaldo: 0.72, valorMinimo: 500, trocoMin: 100 },
+  { nome: "Amigoz", minPag: 12, minParc: 20, port: true, refin: true, portRefin: true, fatorSaldo: 0.72, valorMinimo: 500, trocoMin: 100 },
+  { nome: "BRB", minPag: 12, minParc: 20, port: true, refin: true, portRefin: true, fatorSaldo: 0.72, valorMinimo: 500, trocoMin: 100 },
+  { nome: "Digio", minPag: 12, minParc: 20, port: true, refin: true, portRefin: true, fatorSaldo: 0.72, valorMinimo: 500, trocoMin: 100 },
+  { nome: "Finanto Bank", minPag: 12, minParc: 20, port: true, refin: true, portRefin: true, fatorSaldo: 0.72, valorMinimo: 500, trocoMin: 100 },
+  { nome: "iCred", minPag: 12, minParc: 20, port: true, refin: true, portRefin: true, fatorSaldo: 0.72, valorMinimo: 500, trocoMin: 100 },
+  { nome: "Mais BB", minPag: 12, minParc: 20, port: true, refin: true, portRefin: true, fatorSaldo: 0.72, valorMinimo: 500, trocoMin: 100 },
+  { nome: "Mercantil", minPag: 12, minParc: 20, port: true, refin: true, portRefin: true, fatorSaldo: 0.72, valorMinimo: 500, trocoMin: 100 },
+  { nome: "PicPay", minPag: 12, minParc: 20, port: true, refin: true, portRefin: true, fatorSaldo: 0.72, valorMinimo: 500, trocoMin: 100 },
+  { nome: "Presença Bank", minPag: 12, minParc: 20, port: true, refin: true, portRefin: true, fatorSaldo: 0.72, valorMinimo: 500, trocoMin: 100 },
+  { nome: "Quero Mais", minPag: 12, minParc: 20, port: true, refin: true, portRefin: true, fatorSaldo: 0.72, valorMinimo: 500, trocoMin: 100 },
+  { nome: "Total Cash", minPag: 12, minParc: 20, port: true, refin: true, portRefin: true, fatorSaldo: 0.72, valorMinimo: 500, trocoMin: 100 },
+  { nome: "VCTEX", minPag: 12, minParc: 20, port: true, refin: true, portRefin: true, fatorSaldo: 0.72, valorMinimo: 500, trocoMin: 100 },
 ];
 
 export async function GET() {
@@ -29,6 +35,18 @@ export async function GET() {
     for (const empresa of empresas) {
       logs.push(`Processando regras para a empresa: ${empresa.nomeEmpresa || empresa.id}`);
       
+      // Desativa bancos genéricos previamente inseridos
+      await prisma.banco.updateMany({
+        where: {
+          empresaId: empresa.id,
+          nome: { in: ["Itaú", "Bradesco", "Caixa", "Banco do Brasil", "Santander", "Sicoob"] }
+        },
+        data: {
+          status: "inativo",
+          ativoSimulacao: false
+        }
+      });
+
       const inss = await prisma.convenio.findFirst({
         where: { empresaId: empresa.id, slug: "inss" }
       });
@@ -121,12 +139,14 @@ export async function GET() {
               prioridade: 1,
               taxaMinimaAm: 1.0,
               taxaMaximaAm: 1.66,
-              trocoMinimoLiberado: 100,
+              trocoMinimoLiberado: b.trocoMin,
+              valorMinimo: b.valorMinimo,
               portPermitido: prodProp.tipo.includes("PORTABILIDADE") ? b.port : undefined,
               portParcelasMinPagas: prodProp.tipo.includes("PORTABILIDADE") ? b.minPag : undefined,
               refinPermitido: prodProp.tipo.includes("REFINANCIAMENTO") ? b.refin : undefined,
               refinParcelasMinPagas: prodProp.tipo.includes("REFINANCIAMENTO") ? b.minPag : undefined,
-              refinValorMin: b.minParc,
+              refinValorMin: b.valorMinimo,
+              refinTrocoMin: b.trocoMin,
               faixasEtarias: [{ idade_min: 21, idade_max: 73 }],
               especies: { aceitas: [21, 32, 41, 42, 46, 92] }
             }

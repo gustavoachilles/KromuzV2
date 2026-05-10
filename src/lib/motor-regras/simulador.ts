@@ -50,6 +50,17 @@ export interface Oportunidade {
 }
 
 /**
+ * Função utilitária para checar se dois bancos são da mesma instituição
+ * (Trata variações como "Banco Daycoval" e "Daycoval")
+ */
+function isMesmoBanco(nome1: string | undefined | null, nome2: string | undefined | null): boolean {
+  if (!nome1 || !nome2) return false;
+  const n1 = nome1.toUpperCase().trim();
+  const n2 = nome2.toUpperCase().trim();
+  return n1.includes(n2) || n2.includes(n1);
+}
+
+/**
  * Cérebro do Motor de Regras:
  * Cruza os dados do cliente (HISCON) com as regras dos bancos para gerar oportunidades.
  */
@@ -120,6 +131,9 @@ export function calcularOportunidades(
       for (const tab of tabelasProduto) {
         if (!tab.ativo) continue;
 
+        const valorLiberado = cliente.margemLivre / tab.coeficiente;
+        if (valorLiberado < (regra.valorMinimo ?? 500)) continue;
+
         oportunidades.push({
           tipo: "EMPRESTIMO_CONSIGNADO",
           bancoId: regra.bancoId,
@@ -128,7 +142,7 @@ export function calcularOportunidades(
           produtoNome: regra.produtoNome,
           convenioId: regra.convenioId,
           valorParcela: cliente.margemLivre,
-          valorLiberado: cliente.margemLivre / tab.coeficiente,
+          valorLiberado: valorLiberado,
           prazo: tab.prazo,
           taxaJuros: tab.taxaJurosMensal,
           score: 100,
@@ -140,6 +154,9 @@ export function calcularOportunidades(
     // --- PORTABILIDADE ---
     if (regra.tipoOperacao === "PORTABILIDADE") {
       for (const contrato of contratos) {
+        // Regra de Ouro: Portabilidade só faz sentido para bancos diferentes
+        if (isMesmoBanco(contrato.bancoNome, regra.bancoNome)) continue;
+
         if (regra.portParcelasMinPagas && contrato.parcelasPagas < regra.portParcelasMinPagas) continue;
         if (regra.taxaMinimaAm && contrato.taxaJuros < regra.taxaMinimaAm) continue;
         
@@ -196,6 +213,9 @@ export function calcularOportunidades(
     // --- REFINANCIAMENTO ---
     if (regra.tipoOperacao === "REFINANCIAMENTO") {
       for (const contrato of contratos) {
+        // Regra de Ouro: Refinanciamento DEVE ser no MESMO banco da dívida original
+        if (!isMesmoBanco(contrato.bancoNome, regra.bancoNome)) continue;
+
         if (regra.refinPermitido === false) continue;
         if (regra.refinParcelasMinPagas && contrato.parcelasPagas < regra.refinParcelasMinPagas) continue;
 
@@ -257,6 +277,9 @@ export function calcularOportunidades(
     // --- PORTABILIDADE + REFIN ---
     if (regra.tipoOperacao === "PORTABILIDADE_REFIN") {
       for (const contrato of contratos) {
+        // Regra de Ouro: Portabilidade requer troca de banco
+        if (isMesmoBanco(contrato.bancoNome, regra.bancoNome)) continue;
+
         if (regra.portParcelasMinPagas && contrato.parcelasPagas < regra.portParcelasMinPagas) continue;
         if (regra.taxaMinimaAm && contrato.taxaJuros < regra.taxaMinimaAm) continue;
 
