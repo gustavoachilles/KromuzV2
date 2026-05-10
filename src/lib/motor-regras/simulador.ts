@@ -61,17 +61,38 @@ function isMesmoBanco(nome1: string | undefined | null, nome2: string | undefine
 }
 
 /**
+ * Calcula o Valor Presente (Saldo Devedor) de um contrato
+ * com base na parcela, prazo restante e taxa de juros original.
+ */
+function calcularPresentValue(pmt: number, n: number, i: number): number {
+  if (n <= 0 || pmt <= 0) return 0;
+  if (i <= 0) return pmt * n; // Sem juros
+  const iDecimal = i / 100;
+  return pmt * ((1 - Math.pow(1 + iDecimal, -n)) / iDecimal);
+}
+
+/**
  * Cérebro do Motor de Regras:
  * Cruza os dados do cliente (HISCON) com as regras dos bancos para gerar oportunidades.
  */
 export function calcularOportunidades(
   cliente: ClienteSimulacao,
-  contratos: ContratoAtivo[],
+  contratosInput: ContratoAtivo[],
   regras: RegraProdutoCredito[],
   tabelas: TabelaCoeficiente[],
   bancos: Banco[] // Injetamos a lista de bancos para puxar o fatorSaldo
 ): Oportunidade[] {
   const oportunidades: Oportunidade[] = [];
+
+  // Pré-processamento: Garante que o Saldo Devedor não seja R$ 0.00
+  // Se for 0.00 (não veio no PDF), estimamos via Valor Presente da dívida.
+  const contratos = contratosInput.map(c => {
+    let saldo = c.saldoDevedorEstimado;
+    if (!saldo || saldo <= 0) {
+      saldo = calcularPresentValue(c.valorParcela, c.prazoRestante, c.taxaJuros || 1.66);
+    }
+    return { ...c, saldoDevedorEstimado: saldo };
+  });
 
   for (const regra of regras) {
     if (!regra.ativa) continue;
@@ -155,9 +176,28 @@ export function calcularOportunidades(
 
     // --- PORTABILIDADE ---
     if (regra.tipoOperacao === "PORTABILIDADE") {
+      // Regras de bloqueio de compra extraídas do Roteiro Operacional (Bevihelp)
+      const RESTRICOES_ORIGEM: Record<string, string[]> = {
+        "C6": ["AGIPLAN", "CETELEM", "FACTA", "DAYCOVAL", "PAN", "MERCANTIL", "BANCO OBM", "BANCO BMG"],
+        "DAYCOVAL": ["FACTA", "C6", "SAFRA", "PAN", "BMG", "MERCANTIL", "AGIPLAN"],
+        "BANRISUL": [], // Banrisul aceita quase todos, mas exige R$ 5.000 saldo
+        "BRB": [],
+        "FACTA": ["CETELEM", "AGIPLAN"],
+        "ICRED": [] // iCred aceita FACTA
+      };
+
       for (const contrato of contratos) {
         // Regra de Ouro: Portabilidade só faz sentido para bancos diferentes
         if (isMesmoBanco(contrato.bancoNome, regra.bancoNome)) continue;
+
+        // Regra de Ouro 2: Bloqueio de Origem (Ex: C6 não compra de Facta)
+        const blacklist = Object.keys(RESTRICOES_ORIGEM).find(k => isMesmoBanco(k, regra.bancoNome));
+        if (blacklist) {
+          const isBloqueado = RESTRICOES_ORIGEM[blacklist].some(bloqueado => 
+            contrato.bancoNome.toUpperCase().includes(bloqueado)
+          );
+          if (isBloqueado) continue;
+        }
 
         if (regra.portParcelasMinPagas && contrato.parcelasPagas < regra.portParcelasMinPagas) continue;
         if (regra.taxaMinimaAm && contrato.taxaJuros < regra.taxaMinimaAm) continue;
@@ -168,47 +208,53 @@ export function calcularOportunidades(
           t.prazo >= contrato.prazoRestante
         );
 
-        if (tabPort) {
-          // Busca fator_saldo do banco de origem
-          const bancoOrigem = bancos.find(b => 
-            contrato.bancoNome.toUpperCase().includes(b.nome.toUpperCase()) ||
-            b.nome.toUpperCase().includes(contrato.bancoNome.toUpperCase())
-          );
-          const fatorSaldo = bancoOrigem?.fatorSaldo ?? 1.0;
-          
-          const saldoParaQuitacao = contrato.saldoDevedorEstimado * fatorSaldo;
-          const novoValorLiberado = contrato.valorParcela / tabPort.coeficiente;
-          
-          const trocoBruto = novoValorLiberado - saldoParaQuitacao;
-          const iof = trocoBruto > 0 ? trocoBruto * 0.013 : 0;
-          const trocoLiquido = trocoBruto - iof;
+          if (tabPort) {
+            // Busca fator_saldo do banco de origem
+            const bancoOrigem = bancos.find(b => 
+              contrato.bancoNome.toUpperCase().includes(b.nome.toUpperCase()) ||
+              b.nome.toUpperCase().includes(contrato.bancoNome.toUpperCase())
+            );
+            const fatorSaldo = bancoOrigem?.fatorSaldo ?? 1.0;
+            
+            const saldoParaQuitacao = contrato.saldoDevedorEstimado * fatorSaldo;
+            const novoValorLiberado = contrato.valorParcela / tabPort.coeficiente;
+            
+            const trocoBruto = novoValorLiberado - saldoParaQuitacao;
+            // IOF ajustado (aproximadamente 3.14% apenas sobre o valor do troco novo)
+            const iof = trocoBruto > 0 ? trocoBruto * 0.0314 : 0;
+            const trocoLiquido = trocoBruto - iof;
+            
+            // Taxa Ponderada = Média ponderada entre a dívida velha (taxa original) e o dinheiro novo (taxa nova)
+            const taxaPonderada = trocoBruto > 0 
+              ? ((saldoParaQuitacao * contrato.taxaJuros) + (trocoBruto * tabPort.taxaJurosMensal)) / novoValorLiberado
+              : tabPort.taxaJurosMensal;
 
-          if (trocoLiquido >= (regra.trocoMinimoLiberado ?? 0)) {
-            // Pontua mais alto se a taxa de origem for maior que a destino
-            const taxaReduzida = contrato.taxaJuros > tabPort.taxaJurosMensal;
-            const score = taxaReduzida ? 100 : 80;
+            if (trocoLiquido >= (regra.trocoMinimoLiberado ?? 0)) {
+              // Pontua mais alto se a taxa de origem for maior que a destino
+              const taxaReduzida = contrato.taxaJuros > tabPort.taxaJurosMensal;
+              const score = taxaReduzida ? 100 : 80;
 
-            oportunidades.push({
-              tipo: "PORTABILIDADE",
-              bancoId: regra.bancoId,
-              bancoNome: regra.bancoNome,
-              produtoId: regra.produtoId,
-              produtoNome: regra.produtoNome,
-              convenioId: regra.convenioId,
-              valorParcela: contrato.valorParcela,
-              valorLiberado: novoValorLiberado,
-              prazo: tabPort.prazo,
-              taxaJuros: tabPort.taxaJurosMensal,
-              contratoOriginalId: contrato.id,
-              trocoEstimado: trocoLiquido,
-              score: score,
-              mensagens: [
-                `Portabilidade com troco de R$ ${trocoLiquido.toFixed(2)}`,
-                taxaReduzida ? `Redução de Taxa: de ${contrato.taxaJuros}% para ${tabPort.taxaJurosMensal}%` : `Taxa de ${tabPort.taxaJurosMensal}%`
-              ]
-            });
+              oportunidades.push({
+                tipo: "PORTABILIDADE",
+                bancoId: regra.bancoId,
+                bancoNome: regra.bancoNome,
+                produtoId: regra.produtoId,
+                produtoNome: regra.produtoNome,
+                convenioId: regra.convenioId,
+                valorParcela: contrato.valorParcela,
+                valorLiberado: novoValorLiberado,
+                prazo: tabPort.prazo,
+                taxaJuros: taxaPonderada,
+                contratoOriginalId: contrato.id,
+                trocoEstimado: trocoLiquido,
+                score: score,
+                mensagens: [
+                  `Portabilidade com troco de R$ ${trocoLiquido.toFixed(2)}`,
+                  `Taxa Ponderada: ${taxaPonderada.toFixed(2)}% a.m.`
+                ]
+              });
+            }
           }
-        }
       }
     }
 

@@ -17,7 +17,8 @@ export async function parseHisconPdf(buffer: Buffer): Promise<ExtratoHisconRaw> 
   }
 
   // Importação para funcionar no Next.js (compatível com Webpack)
-  const pdf = require("pdf-parse");
+  const pdfParse = require("pdf-parse");
+  const pdf = pdfParse.default || pdfParse;
   const data = await pdf(buffer);
   const text = data.text;
 
