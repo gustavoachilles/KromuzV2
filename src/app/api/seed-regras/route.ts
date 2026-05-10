@@ -91,6 +91,26 @@ export async function GET() {
         produtosProps.push({ tipo: "CARTAO_BENEFICIO", nome: "Cartão Benefício" });
       }
 
+      const tiposPermitidos = produtosProps.map(p => p.tipo);
+
+      // Desativa produtos e regras antigas que não são mais permitidas para este banco
+      await prisma.produtoCredito.updateMany({
+        where: {
+          empresaId: empresa.id,
+          bancoId: bancoDb.id,
+          tipoProduto: { notIn: tiposPermitidos as any }
+        },
+        data: { ativo: false }
+      });
+      await prisma.regraProdutoCredito.updateMany({
+        where: {
+          empresaId: empresa.id,
+          bancoId: bancoDb.id,
+          tipoOperacao: { notIn: tiposPermitidos as any }
+        },
+        data: { ativa: false }
+      });
+
       for (const prodProp of produtosProps) {
         let produto = await prisma.produtoCredito.findFirst({
           where: { empresaId: empresa.id, bancoId: bancoDb.id, tipoProduto: prodProp.tipo as any }
@@ -106,6 +126,12 @@ export async function GET() {
               tipoProduto: prodProp.tipo as any,
               ativo: true
             }
+          });
+        } else {
+          // Reativa se já existia
+          await prisma.produtoCredito.update({
+            where: { id: produto.id },
+            data: { ativo: true }
           });
         }
 
@@ -158,6 +184,11 @@ export async function GET() {
               faixasEtarias: [{ idade_min: 21, idade_max: 73 }],
               especies: { aceitas: [21, 32, 41, 42, 46, 92] }
             }
+          });
+        } else {
+          await prisma.regraProdutoCredito.update({
+            where: { id: regraExistente.id },
+            data: { ativa: true }
           });
         }
       }
