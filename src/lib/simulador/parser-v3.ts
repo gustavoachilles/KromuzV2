@@ -1,5 +1,6 @@
 import { ExtratoHisconRaw } from "./schema-hiscon";
-import { PDFParse } from "pdf-parse";
+// @ts-ignore - Ignora erro do Vercel caso não encontre type default
+import pdfParse from "pdf-parse";
 
 /**
  * Robô Extrator (Parser):
@@ -17,13 +18,11 @@ export async function parseHisconPdf(buffer: Buffer): Promise<ExtratoHisconRaw> 
     };
   }
 
-  // pdf-parse v2: usa a classe PDFParse
-  const parser = new PDFParse({ verbosity: 0 });
-  await (parser as any).load(buffer);
+  // Restaura o uso da versão 1.1.1 que é apenas uma função
+  const pdf = pdfParse.default || pdfParse;
+  const data = await pdf(buffer);
   
-  // Extrai o texto e garante que é string (ignora tipos errados da biblioteca)
-  const result: any = await parser.getText();
-  const textStr: string = typeof result === "string" ? result : (result?.text || "");
+  const textStr: string = data.text || "";
   const text = textStr;
 
   // 1. Extração de Dados Básicos
