@@ -33,9 +33,21 @@ export async function POST(req: NextRequest) {
     let hiscon;
     try {
       hiscon = await parseHisconPdf(buffer);
-      console.log("✅ [Simulador] Robô leu o PDF com sucesso!");
+      console.log(`✅ [Simulador] Robô leu o PDF com sucesso! (Contratos achados: ${hiscon.contratos_ativos.length})`);
+      
+      // Se o robô não achar contratos, a regex pode ter falhado. Tenta a IA silenciosamente.
+      if (hiscon.contratos_ativos.length === 0) {
+        console.log("⚠️ [Simulador] Robô encontrou 0 contratos. Tentando IA para garantir...");
+        const extracao = await processarHisconV3(pdfBase64);
+        if (extracao.ok && extracao.dados.contratos_ativos.length > 0) {
+          console.log("✅ [Simulador] IA salvou o dia e encontrou os contratos!");
+          hiscon = extracao.dados;
+        } else {
+          console.log("ℹ️ [Simulador] IA também não encontrou contratos ou falhou. Mantendo resultado do Robô.");
+        }
+      }
     } catch (e: any) {
-      console.warn("⚠️ [Simulador] Robô falhou, tentando via IA como fallback...", e.message);
+      console.warn("⚠️ [Simulador] Robô falhou com erro, tentando via IA como fallback...", e.message);
       const extracao = await processarHisconV3(pdfBase64);
       
       if (!extracao.ok) {
