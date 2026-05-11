@@ -71,12 +71,14 @@ export function SimuladorTableRow({ contrato, oportunidades }: SimuladorTableRow
     <>
       <tr className={`border-b border-slate-100 hover:bg-slate-50 transition-colors ${checked ? 'bg-slate-50' : ''}`}>
         <td className="p-3 text-center">
-          <input 
-            type="checkbox" 
-            checked={checked}
-            onChange={(e) => setChecked(e.target.checked)}
-            className="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 border-slate-300"
-          />
+          {opsValidas.length > 0 && (
+            <input 
+              type="checkbox" 
+              checked={checked}
+              onChange={(e) => setChecked(e.target.checked)}
+              className="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 border-slate-300"
+            />
+          )}
         </td>
         <td className="p-3 text-sm font-medium text-slate-800 uppercase max-w-[200px] truncate" title={contrato.bancoNome}>
           {contrato.bancoNome}
@@ -146,7 +148,6 @@ export function SimuladorTableRow({ contrato, oportunidades }: SimuladorTableRow
                   value={prazo}
                   onChange={(e) => setPrazo(Number(e.target.value))}
                   className="w-full bg-white border border-slate-200 rounded-md px-3 py-1.5 text-sm font-medium focus:ring-2 focus:ring-indigo-500 outline-none"
-                  disabled={prazosDisp.length <= 1}
                 >
                   {prazosDisp.map(p => (
                     <option key={p} value={p}>{p} Meses</option>

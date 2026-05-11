@@ -66,9 +66,14 @@ export async function parseHisconPdf(buffer: Buffer): Promise<ExtratoHisconRaw> 
   const contratoRegex = /([\d\w]+)\s+(\d+\s+-\s+[^\n]+)\s+Ativo[\s\S]*?(\d+)\s+R\$([\d.,]+)[\s\S]*?R\$([\d.,]+)/gi;
   let match;
   while ((match = contratoRegex.exec(sectionAtivos)) !== null) {
+    let bancoNome = match[2].trim();
+    if (bancoNome.toUpperCase().includes("ADE DE CREDITO DIRETO")) {
+      bancoNome = "QI SOCIEDADE DE CREDITO DIRETO S A";
+    }
+
     contratos.push({
       numero_contrato: match[1] || Math.floor(Math.random() * 1000000).toString(),
-      banco_nome: match[2].trim(),
+      banco_nome: bancoNome,
       valor_parcela: parseMoeda(match[4]),
       taxa_juros_mensal: 1.66,
       parcelas_pagas: 0,

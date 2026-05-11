@@ -179,7 +179,7 @@ export function calcularOportunidades(
       // Regras de bloqueio de compra extraídas do Roteiro Operacional (Bevihelp)
       const RESTRICOES_ORIGEM: Record<string, string[]> = {
         "C6": ["AGIPLAN", "CETELEM", "FACTA", "DAYCOVAL", "PAN", "MERCANTIL", "BANCO OBM", "BANCO BMG"],
-        "DAYCOVAL": ["FACTA", "C6", "SAFRA", "PAN", "BMG", "MERCANTIL", "AGIPLAN"],
+        "DAYCOVAL": ["C6", "SAFRA", "PAN", "BMG", "MERCANTIL", "AGIPLAN"],
         "BANRISUL": [], // Banrisul aceita quase todos, mas exige R$ 5.000 saldo
         "BRB": [],
         "FACTA": ["CETELEM", "AGIPLAN"],
@@ -326,7 +326,7 @@ export function calcularOportunidades(
     if (regra.tipoOperacao === "PORTABILIDADE_REFIN") {
       const RESTRICOES_ORIGEM: Record<string, string[]> = {
         "C6": ["AGIPLAN", "CETELEM", "FACTA", "DAYCOVAL", "PAN", "MERCANTIL", "BANCO OBM", "BANCO BMG"],
-        "DAYCOVAL": ["FACTA", "C6", "SAFRA", "PAN", "BMG", "MERCANTIL", "AGIPLAN"],
+        "DAYCOVAL": ["C6", "SAFRA", "PAN", "BMG", "MERCANTIL", "AGIPLAN"],
         "BANRISUL": [],
         "BRB": [],
         "FACTA": ["CETELEM", "AGIPLAN"],
