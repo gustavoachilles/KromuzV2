@@ -17,7 +17,6 @@ Extraia os dados do HISCON PDF em anexo e retorne EXCLUSIVAMENTE um JSON seguind
     "especie_nome": "NOME DA ESPECIE",
     "numero_beneficio": "000.000.000-0",
     "uf": "UF",
-    "especie_beneficio": 0,
     "possui_representante_legal": false,
     "data_despacho_beneficio": "AAAA-MM-DD",
     "margens": {
@@ -31,15 +30,20 @@ Extraia os dados do HISCON PDF em anexo e retorne EXCLUSIVAMENTE um JSON seguind
       "numero_contrato": "000",
       "banco_nome": "NOME DO BANCO",
       "valor_parcela": 0.0,
-      "quantidade_parcelas": 0,
+      "prazo_total": 0,
       "parcelas_pagas": 0,
       "data_inicio": "AAAA-MM-DD",
-      "taxa_juros": 0.0
+      "taxa_juros_mensal": 0.0,
+      "saldo_devedor_estimado": 0.0
     }
   ]
 }
 
-Considere o ano atual como 2026. IMPORTANTE: A idade e a data de nascimento NÃO existem no HISCON. Preencha a idade com 65 e a data_nascimento com "1950-01-01" como padrão. Extraia a Espécie do Benefício (apenas o número, ex: 21, 41, 32). Não adicione nenhum texto antes ou depois do JSON.`;
+Considere o ano atual como 2026. IMPORTANTE: 
+1. Se o HISCON trouxer apenas a 'Competência de Início do Desconto' ou 'Data de Início', calcule as 'parcelas_pagas' sendo a quantidade de meses desde a Data de Início até hoje (Ex: se iniciou em 01/2025, pagou umas 16 parcelas). Nunca retorne 0 se a data de inicio for antiga.
+2. Nomeie o banco QI sempre como 'QI SOCIEDADE DE CREDITO DIRETO S A'.
+3. Se não houver saldo devedor, tente estimar ou extraia o 'Valor Emprestado' se disponível.
+Não adicione nenhum texto antes ou depois do JSON.`;
 
 export async function processarHisconV3(pdfBufferBase64: string): Promise<ResultadoExtracaoHiscon> {
   const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
