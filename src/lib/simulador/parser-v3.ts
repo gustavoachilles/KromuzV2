@@ -1,4 +1,5 @@
 import { ExtratoHisconRaw } from "./schema-hiscon";
+import pdfParse from "pdf-parse";
 
 /**
  * Robô Extrator (Parser):
@@ -16,10 +17,8 @@ export async function parseHisconPdf(buffer: Buffer): Promise<ExtratoHisconRaw> 
     };
   }
 
-  // Importação para funcionar no Next.js (compatível com Webpack)
-  const pdfParse = require("pdf-parse");
-  const pdf = pdfParse.default || pdfParse;
-  const data = await pdf(buffer);
+  // Extração do texto
+  const data = await pdfParse(buffer);
   const text = data.text;
 
   // 1. Extração de Dados Básicos
