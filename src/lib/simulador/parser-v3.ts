@@ -20,10 +20,14 @@ export async function parseHisconPdf(buffer: Buffer): Promise<ExtratoHisconRaw> 
   // pdf-parse v2: usa a classe PDFParse
   const parser = new PDFParse({ verbosity: 0 });
   await (parser as any).load(buffer);
-  const text = await parser.getText();
+  
+  // Extrai o texto e garante que é string (ignora tipos errados da biblioteca)
+  const result: any = await parser.getText();
+  const textStr: string = typeof result === "string" ? result : (result?.text || "");
+  const text = textStr;
 
   // 1. Extração de Dados Básicos
-  const nBeneficio = text.match(/Nº Benefício:\s*([\d.-]+)/)?.[1] || "000.000.000-0";
+  const nBeneficio = textStr.match(/Nº Benefício:\s*([\d.-]+)/)?.[1] || "000.000.000-0";
   
   // Nome geralmente fica no começo após os cabeçalhos
   let nome = text.match(/Nome:\s*([^\n]+)/i)?.[1]?.trim();
