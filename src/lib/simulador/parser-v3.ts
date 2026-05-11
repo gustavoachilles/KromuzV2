@@ -19,7 +19,7 @@ export async function parseHisconPdf(buffer: Buffer): Promise<ExtratoHisconRaw> 
 
   // pdf-parse v2: usa a classe PDFParse
   const parser = new PDFParse({ verbosity: 0 });
-  await parser.load(buffer);
+  await (parser as any).load(buffer);
   const text = await parser.getText();
 
   // 1. Extração de Dados Básicos
