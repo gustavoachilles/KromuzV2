@@ -19,7 +19,7 @@ export async function parseHisconPdf(buffer: Buffer): Promise<ExtratoHisconRaw> 
   }
 
   // Restaura o uso da versão 1.1.1 que é apenas uma função
-  const pdf = pdfParse.default || pdfParse;
+  const pdf: any = (pdfParse as any).default || pdfParse;
   const data = await pdf(buffer);
   
   const textStr: string = data.text || "";
