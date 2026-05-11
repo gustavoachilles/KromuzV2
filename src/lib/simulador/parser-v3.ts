@@ -1,5 +1,5 @@
 import { ExtratoHisconRaw } from "./schema-hiscon";
-import pdfParse from "pdf-parse";
+import { PDFParse } from "pdf-parse";
 
 /**
  * Robô Extrator (Parser):
@@ -17,9 +17,10 @@ export async function parseHisconPdf(buffer: Buffer): Promise<ExtratoHisconRaw> 
     };
   }
 
-  // Extração do texto
-  const data = await pdfParse(buffer);
-  const text = data.text;
+  // pdf-parse v2: usa a classe PDFParse
+  const parser = new PDFParse({ verbosity: 0 });
+  await parser.load(buffer);
+  const text = await parser.getText();
 
   // 1. Extração de Dados Básicos
   const nBeneficio = text.match(/Nº Benefício:\s*([\d.-]+)/)?.[1] || "000.000.000-0";
