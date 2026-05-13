@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
 import {
-  Users, Plus, X, Loader2, Phone, Mail, DollarSign, GripVertical, Paperclip, Trash2, UploadCloud, FileText, Building2, MessageCircle, MessageSquare
+  Users, Plus, X, Loader2, Phone, Mail, DollarSign, GripVertical, Paperclip, Trash2, UploadCloud, FileText, Building2, MessageCircle, MessageSquare, Eye, EyeOff
 } from "lucide-react";
 import { toast } from "sonner";
 import { InboxDrawer } from "./InboxDrawer";
@@ -858,7 +858,7 @@ export function LeadsClient({
                           }}
                           className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-zinc-400 hover:text-violet-600 transition"
                         >
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                          {revelarCpf ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                         </button>
                       </div>
                     </div>
@@ -884,7 +884,7 @@ export function LeadsClient({
                           }}
                           className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-zinc-400 hover:text-violet-600 transition"
                         >
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                          {revelarTel ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                         </button>
                       </div>
                     </div>
