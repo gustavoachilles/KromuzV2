@@ -159,6 +159,8 @@ export function DashboardClient({
             icon={<Shield className="h-5 w-5" />}
             label="Comissão Paga"
             value={`R$ ${kpis.comissaoTotal.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`}
+            color="amber"
+          />
           <KpiCard
             icon={<Brain className="h-5 w-5" />}
             label="Cérebro (RAG)"
