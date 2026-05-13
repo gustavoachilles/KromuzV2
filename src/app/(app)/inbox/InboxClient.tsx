@@ -1,20 +1,105 @@
 "use client";
 
-import React, { useState } from "react";
-import { MessageSquare, Camera, ThumbsUp, Bot, Send, Search, CheckCircle2, Clock } from "lucide-react";
+import React, { useState, useEffect, useRef } from "react";
+import { MessageSquare, Camera, ThumbsUp, Bot, Send, Search, CheckCircle2, Clock, Loader2, Plus, Wand2 } from "lucide-react";
+import { toast } from "sonner";
 
 export function InboxClient({ conversas: initConversas, sessao }: { conversas: any[], sessao: any }) {
   const [conversas, setConversas] = useState(initConversas);
   const [ativaId, setAtivaId] = useState<string | null>(null);
+  const [novoTexto, setNovoTexto] = useState("");
+  const [tipoMensagem, setTipoMensagem] = useState<"WHATSAPP" | "INTERNA">("WHATSAPP");
+  const [agendadoPara, setAgendadoPara] = useState("");
+  const [enviando, setEnviando] = useState(false);
+  const [melhorandoTexto, setMelhorandoTexto] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
   
   const conversaAtiva = conversas.find(c => c.id === ativaId);
 
-  const getIcon = (tipo: string) => {
-    if (tipo === "WHATSAPP") return <MessageSquare className="w-4 h-4 text-emerald-500" />;
-    if (tipo === "INSTAGRAM") return <Camera className="w-4 h-4 text-pink-500" />;
-    if (tipo === "FACEBOOK") return <ThumbsUp className="w-4 h-4 text-blue-500" />;
-    return <MessageSquare className="w-4 h-4 text-zinc-500" />;
-  };
+  async function handleMelhorarTexto() {
+    if (!novoTexto.trim() || melhorandoTexto) return;
+    setMelhorandoTexto(true);
+    try {
+      const res = await fetch("/api/ai/melhorar-texto", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ textoOriginal: novoTexto })
+      });
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+      setNovoTexto(data.textoMelhorado);
+      toast.success("Texto melhorado com IA!");
+    } catch (error) {
+      toast.error("Falha ao melhorar texto. Verifique a API.");
+    } finally {
+      setMelhorandoTexto(false);
+    }
+  }
+
+  // Auto-scroll ao receber nova mensagem
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [conversaAtiva?.mensagens?.length]);
+
+  // Polling para novas mensagens (a cada 5 segundos)
+  useEffect(() => {
+    const timer = setInterval(async () => {
+      try {
+        const res = await fetch('/api/inbox/sync');
+        if (res.ok) {
+          const data = await res.json();
+          setConversas(data);
+        }
+      } catch (e) {}
+    }, 5000);
+    return () => clearInterval(timer);
+  }, []);
+
+  async function handleEnviar(e?: React.FormEvent) {
+    if (e) e.preventDefault();
+    if (!ativaId || !novoTexto.trim() || enviando) return;
+
+    setEnviando(true);
+    try {
+      const res = await fetch("/api/mensagens/enviar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          conversaId: ativaId, 
+          conteudo: novoTexto,
+          tipo: tipoMensagem,
+          agendadoPara: agendadoPara || null
+        })
+      });
+
+      if (!res.ok) throw new Error("Erro ao enviar");
+      
+      const { mensagem } = await res.json();
+      
+      // Atualiza UI localmente
+      setConversas(prev => prev.map(c => {
+        if (c.id === ativaId) {
+          return {
+            ...c,
+            mensagens: [...c.mensagens, mensagem],
+            ultimaMensagem: tipoMensagem === "INTERNA" ? `[NOTA] ${novoTexto}` : novoTexto,
+            updatedAt: new Date().toISOString()
+          }
+        }
+        return c;
+      }));
+      
+      setNovoTexto("");
+      setAgendadoPara("");
+      if (tipoMensagem === "INTERNA") setTipoMensagem("WHATSAPP");
+    } catch (err) {
+      toast.error("Erro ao processar mensagem.");
+    } finally {
+      setEnviando(false);
+    }
+  }
 
   return (
     <div className="flex h-full bg-white dark:bg-zinc-950 rounded-xl border border-zinc-200 dark:border-zinc-800 overflow-hidden shadow-sm">
@@ -91,16 +176,27 @@ export function InboxClient({ conversas: initConversas, sessao }: { conversas: a
               )}
             </div>
 
-            {/* Mensagens */}
-            <div className="flex-1 overflow-y-auto p-6 space-y-4">
+            <div className="flex-1 overflow-y-auto p-6 space-y-4" ref={scrollRef}>
               {conversaAtiva.mensagens.map((msg: any) => {
-                const isMine = msg.remetente === "VENDEDOR" || msg.remetente === "IA";
+                const isMine = msg.remetente === "VENDEDOR" || msg.remetente === "IA" || msg.remetente === "SISTEMA";
+                const isNote = msg.tipo === "INTERNA";
+                
                 return (
-                  <div key={msg.id} className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`max-w-[70%] rounded-2xl px-4 py-2 shadow-sm ${isMine ? 'bg-[#d9fdd3] dark:bg-violet-900 text-zinc-900 dark:text-zinc-100 rounded-tr-none' : 'bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-tl-none'}`}>
+                   <div key={msg.id} className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}>
+                    <div className={`max-w-[70%] rounded-2xl px-4 py-2 shadow-sm ${
+                      isNote 
+                        ? 'bg-amber-100 dark:bg-amber-900/40 border border-amber-200 dark:border-amber-800 text-amber-900 dark:text-amber-200 italic rounded-tr-none' 
+                        : isMine 
+                          ? 'bg-[#d9fdd3] dark:bg-violet-900 text-zinc-900 dark:text-zinc-100 rounded-tr-none' 
+                          : 'bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-tl-none'
+                    }`}>
+                      {isNote && <div className="text-[9px] font-bold uppercase tracking-wider mb-1 flex items-center gap-1 opacity-60">📌 Nota Interna</div>}
                       {msg.remetente === "IA" && <div className="text-[10px] font-bold text-violet-600 dark:text-violet-400 mb-1 flex items-center gap-1"><Bot className="w-3 h-3"/> Resposta por IA</div>}
+                      
                       <p className="text-sm whitespace-pre-wrap">{msg.conteudo}</p>
-                      <div className={`text-[10px] text-right mt-1 ${isMine ? 'text-emerald-700/60 dark:text-violet-300/60' : 'text-zinc-400'}`}>
+                      
+                      <div className={`text-[10px] text-right mt-1 flex items-center justify-end gap-1 ${isMine ? 'text-emerald-700/60 dark:text-violet-300/60' : 'text-zinc-400'}`}>
+                        {msg.agendadoPara && <Clock className="w-3 h-3" />}
                         {new Date(msg.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                       </div>
                     </div>
@@ -116,17 +212,75 @@ export function InboxClient({ conversas: initConversas, sessao }: { conversas: a
               )}
             </div>
 
-            {/* Input */}
-            <div className="p-4 bg-[#f0f2f5] dark:bg-zinc-900 border-t border-zinc-200 dark:border-zinc-800 flex gap-2 z-10">
+            <div className="px-4 py-2 bg-white/60 dark:bg-zinc-900/60 backdrop-blur-md flex items-center gap-4 border-t border-zinc-200 dark:border-zinc-800">
+               <div className="flex bg-zinc-100 dark:bg-zinc-800 rounded-lg p-1">
+                  <button 
+                    type="button"
+                    onClick={() => setTipoMensagem("WHATSAPP")}
+                    className={`px-3 py-1 text-[10px] font-bold uppercase rounded-md transition ${tipoMensagem === "WHATSAPP" ? 'bg-white dark:bg-zinc-700 shadow-sm text-violet-600' : 'text-zinc-500'}`}
+                  >
+                    WhatsApp
+                  </button>
+                  <button 
+                    type="button"
+                    onClick={() => setTipoMensagem("INTERNA")}
+                    className={`px-3 py-1 text-[10px] font-bold uppercase rounded-md transition ${tipoMensagem === "INTERNA" ? 'bg-amber-400 text-amber-950 shadow-sm' : 'text-zinc-500'}`}
+                  >
+                    Nota Interna
+                  </button>
+               </div>
+
+               {tipoMensagem === "WHATSAPP" && (
+                 <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-bold text-zinc-400 uppercase">Agendar:</span>
+                    <input 
+                      type="datetime-local" 
+                      value={agendadoPara}
+                      onChange={e => setAgendadoPara(e.target.value)}
+                      className="bg-transparent border-none text-[11px] font-medium text-zinc-600 focus:ring-0 cursor-pointer"
+                    />
+                 </div>
+               )}
+            </div>
+
+            <form 
+              onSubmit={handleEnviar}
+              className="p-4 bg-[#f0f2f5] dark:bg-zinc-900 border-t border-zinc-200 dark:border-zinc-800 flex gap-2 z-10"
+            >
               <input 
                 type="text" 
-                placeholder="Digite uma mensagem..." 
-                className="flex-1 bg-white dark:bg-zinc-800 rounded-full px-5 py-3 text-sm focus:outline-none shadow-sm border border-transparent focus:border-violet-500"
+                value={novoTexto}
+                onChange={e => setNovoTexto(e.target.value)}
+                placeholder={tipoMensagem === "INTERNA" ? "Escreva uma nota interna privada..." : "Digite uma mensagem..."}
+                className={`flex-1 rounded-full px-5 py-3 text-sm focus:outline-none shadow-sm border border-transparent transition ${
+                  tipoMensagem === "INTERNA" 
+                    ? 'bg-amber-50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800 focus:border-amber-400' 
+                    : 'bg-white dark:bg-zinc-800 focus:border-violet-500'
+                }`}
               />
-              <button className="w-12 h-12 rounded-full bg-violet-600 hover:bg-violet-700 text-white flex items-center justify-center shadow-sm transition shrink-0">
-                <Send className="w-5 h-5 ml-1" />
+              
+              {tipoMensagem === "WHATSAPP" && novoTexto.trim().length > 0 && (
+                <button
+                  type="button"
+                  onClick={handleMelhorarTexto}
+                  disabled={melhorandoTexto}
+                  title="Melhorar texto com IA"
+                  className="w-12 h-12 rounded-full bg-indigo-100 hover:bg-indigo-200 dark:bg-indigo-900/40 dark:hover:bg-indigo-900/60 text-indigo-600 flex items-center justify-center shadow-sm transition shrink-0 disabled:opacity-50 border border-indigo-200 dark:border-indigo-800"
+                >
+                  {melhorandoTexto ? <Loader2 className="w-5 h-5 animate-spin" /> : <Wand2 className="w-5 h-5" />}
+                </button>
+              )}
+
+              <button 
+                type="submit"
+                disabled={enviando || !novoTexto.trim()}
+                className={`w-12 h-12 rounded-full flex items-center justify-center shadow-sm transition shrink-0 disabled:opacity-50 ${
+                  tipoMensagem === "INTERNA" ? 'bg-amber-500 hover:bg-amber-600 text-amber-950' : 'bg-violet-600 hover:bg-violet-700 text-white'
+                }`}
+              >
+                {enviando ? <Loader2 className="w-5 h-5 animate-spin" /> : tipoMensagem === "INTERNA" ? <Plus className="w-5 h-5" /> : <Send className="w-5 h-5 ml-1" />}
               </button>
-            </div>
+            </form>
           </>
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center text-zinc-400 bg-zinc-50 dark:bg-zinc-950/50">

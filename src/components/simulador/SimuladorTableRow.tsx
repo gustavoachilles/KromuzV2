@@ -2,14 +2,15 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { Oportunidade, ContratoAtivo } from "@/lib/motor-regras/simulador";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, Sparkles, ArrowRight } from "lucide-react";
 
 interface SimuladorTableRowProps {
   contrato: ContratoAtivo;
   oportunidades: Oportunidade[];
+  onOpenInsight?: (context: any) => void;
 }
 
-export function SimuladorTableRow({ contrato, oportunidades }: SimuladorTableRowProps) {
+export function SimuladorTableRow({ contrato, oportunidades, onOpenInsight }: SimuladorTableRowProps) {
   const [checked, setChecked] = useState(false);
   
   // Filtra oportunidades para este contrato
@@ -66,6 +67,41 @@ export function SimuladorTableRow({ contrato, oportunidades }: SimuladorTableRow
     if (t === "PORTABILIDADE_REFIN") return "Refinanciamento Portabilidade";
     return t;
   };
+
+  const [gerandoProposta, setGerandoProposta] = useState(false);
+
+  async function handleGerarProposta() {
+    if (!simulacaoSelecionada) return;
+    setGerandoProposta(true);
+    try {
+      const res = await fetch("/api/propostas", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          clienteNome: "Cliente do Simulador", // Poderia vir de um campo de nome no topo
+          clienteCpf: undefined,
+          tipoOperacao: simulacaoSelecionada.tipo,
+          bancoNome: simulacaoSelecionada.bancoNome,
+          produtoNome: simulacaoSelecionada.produtoNome,
+          valorParcela: simulacaoSelecionada.valorParcela,
+          valorLiberado: simulacaoSelecionada.trocoEstimado || 0,
+          prazo: simulacaoSelecionada.prazo,
+          taxaJuros: simulacaoSelecionada.taxaJuros,
+          especieBeneficio: contrato.especieOriginal ? Number(contrato.especieOriginal) : undefined,
+          observacoes: `Gerado via Simulador HISCON. Contrato original: ${contrato.bancoNome}`
+        })
+      });
+
+      if (!res.ok) throw new Error("Erro ao criar proposta");
+      
+      const data = await res.json();
+      alert(`✅ Proposta gerada com sucesso para o banco ${data.bancoNome}!`);
+    } catch (err) {
+      alert("Erro ao gerar proposta na esteira.");
+    } finally {
+      setGerandoProposta(false);
+    }
+  }
 
   return (
     <>
@@ -172,12 +208,40 @@ export function SimuladorTableRow({ contrato, oportunidades }: SimuladorTableRow
                     <div className="text-sm font-bold text-slate-800">R$ {simulacaoSelecionada.valorLiberado.toFixed(2)}</div>
                   </div>
 
-                  <div className="w-[140px] text-center bg-emerald-50 rounded-lg p-2 border border-emerald-100">
-                    <label className="block text-xs font-semibold text-emerald-600 mb-1">Valor Cliente</label>
-                    <div className="text-lg font-black text-emerald-600">
+                  <div className="w-[140px] text-center bg-emerald-50 dark:bg-emerald-900/20 rounded-lg p-2 border border-emerald-100 dark:border-emerald-900/30">
+                    <label className="block text-xs font-semibold text-emerald-600 dark:text-emerald-400 mb-1">Valor Cliente</label>
+                    <div className="text-lg font-black text-emerald-600 dark:text-emerald-400">
                       R$ {simulacaoSelecionada.trocoEstimado ? simulacaoSelecionada.trocoEstimado.toFixed(2) : "0.00"}
                     </div>
                   </div>
+
+                  <button
+                    onClick={() => onOpenInsight?.({
+                      bancoNome: simulacaoSelecionada.bancoNome,
+                      produtoNome: simulacaoSelecionada.produtoNome,
+                      clienteEspecie: contrato.especieOriginal || '---',
+                      clienteIdade: 0, // Idade não está disponível no contrato, mas está no simulador pai
+                      valorParcela: simulacaoSelecionada.valorParcela,
+                      prazo: simulacaoSelecionada.prazo
+                    })}
+                    className="p-3 bg-violet-600 text-white rounded-xl hover:bg-violet-500 transition-all shadow-lg shadow-violet-600/20 group/ai"
+                    title="Analisar com IA"
+                  >
+                    <Sparkles className="w-5 h-5 group-hover/ai:rotate-12 transition-transform" />
+                  </button>
+
+                  <button
+                    disabled={gerandoProposta}
+                    onClick={handleGerarProposta}
+                    className="p-3 bg-emerald-600 text-white rounded-xl hover:bg-emerald-500 transition-all shadow-lg shadow-emerald-600/20 group/sell"
+                    title="Gerar Proposta na Esteira"
+                  >
+                    {gerandoProposta ? (
+                      <RefreshCw className="w-5 h-5 animate-spin" />
+                    ) : (
+                      <ArrowRight className="w-5 h-5 group-hover/sell:translate-x-1 transition-transform" />
+                    )}
+                  </button>
                 </>
               )}
 

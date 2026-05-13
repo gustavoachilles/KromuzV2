@@ -39,12 +39,14 @@ export async function middleware(request: NextRequest) {
     pathname === "/analise" ||
     pathname.startsWith("/api/auth") ||
     pathname.startsWith("/api/webhooks") ||
-    pathname.startsWith("/api/motor/isca") ||
     pathname.startsWith("/_next") ||
     pathname.startsWith("/favicon");
 
-  // Se não está logado e tenta acessar área protegida → login
+  // Se não está logado e tenta acessar área protegida → login ou 401
   if (!user && !isPublic) {
+    if (pathname.startsWith("/api/")) {
+      return NextResponse.json({ error: "Acesso negado. Token/Sessão ausente." }, { status: 401 });
+    }
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     url.searchParams.set("redirect", pathname);

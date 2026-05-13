@@ -24,6 +24,7 @@ export interface ContratoAtivo {
   taxaJuros: number;
   saldoDevedorEstimado: number;
   prazoRestante: number;
+  especieOriginal?: string;
 }
 
 export interface Oportunidade {

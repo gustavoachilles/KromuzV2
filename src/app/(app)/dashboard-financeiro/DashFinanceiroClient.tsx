@@ -1,12 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { DollarSign, TrendingUp, Building2, CheckCircle2, BarChart3, Plus, FileText, Banknote, Clock, AlertCircle } from "lucide-react";
+import { DollarSign, TrendingUp, Building2, CheckCircle2, BarChart3, Plus, FileText, Banknote, Clock, AlertCircle, Users, Wallet } from "lucide-react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 
 type MesData = { label: string; volume: number; comissao: number; parcela: number; count: number };
 type BancoGrupo = { bancoNome: string | null; _count: number; _sum: { valorLiberado: number | null; valorComissao: number | null } };
+type VendedorGrupo = { vendedorEmail: string | null; vendedorNome: string | null; _count: number; _sum: { valorLiberado: number | null; valorComissao: number | null } };
 type Totais = { volume: number; comissao: number; count: number };
 
 type FaturaBanco = {
@@ -39,26 +40,31 @@ function fmtFull(v: number) {
 export function DashFinanceiroClient({
   meses,
   porBanco,
+  porVendedor = [],
+  usuarios = [],
   totais,
   faturasIniciais,
   pendentesIniciais
 }: {
   meses: MesData[];
   porBanco: BancoGrupo[];
+  porVendedor?: VendedorGrupo[];
+  usuarios?: any[];
   totais: Totais;
   faturasIniciais?: FaturaBanco[];
   pendentesIniciais?: PropostaPendente[];
 }) {
   const router = useRouter();
-  const [tab, setTab] = useState<"visao_geral" | "lotes">("visao_geral");
+  const [tab, setTab] = useState<"visao_geral" | "vendedores" | "rede" | "lotes">("visao_geral");
   const [isGerandoLote, setIsGerandoLote] = useState(false);
   const [faturas, setFaturas] = useState(faturasIniciais || []);
 
   const maxVolume = Math.max(...meses.map((m) => m.volume), 1);
   const maxBanco = Math.max(...porBanco.map((b) => b._sum.valorLiberado || 0), 1);
+  const maxVendedor = Math.max(...porVendedor.map((v) => v._sum.valorLiberado || 0), 1);
   const taxaComissao = totais.volume > 0 ? ((totais.comissao / totais.volume) * 100).toFixed(2) : "0.00";
 
-  // Agrupar propostas pendentes por banco para o modal de geração
+  // Agrupar propostas pendentes por banco
   const pendentesPorBanco = pendentesIniciais?.reduce((acc, p) => {
     const b = p.bancoNome || "Desconhecido";
     if (!acc[b]) acc[b] = { count: 0, valor: 0, ids: [] };
@@ -68,9 +74,50 @@ export function DashFinanceiroClient({
     return acc;
   }, {} as Record<string, { count: number; valor: number; ids: string[] }>) || {};
 
+  // Calcular Hierarquia Master/Sub
+  const masterData: Record<string, { nome: string; volumeMaster: number; comissaoMaster: number; subs: any[]; splitRecebido: number }> = {};
+  
+  if (usuarios) {
+    usuarios.filter(u => !u.masterId).forEach(master => {
+      masterData[master.id] = {
+        nome: master.nome || master.email,
+        volumeMaster: 0,
+        comissaoMaster: 0,
+        subs: [],
+        splitRecebido: 0
+      };
+      
+      const vData = porVendedor.find(v => v.vendedorEmail === master.email);
+      if (vData) {
+        masterData[master.id].volumeMaster = vData._sum.valorLiberado || 0;
+        masterData[master.id].comissaoMaster = vData._sum.valorComissao || 0;
+      }
+    });
+
+    usuarios.filter(u => u.masterId).forEach(sub => {
+      if (!masterData[sub.masterId]) return;
+      const vData = porVendedor.find(v => v.vendedorEmail === sub.email);
+      const volumeSub = vData?._sum?.valorLiberado || 0;
+      const comissaoSub = vData?._sum?.valorComissao || 0;
+      const splitPct = sub.percentualSplitMaster || 0;
+      const repasseParaMaster = (comissaoSub * splitPct) / 100;
+      const subFicaCom = comissaoSub - repasseParaMaster;
+
+      masterData[sub.masterId].subs.push({
+        nome: sub.nome || sub.email,
+        volume: volumeSub,
+        comissaoTotal: comissaoSub,
+        splitPct,
+        repasseParaMaster,
+        subFicaCom
+      });
+
+      masterData[sub.masterId].splitRecebido += repasseParaMaster;
+    });
+  }
+
   async function handleGerarLote(banco: string, propostas: { ids: string[]; valor: number }) {
     if (!confirm(`Gerar lote de faturamento para o banco ${banco} no valor de ${fmtFull(propostas.valor)}?`)) return;
-    
     setIsGerandoLote(true);
     try {
       const res = await fetch("/api/financeiro/faturas", {
@@ -78,12 +125,11 @@ export function DashFinanceiroClient({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ bancoNome: banco, propostaIds: propostas.ids })
       });
-      if (!res.ok) throw new Error(await res.text());
+      if (!res.ok) throw new Error();
       toast.success("Lote gerado com sucesso!");
       router.refresh();
-      // Em um cenário real, também faríamos update local do state para não piscar a tela
-    } catch (err: any) {
-      toast.error(err.message || "Erro ao gerar lote");
+    } catch (err) {
+      toast.error("Erro ao gerar lote");
     } finally {
       setIsGerandoLote(false);
     }
@@ -114,7 +160,7 @@ export function DashFinanceiroClient({
               <DollarSign className="h-5 w-5" />
               <span className="text-xs uppercase tracking-widest font-semibold">Financeiro</span>
             </div>
-            <h1 className="text-3xl md:text-4xl font-bold tracking-tight">Dashboard Financeiro</h1>
+            <h1 className="text-3xl md:text-4xl font-bold tracking-tight">Gestão Financeira</h1>
             <p className="text-zinc-600 dark:text-zinc-400 mt-1">Visão consolidada de receitas e comissões</p>
           </div>
 
@@ -128,189 +174,219 @@ export function DashFinanceiroClient({
               Visão Geral
             </button>
             <button
+              onClick={() => setTab("vendedores")}
+              className={`px-4 py-2 text-sm font-medium rounded-lg transition ${
+                tab === "vendedores" ? "bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 shadow-sm" : "text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"
+              }`}
+            >
+              Comissões
+            </button>
+            <button
+              onClick={() => setTab("rede")}
+              className={`px-4 py-2 text-sm font-medium rounded-lg transition ${
+                tab === "rede" ? "bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 shadow-sm" : "text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"
+              }`}
+            >
+              Rede de Parceiros
+            </button>
+            <button
               onClick={() => setTab("lotes")}
               className={`px-4 py-2 text-sm font-medium rounded-lg transition ${
                 tab === "lotes" ? "bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 shadow-sm" : "text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"
               }`}
             >
-              Controle de Lotes
+              Lotes
             </button>
           </div>
         </header>
 
         {tab === "visao_geral" && (
-          <>
-            {/* KPIs */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <KpiBox icon={<TrendingUp className="h-4 w-4" />} label="Volume Total Pago" value={fmtFull(totais.volume)} color="text-violet-600" />
-          <KpiBox icon={<DollarSign className="h-4 w-4" />} label="Comissões Totais" value={fmtFull(totais.comissao)} color="text-emerald-600" />
-          <KpiBox icon={<CheckCircle2 className="h-4 w-4" />} label="Propostas Pagas" value={String(totais.count)} color="text-indigo-600" />
-          <KpiBox icon={<BarChart3 className="h-4 w-4" />} label="Taxa Média Comissão" value={`${taxaComissao}%`} color="text-amber-600" />
-        </div>
+          <div className="space-y-6">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <KpiBox icon={<TrendingUp className="h-4 w-4" />} label="Volume Total Pago" value={fmtFull(totais.volume)} color="text-violet-600" />
+              <KpiBox icon={<DollarSign className="h-4 w-4" />} label="Comissões Totais" value={fmtFull(totais.comissao)} color="text-emerald-600" />
+              <KpiBox icon={<CheckCircle2 className="h-4 w-4" />} label="Propostas Pagas" value={String(totais.count)} color="text-indigo-600" />
+              <KpiBox icon={<BarChart3 className="h-4 w-4" />} label="Margem Média" value={`${taxaComissao}%`} color="text-amber-600" />
+            </div>
 
-        {/* Evolução Mensal */}
-        <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6">
-          <h2 className="text-lg font-semibold mb-1">Evolução Mensal</h2>
-          <p className="text-xs text-zinc-500 mb-6">Volume pago nos últimos 6 meses</p>
-          <div className="flex items-end gap-3 h-48">
-            {meses.map((m) => {
-              const h = maxVolume > 0 ? Math.max((m.volume / maxVolume) * 100, 4) : 4;
-              return (
-                <div key={m.label} className="flex-1 flex flex-col items-center gap-1">
-                  <span className="text-[10px] text-zinc-500 tabular-nums">{fmt(m.volume)}</span>
-                  <div className="w-full bg-zinc-100 dark:bg-zinc-800 rounded-t-lg relative" style={{ height: "100%" }}>
-                    <div
-                      className="absolute bottom-0 w-full bg-gradient-to-t from-violet-600 to-violet-400 rounded-t-lg transition-all duration-700"
-                      style={{ height: `${h}%` }}
-                    />
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+               <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6">
+                  <h2 className="text-lg font-semibold mb-1">Evolução Mensal</h2>
+                  <p className="text-xs text-zinc-500 mb-6">Volume pago nos últimos 6 meses</p>
+                  <div className="flex items-end gap-3 h-48">
+                    {meses.map((m) => {
+                      const h = maxVolume > 0 ? Math.max((m.volume / maxVolume) * 100, 4) : 4;
+                      return (
+                        <div key={m.label} className="flex-1 flex flex-col items-center gap-1">
+                          <div className="w-full bg-zinc-100 dark:bg-zinc-800 rounded-t-lg relative" style={{ height: "100%" }}>
+                            <div className="absolute bottom-0 w-full bg-violet-600 rounded-t-lg transition-all duration-700" style={{ height: `${h}%` }} />
+                          </div>
+                          <span className="text-[10px] text-zinc-400 font-medium">{m.label}</span>
+                        </div>
+                      );
+                    })}
                   </div>
-                  <span className="text-[10px] text-zinc-400 font-medium">{m.label}</span>
-                  <span className="text-[9px] text-zinc-400">{m.count} prop</span>
-                </div>
-              );
-            })}
+               </div>
+
+               <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6">
+                  <h2 className="text-lg font-semibold mb-1">Top Bancos</h2>
+                  <p className="text-xs text-zinc-500 mb-6">Produção por banco receptor</p>
+                  <div className="space-y-4">
+                    {porBanco.slice(0, 5).map((b) => (
+                      <div key={b.bancoNome} className="flex items-center gap-3">
+                         <div className="flex-1 h-2 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
+                            <div className="h-full bg-emerald-500" style={{ width: `${( (b._sum.valorLiberado || 0) / maxBanco ) * 100}%` }} />
+                         </div>
+                         <div className="text-right w-32">
+                            <p className="text-xs font-bold truncate">{b.bancoNome}</p>
+                            <p className="text-[10px] text-zinc-500">{fmtFull(b._sum.valorLiberado || 0)}</p>
+                         </div>
+                      </div>
+                    ))}
+                  </div>
+               </div>
+            </div>
           </div>
-          {/* Comissão line */}
-          <div className="mt-4 pt-3 border-t border-zinc-100 dark:border-zinc-800 flex gap-6 overflow-x-auto">
-            {meses.map((m) => (
-              <div key={m.label} className="text-center shrink-0">
-                <p className="text-xs font-semibold text-emerald-600 tabular-nums">{fmt(m.comissao)}</p>
-                <p className="text-[9px] text-zinc-400">comissão</p>
-              </div>
+        )}
+
+        {tab === "vendedores" && (
+          <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 overflow-hidden shadow-sm">
+            <div className="p-6 border-b border-zinc-100 dark:border-zinc-800">
+               <h2 className="text-lg font-bold flex items-center gap-2">
+                 <Users className="w-5 h-5 text-violet-500" />
+                 Repasse de Comissões por Vendedor
+               </h2>
+               <p className="text-sm text-zinc-500">Cálculo baseado em propostas com status PAGA.</p>
+            </div>
+            <div className="overflow-x-auto">
+               <table className="w-full text-left border-collapse">
+                  <thead>
+                     <tr className="bg-zinc-50 dark:bg-zinc-800/40 text-[11px] uppercase tracking-wider text-zinc-500 font-bold">
+                        <th className="px-6 py-3">Vendedor</th>
+                        <th className="px-6 py-3 text-right">Qtd</th>
+                        <th className="px-6 py-3 text-right">Volume Produzido</th>
+                        <th className="px-6 py-3 text-right">Comissão Total</th>
+                        <th className="px-6 py-3 text-right text-violet-600">Previsão Repasse (20%)</th>
+                     </tr>
+                  </thead>
+                  <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
+                     {porVendedor.map((v) => {
+                        const totalCom = v._sum.valorComissao || 0;
+                        const repasse = totalCom * 0.20; // Exemplo de 20% de repasse
+                        return (
+                           <tr key={v.vendedorEmail} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition">
+                              <td className="px-6 py-4">
+                                 <div className="text-sm font-bold">{v.vendedorNome || "N/A"}</div>
+                                 <div className="text-[10px] text-zinc-500">{v.vendedorEmail}</div>
+                              </td>
+                              <td className="px-6 py-4 text-right tabular-nums text-sm">{v._count}</td>
+                              <td className="px-6 py-4 text-right tabular-nums text-sm font-medium">{fmtFull(v._sum.valorLiberado || 0)}</td>
+                              <td className="px-6 py-4 text-right tabular-nums text-sm text-emerald-600">{fmtFull(totalCom)}</td>
+                              <td className="px-6 py-4 text-right tabular-nums text-sm font-black text-violet-600 bg-violet-50/30">
+                                 {fmtFull(repasse)}
+                              </td>
+                           </tr>
+                        );
+                     })}
+                  </tbody>
+               </table>
+            </div>
+          </div>
+        )}
+
+        {tab === "rede" && (
+          <div className="space-y-6">
+            <div className="p-6 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900 rounded-2xl flex items-start gap-4">
+               <Building2 className="w-6 h-6 text-blue-600 shrink-0 mt-0.5" />
+               <div>
+                  <h2 className="text-lg font-bold text-blue-900 dark:text-blue-400">Master / Sub-Corretores (Split)</h2>
+                  <p className="text-sm text-blue-700 dark:text-blue-300/80 mt-1">
+                     Acompanhe a produção da sua rede de parceiros. O sistema deduz a porcentagem da comissão do Sub e atribui automaticamente ao lucro do Master.
+                  </p>
+               </div>
+            </div>
+
+            {Object.values(masterData).map(m => (
+               <div key={m.nome} className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 overflow-hidden shadow-sm">
+                  <div className="p-6 border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800/40 flex justify-between items-center">
+                     <div>
+                        <h3 className="font-black text-lg flex items-center gap-2"><Building2 className="w-4 h-4 text-zinc-400"/> {m.nome} (Master)</h3>
+                        <p className="text-xs text-zinc-500">Produção Própria: {fmtFull(m.volumeMaster)} | Comissões Diretas: {fmtFull(m.comissaoMaster)}</p>
+                     </div>
+                     <div className="text-right">
+                        <p className="text-[10px] uppercase font-bold text-emerald-600 tracking-wider">Lucro da Rede (Split)</p>
+                        <p className="text-2xl font-black text-emerald-500 tabular-nums">+{fmtFull(m.splitRecebido)}</p>
+                     </div>
+                  </div>
+                  {m.subs.length > 0 ? (
+                     <table className="w-full text-left border-collapse">
+                        <thead>
+                           <tr className="border-b border-zinc-100 dark:border-zinc-800 text-[10px] uppercase tracking-wider text-zinc-500 font-bold">
+                              <th className="px-6 py-3">Sub-Corretor</th>
+                              <th className="px-6 py-3 text-right">Volume</th>
+                              <th className="px-6 py-3 text-right">Comissão Gerada</th>
+                              <th className="px-6 py-3 text-right">Taxa Split</th>
+                              <th className="px-6 py-3 text-right text-emerald-600">Sua Parte (Master)</th>
+                              <th className="px-6 py-3 text-right text-violet-600">Líquido do Sub</th>
+                           </tr>
+                        </thead>
+                        <tbody className="divide-y divide-zinc-50 dark:divide-zinc-800/50">
+                           {m.subs.map(sub => (
+                              <tr key={sub.nome} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/20">
+                                 <td className="px-6 py-3 text-sm font-semibold">{sub.nome}</td>
+                                 <td className="px-6 py-3 text-sm text-right tabular-nums">{fmtFull(sub.volume)}</td>
+                                 <td className="px-6 py-3 text-sm text-right tabular-nums">{fmtFull(sub.comissaoTotal)}</td>
+                                 <td className="px-6 py-3 text-xs font-bold text-right text-orange-500">{sub.splitPct}%</td>
+                                 <td className="px-6 py-3 text-sm text-right tabular-nums font-bold text-emerald-600 bg-emerald-50/30">+{fmtFull(sub.repasseParaMaster)}</td>
+                                 <td className="px-6 py-3 text-sm text-right tabular-nums font-bold text-violet-600">{fmtFull(sub.subFicaCom)}</td>
+                              </tr>
+                           ))}
+                        </tbody>
+                     </table>
+                  ) : (
+                     <div className="p-6 text-center text-zinc-500 text-sm">Este usuário não possui sub-corretores vinculados.</div>
+                  )}
+               </div>
             ))}
           </div>
-        </div>
-
-        {/* Por Banco */}
-        <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6">
-          <h2 className="text-lg font-semibold mb-1">Volume por Banco</h2>
-          <p className="text-xs text-zinc-500 mb-6">Top bancos por produção paga</p>
-          {porBanco.length === 0 ? (
-            <p className="text-center text-zinc-400 py-12 text-sm">Nenhuma proposta paga ainda.</p>
-          ) : (
-            <div className="space-y-3">
-              {porBanco.map((b) => {
-                const vol = b._sum.valorLiberado || 0;
-                const com = b._sum.valorComissao || 0;
-                return (
-                  <div key={b.bancoNome || "N/A"} className="flex items-center gap-3">
-                    <Building2 className="h-4 w-4 text-zinc-400 shrink-0" />
-                    <span className="text-xs text-zinc-600 dark:text-zinc-400 w-32 shrink-0 truncate">{b.bancoNome || "N/A"}</span>
-                    <div className="flex-1 h-7 bg-zinc-100 dark:bg-zinc-800 rounded-lg overflow-hidden relative">
-                      <div className="h-full rounded-lg bg-gradient-to-r from-emerald-500 to-emerald-400 transition-all duration-500"
-                        style={{ width: `${Math.max((vol / maxBanco) * 100, 8)}%` }} />
-                      <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs font-bold tabular-nums text-zinc-700 dark:text-zinc-300">{b._count}</span>
-                    </div>
-                    <div className="text-right shrink-0 w-28">
-                      <p className="text-xs font-bold tabular-nums">{fmtFull(vol)}</p>
-                      <p className="text-[10px] text-emerald-600 tabular-nums">+{fmtFull(com)}</p>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-          </>
         )}
 
         {tab === "lotes" && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            
-            {/* Lotes Gerados (Histórico) */}
-            <div className="lg:col-span-2 space-y-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-xl font-bold">Lotes Emitidos</h2>
-                  <p className="text-sm text-zinc-500">Acompanhe as comissões a receber dos bancos</p>
-                </div>
+           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-2 space-y-4">
+                 <h2 className="text-xl font-bold">Lotes de Comissões</h2>
+                 {faturas.map(f => (
+                    <div key={f.id} className="p-4 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl flex items-center justify-between">
+                       <div className="flex items-center gap-4">
+                          <div className={`p-3 rounded-xl ${f.status === 'PAGA' ? 'bg-emerald-100 text-emerald-600' : 'bg-amber-100 text-amber-600'}`}>
+                             <Wallet className="w-5 h-5" />
+                          </div>
+                          <div>
+                             <p className="text-sm font-bold">{f.codigoLote} • {f.bancoNome}</p>
+                             <p className="text-[10px] text-zinc-500">{new Date(f.dataEmissao).toLocaleDateString()}</p>
+                          </div>
+                       </div>
+                       <div className="text-right">
+                          <p className="text-sm font-bold text-emerald-600">{fmtFull(f.valorTotal)}</p>
+                          <span className={`text-[10px] font-bold ${f.status === 'PAGA' ? 'text-emerald-500' : 'text-amber-500'}`}>{f.status}</span>
+                       </div>
+                    </div>
+                 ))}
               </div>
 
-              {faturas.length === 0 ? (
-                <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-12 text-center">
-                  <Banknote className="h-8 w-8 mx-auto text-zinc-300 mb-3" />
-                  <p className="text-zinc-500 font-medium">Nenhum lote de comissão emitido.</p>
-                  <p className="text-sm text-zinc-400 mt-1">Gere um lote selecionando o banco no painel ao lado.</p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {faturas.map(f => (
-                    <div key={f.id} className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                      <div className="flex items-center gap-4">
-                        <div className={`h-12 w-12 rounded-xl flex items-center justify-center shrink-0 ${f.status === 'PAGA' ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30' : 'bg-amber-100 text-amber-600 dark:bg-amber-900/30'}`}>
-                          {f.status === 'PAGA' ? <CheckCircle2 className="h-6 w-6" /> : <Clock className="h-6 w-6" />}
-                        </div>
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <h3 className="font-bold">{f.codigoLote}</h3>
-                            <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold tracking-wider ${f.status === 'PAGA' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
-                              {f.status}
-                            </span>
-                          </div>
-                          <p className="text-sm text-zinc-500 mt-0.5">{f.bancoNome} • {f._count.propostas} propostas</p>
-                          <p className="text-xs text-zinc-400 mt-1">Emitido em {new Date(f.dataEmissao).toLocaleDateString("pt-BR")}</p>
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-center gap-4 md:flex-col md:items-end md:gap-1">
-                        <p className="text-xl font-bold tabular-nums text-emerald-600 dark:text-emerald-400">
-                          {fmtFull(f.valorTotal)}
-                        </p>
-                        {f.status === 'PENDENTE' && (
-                          <button 
-                            onClick={() => handleMarcarPago(f.id)}
-                            className="text-xs text-violet-600 hover:text-violet-700 font-medium underline underline-offset-2"
-                          >
-                            Marcar Recebido
-                          </button>
-                        )}
-                        {f.status === 'PAGA' && f.dataPagamento && (
-                          <p className="text-xs text-zinc-500">Pago em {new Date(f.dataPagamento).toLocaleDateString("pt-BR")}</p>
-                        )}
-                      </div>
+              <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6 h-fit">
+                 <h3 className="font-bold mb-4">Gerar Novo Lote</h3>
+                 {Object.entries(pendentesPorBanco).map(([banco, dados]) => (
+                    <div key={banco} className="mb-4 p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl">
+                       <p className="text-xs font-bold">{banco}</p>
+                       <p className="text-lg font-black text-emerald-600">{fmtFull(dados.valor)}</p>
+                       <button onClick={() => handleGerarLote(banco, dados)} className="w-full mt-3 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 py-2 rounded-lg text-xs font-bold">
+                          Faturar {dados.count} propostas
+                       </button>
                     </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Gerar Novo Lote (Sidebar) */}
-            <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6 h-fit sticky top-6">
-              <h3 className="font-bold mb-1">Comissões Pendentes</h3>
-              <p className="text-xs text-zinc-500 mb-6">Propostas pagas que ainda não foram enviadas para faturamento do banco.</p>
-
-              {Object.keys(pendentesPorBanco).length === 0 ? (
-                <div className="flex items-center gap-2 text-zinc-400 text-sm p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl">
-                  <CheckCircle2 className="h-4 w-4" />
-                  <p>Tudo faturado. Nenhuma pendência.</p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {Object.entries(pendentesPorBanco).map(([banco, dados]) => (
-                    <div key={banco} className="p-4 border border-zinc-100 dark:border-zinc-800 rounded-xl hover:border-violet-200 transition">
-                      <div className="flex justify-between items-start mb-2">
-                        <p className="font-semibold text-sm">{banco}</p>
-                        <span className="bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 text-[10px] px-2 py-0.5 rounded-md font-medium">
-                          {dados.count} prop.
-                        </span>
-                      </div>
-                      <p className="text-lg font-bold text-emerald-600 dark:text-emerald-400 mb-4 tabular-nums">
-                        {fmtFull(dados.valor)}
-                      </p>
-                      <button
-                        onClick={() => handleGerarLote(banco, dados)}
-                        disabled={isGerandoLote}
-                        className="w-full flex items-center justify-center gap-2 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 py-2 rounded-lg text-sm font-medium hover:bg-zinc-800 disabled:opacity-50 transition"
-                      >
-                        <Plus className="h-4 w-4" /> Gerar Lote
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-            
-          </div>
+                 ))}
+              </div>
+           </div>
         )}
       </div>
     </div>
@@ -319,8 +395,8 @@ export function DashFinanceiroClient({
 
 function KpiBox({ icon, label, value, color }: { icon: React.ReactNode; label: string; value: string; color: string }) {
   return (
-    <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5">
-      <div className={`flex items-center gap-2 ${color} mb-2`}>{icon}<span className="text-xs text-zinc-500">{label}</span></div>
+    <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 shadow-sm">
+      <div className={`flex items-center gap-2 ${color} mb-2`}>{icon}<span className="text-xs text-zinc-500 uppercase font-bold tracking-tighter">{label}</span></div>
       <p className="text-xl font-bold tabular-nums">{value}</p>
     </div>
   );

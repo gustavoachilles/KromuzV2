@@ -17,16 +17,48 @@ type Canal = {
 export function CanaisClient({ canais: initCanais, sessao }: { canais: Canal[], sessao: any }) {
   const [canais, setCanais] = useState(initCanais);
   const [modal, setModal] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [qrCode, setQrCode] = useState<string | null>(null);
+  const [form, setForm] = useState({
+    nomeCanal: "WhatsApp Principal",
+    apiUrl: "",
+    apiKey: ""
+  });
   const router = useRouter();
   
   const isAdmin = sessao.perfilSlug === "admin";
 
-  const getIcon = (tipo: string) => {
-    if (tipo === "WHATSAPP") return <MessageSquare className="w-5 h-5 text-emerald-500" />;
-    if (tipo === "INSTAGRAM") return <Camera className="w-5 h-5 text-pink-500" />;
-    if (tipo === "FACEBOOK") return <ThumbsUp className="w-5 h-5 text-blue-500" />;
-    return <MessageSquare className="w-5 h-5 text-zinc-500" />;
-  };
+  const getIcon = (tipo: string) => { ... }; // Unchanged
+
+  async function handleGerarQR() {
+    if (!form.apiUrl || !form.apiKey) {
+      alert("Preencha a URL e a API Key da sua Evolution API.");
+      return;
+    }
+
+    setLoading(true);
+    setQrCode(null);
+    try {
+      const res = await fetch("/api/canais/conectar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form)
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+
+      if (data.qrcode) {
+        setQrCode(data.qrcode);
+      } else {
+        alert("Instância conectada ou QR Code não gerado. Verifique seu servidor.");
+      }
+    } catch (err: any) {
+      alert("Erro ao conectar: " + err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">
@@ -108,25 +140,45 @@ export function CanaisClient({ canais: initCanais, sessao }: { canais: Canal[], 
             
             <div className="space-y-4 mb-6">
               <div className="bg-violet-50 dark:bg-violet-900/20 p-4 rounded-xl text-sm text-violet-800 dark:text-violet-300">
-                Para conectar, digite os dados do seu servidor <b>Evolution API</b> (EasyPanel).
+                Para conectar, digite os dados do seu servidor <b>Evolution API</b>.
               </div>
               
               <div className="space-y-2">
+                <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Nome do Canal</label>
+                <input type="text" value={form.nomeCanal} onChange={e => setForm({...form, nomeCanal: e.target.value})} placeholder="Ex: WhatsApp Suporte" className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-950 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500" />
+              </div>
+
+              <div className="space-y-2">
                 <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">URL da Evolution API</label>
-                <input type="text" placeholder="https://evolution.seuservidor.com" className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-950 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500" />
+                <input type="text" value={form.apiUrl} onChange={e => setForm({...form, apiUrl: e.target.value})} placeholder="https://evolution.seuservidor.com" className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-950 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500" />
               </div>
               
               <div className="space-y-2">
                 <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Global API Key</label>
-                <input type="password" placeholder="Sua chave secreta" className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-950 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500" />
+                <input type="password" value={form.apiKey} onChange={e => setForm({...form, apiKey: e.target.value})} placeholder="Sua chave secreta" className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-950 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500" />
               </div>
+
+              {qrCode && (
+                <div className="flex flex-col items-center justify-center p-6 bg-zinc-50 dark:bg-zinc-800 rounded-2xl border-2 border-emerald-500/20 mt-4">
+                  <p className="text-sm font-bold text-emerald-600 mb-4 animate-pulse">QR CODE GERADO! ESCANEIE AGORA:</p>
+                  <img src={qrCode.startsWith('data:') ? qrCode : `data:image/png;base64,${qrCode}`} alt="WhatsApp QR Code" className="w-64 h-64 shadow-xl rounded-lg border-4 border-white" />
+                  <p className="text-xs text-zinc-500 mt-4 text-center">Após escanear, aguarde alguns segundos e atualize a página.</p>
+                </div>
+              )}
             </div>
 
             <div className="flex justify-end gap-3 pt-4 border-t border-zinc-100 dark:border-zinc-800">
-              <button onClick={() => setModal(false)} className="px-4 py-2 text-sm font-medium text-zinc-600 hover:bg-zinc-100 rounded-lg transition">Cancelar</button>
-              <button className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2 rounded-lg text-sm font-bold shadow-lg shadow-emerald-500/30 transition">
-                Gerar QR Code
-              </button>
+              <button onClick={() => { setModal(false); setQrCode(null); }} className="px-4 py-2 text-sm font-medium text-zinc-600 hover:bg-zinc-100 rounded-lg transition">Fechar</button>
+              {!qrCode && (
+                <button 
+                  onClick={handleGerarQR}
+                  disabled={loading}
+                  className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2 rounded-lg text-sm font-bold shadow-lg shadow-emerald-500/30 transition disabled:opacity-50"
+                >
+                  {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+                  {loading ? "Conectando..." : "Gerar QR Code"}
+                </button>
+              )}
             </div>
           </div>
         </div>

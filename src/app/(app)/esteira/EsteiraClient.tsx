@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
 import {
   Kanban,
   Plus,
@@ -16,7 +17,11 @@ import {
   ArrowRight,
   Search,
   Filter,
+  GripVertical,
+  Building2,
+  FileText
 } from "lucide-react";
+import { toast } from "sonner";
 
 type Proposta = {
   id: string;
@@ -139,14 +144,30 @@ export function EsteiraClient({
 
   async function mudarStatus(propostaId: string, novoStatus: string) {
     setAtualizando(propostaId);
-    await fetch(`/api/propostas/${propostaId}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status: novoStatus }),
-    });
-    setAtualizando(null);
-    router.refresh();
+    try {
+      const res = await fetch(`/api/propostas/${propostaId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: novoStatus }),
+      });
+      if (!res.ok) throw new Error("Erro ao atualizar status");
+      toast.success(`Status atualizado para ${statusConfig[novoStatus]?.label}`);
+    } catch (err) {
+      toast.error("Não foi possível atualizar o status bancário.");
+    } finally {
+      setAtualizando(null);
+      router.refresh();
+    }
   }
+
+  const onDragEnd = async (result: DropResult) => {
+    const { source, destination, draggableId } = result;
+    if (!destination) return;
+    if (source.droppableId === destination.droppableId && source.index === destination.index) return;
+
+    const novoStatus = destination.droppableId;
+    await mudarStatus(draggableId, novoStatus);
+  };
 
   function formatMoney(v: number | null) {
     if (!v) return "—";
@@ -228,82 +249,129 @@ export function EsteiraClient({
           )}
         </div>
 
-        {/* Lista */}
-        {filtrados.length === 0 ? (
-          <div className="text-center py-20">
-            <Kanban className="h-12 w-12 text-zinc-300 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-zinc-600">Nenhuma proposta</h3>
-            <p className="text-sm text-zinc-400 mt-1">Crie uma proposta ou ajuste os filtros.</p>
-          </div>
-        ) : (
-          <div className="space-y-2">
-            {filtrados.map((p) => {
-              const cfg = statusConfig[p.status] || statusConfig.RASCUNHO;
-              const nextStatus = getNextStatus(p.status);
+        {/* Pipeline Kanban */}
+        <div className="flex gap-4 overflow-x-auto pb-4 items-start min-h-[60vh] scrollbar-hide">
+          <DragDropContext onDragEnd={onDragEnd}>
+            {funnelOrder.map((statusKey) => {
+              const cfg = statusConfig[statusKey] || statusConfig.RASCUNHO;
+              const items = filtrados.filter(p => p.status === statusKey);
+              const totalValor = items.reduce((acc, curr) => acc + (curr.valorLiberado || 0), 0);
 
               return (
-                <div
-                  key={p.id}
-                  className={`rounded-xl border-l-4 border bg-white dark:bg-zinc-900 ${cfg.bgCard} p-4 flex items-center gap-4 flex-wrap`}
-                >
-                  {/* Status dot */}
-                  <div className={`h-3 w-3 rounded-full shrink-0 ${cfg.color}`} />
-
-                  {/* Cliente */}
-                  <div className="flex-1 min-w-[180px]">
-                    <p className="font-semibold text-sm text-zinc-900 dark:text-zinc-100">{p.clienteNome}</p>
-                    <div className="flex items-center gap-3 text-[11px] text-zinc-500 mt-0.5">
-                      {p.clienteTelefone && (
-                        <span className="flex items-center gap-1"><Phone className="h-3 w-3" />{p.clienteTelefone}</span>
-                      )}
-                      <span>{tipoLabel[p.tipoOperacao] || p.tipoOperacao}</span>
-                      {p.bancoNome && <span>· {p.bancoNome}</span>}
+                <div key={statusKey} className="flex-shrink-0 w-80 bg-zinc-100/50 dark:bg-zinc-900/50 rounded-2xl p-3 flex flex-col max-h-[80vh]">
+                  {/* Column Header */}
+                  <div className="flex items-center justify-between px-2 mb-3">
+                    <div className="flex items-center gap-2">
+                      <div className={`h-3 w-3 rounded-full ${cfg.color}`} />
+                      <h3 className="font-semibold text-sm">{cfg.label}</h3>
+                    </div>
+                    <div className="flex flex-col items-end">
+                      <span className="text-[10px] font-bold text-zinc-500 bg-white dark:bg-zinc-800 px-2 py-0.5 rounded-full shadow-sm">
+                        {items.length}
+                      </span>
+                      <span className="text-[9px] text-zinc-400 mt-1 font-medium">{formatMoney(totalValor)}</span>
                     </div>
                   </div>
 
-                  {/* Valor */}
-                  <div className="text-right shrink-0">
-                    <p className="text-sm font-bold tabular-nums text-zinc-900 dark:text-zinc-100">
-                      {formatMoney(p.valorLiberado)}
-                    </p>
-                    {p.vendedorNome && (
-                      <p className="text-[10px] text-zinc-400 flex items-center gap-1 justify-end">
-                        <User className="h-3 w-3" />{p.vendedorNome}
-                      </p>
+                  <Droppable droppableId={statusKey}>
+                    {(provided, snapshot) => (
+                      <div 
+                        ref={provided.innerRef} 
+                        {...provided.droppableProps} 
+                        className={`flex-1 overflow-y-auto space-y-3 p-1 transition-colors rounded-xl min-h-[150px] ${snapshot.isDraggingOver ? 'bg-violet-50 dark:bg-violet-900/20' : ''}`}
+                      >
+                        {items.length === 0 && !snapshot.isDraggingOver && (
+                          <div className="py-10 text-center border-2 border-dashed border-zinc-200 dark:border-zinc-800 rounded-xl opacity-40">
+                             <p className="text-[10px] uppercase font-bold tracking-tighter text-zinc-400">Vazio</p>
+                          </div>
+                        )}
+
+                        {items.map((p, index) => (
+                          <Draggable key={p.id} draggableId={p.id} index={index}>
+                            {(provided, snapshot) => (
+                              <div 
+                                ref={provided.innerRef} 
+                                {...provided.draggableProps} 
+                                {...provided.dragHandleProps}
+                                className={`bg-white dark:bg-zinc-950 rounded-xl p-4 border border-zinc-200 dark:border-zinc-800 shadow-sm flex flex-col gap-3 transition-shadow cursor-pointer ${snapshot.isDragging ? 'shadow-xl ring-2 ring-violet-500/50 opacity-90' : 'hover:shadow-md'}`}
+                              >
+                                <div className="flex items-start justify-between gap-2">
+                                  <div className="flex-1">
+                                    <p className="font-bold text-sm leading-tight text-zinc-900 dark:text-zinc-100 line-clamp-2">{p.clienteNome}</p>
+                                    <p className="text-[10px] text-zinc-400 font-medium mt-0.5">{tipoLabel[p.tipoOperacao] || p.tipoOperacao}</p>
+                                  </div>
+                                  <GripVertical className="h-4 w-4 text-zinc-300 shrink-0" />
+                                </div>
+
+                                <div className="flex flex-col gap-1.5 text-xs text-zinc-500 dark:text-zinc-400">
+                                  {p.bancoNome && (
+                                    <div className="flex items-center gap-1.5">
+                                      <Building2 className="h-3 w-3 shrink-0" />
+                                      <span className="truncate font-medium">{p.bancoNome}</span>
+                                    </div>
+                                  )}
+                                  {p.clienteTelefone && (
+                                    <div className="flex items-center gap-1.5">
+                                      <Phone className="h-3 w-3 shrink-0" />
+                                      <span>{p.clienteTelefone}</span>
+                                    </div>
+                                  )}
+                                </div>
+
+                                {['RASCUNHO', 'SIMULADA'].includes(p.status) && (
+                                  <button
+                                    onClick={async (e) => {
+                                      e.stopPropagation();
+                                      if(!p.bancoNome) return alert("Defina um banco na proposta antes de enviá-la para o robô.");
+                                      const btn = e.currentTarget;
+                                      const originalText = btn.innerHTML;
+                                      btn.innerHTML = "Enviando...";
+                                      try {
+                                        const res = await fetch('/api/rpa/digitar', {
+                                          method: 'POST',
+                                          headers: {'Content-Type': 'application/json'},
+                                          body: JSON.stringify({ propostaId: p.id, banco: p.bancoNome })
+                                        });
+                                        if(res.ok) {
+                                          alert("Sucesso! Tarefa enfileirada no Robô RPA. O status mudará automaticamente quando a digitação for concluída.");
+                                        } else {
+                                          throw new Error("API Falhou");
+                                        }
+                                      } catch(err) {
+                                        alert("Erro ao conectar com a fila RPA.");
+                                      } finally {
+                                        btn.innerHTML = originalText;
+                                      }
+                                    }}
+                                    className="mt-1 w-full flex items-center justify-center gap-1.5 bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition"
+                                  >
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="m12 16 4-4-4-4"/><path d="M8 12h8"/></svg>
+                                    Digitação Automática
+                                  </button>
+                                )}
+
+                                <div className="flex items-center justify-between pt-2 border-t border-zinc-100 dark:border-zinc-800/50 mt-1">
+                                  <div className="flex items-center gap-1 text-xs font-bold text-emerald-600 dark:text-emerald-400">
+                                    {formatMoney(p.valorLiberado)}
+                                  </div>
+                                  <div className="flex items-center gap-1 text-[9px] text-zinc-400 uppercase tracking-tighter">
+                                    <Clock className="h-3 w-3" />
+                                    {new Date(p.createdAt).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })}
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                          </Draggable>
+                        ))}
+                        {provided.placeholder}
+                      </div>
                     )}
-                  </div>
-
-                  {/* Status badge */}
-                  <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ${cfg.color} text-white shrink-0`}>
-                    {cfg.label}
-                  </span>
-
-                  {/* Ação rápida */}
-                  {nextStatus && (
-                    <button
-                      disabled={atualizando === p.id}
-                      onClick={() => mudarStatus(p.id, nextStatus)}
-                      className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium border border-zinc-200 dark:border-zinc-700 hover:border-violet-400 hover:text-violet-600 transition disabled:opacity-50 shrink-0"
-                    >
-                      {atualizando === p.id ? (
-                        <Loader2 className="h-3 w-3 animate-spin" />
-                      ) : (
-                        <ArrowRight className="h-3 w-3" />
-                      )}
-                      {statusConfig[nextStatus]?.label}
-                    </button>
-                  )}
-
-                  {/* Data */}
-                  <span className="text-[10px] text-zinc-400 tabular-nums flex items-center gap-1 shrink-0">
-                    <Clock className="h-3 w-3" />
-                    {new Date(p.createdAt).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })}
-                  </span>
+                  </Droppable>
                 </div>
               );
             })}
-          </div>
-        )}
+          </DragDropContext>
+        </div>
       </div>
 
       {/* Modal */}

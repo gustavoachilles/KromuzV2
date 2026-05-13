@@ -10,6 +10,7 @@ import {
   Crown,
   Star,
   Flame,
+  FileDigit
 } from "lucide-react";
 
 type MetaRow = {
@@ -21,10 +22,10 @@ type MetaRow = {
   metaComissao: number | null;
 };
 
-type PropostaPaga = {
+type PropostaAgrupada = {
   vendedorEmail: string | null;
   _count: number;
-  _sum: { valorLiberado: number | null; valorComissao: number | null };
+  _sum?: { valorLiberado: number | null; valorComissao: number | null };
 };
 
 type LeadCriado = {
@@ -53,24 +54,18 @@ function getRankIcon(pos: number) {
   return <Star className="h-4 w-4 text-zinc-300" />;
 }
 
-function getStreakLabel(pctTotal: number) {
-  if (pctTotal >= 100) return { label: "🏆 Meta Batida!", color: "text-emerald-600" };
-  if (pctTotal >= 75) return { label: "🔥 Quase lá!", color: "text-orange-500" };
-  if (pctTotal >= 50) return { label: "💪 Bom ritmo", color: "text-blue-500" };
-  if (pctTotal >= 25) return { label: "🚀 Acelerando", color: "text-violet-500" };
-  return { label: "⏳ Começando", color: "text-zinc-400" };
-}
-
 export function RankingClient({
   metas,
   propostasPagas,
+  propostasDigitadas = [],
   leadsCriados,
   equipe,
   mesAtual,
   anoAtual,
 }: {
   metas: MetaRow[];
-  propostasPagas: PropostaPaga[];
+  propostasPagas: PropostaAgrupada[];
+  propostasDigitadas?: PropostaAgrupada[];
   leadsCriados: LeadCriado[];
   equipe: Membro[];
   mesAtual: number;
@@ -80,6 +75,7 @@ export function RankingClient({
   const vendedorMap = new Map<string, {
     nome: string;
     propostas: number;
+    propostasDigitadas: number;
     volume: number;
     comissao: number;
     leads: number;
@@ -87,13 +83,14 @@ export function RankingClient({
     metaVolume: number | null;
     metaLeads: number | null;
     metaComissao: number | null;
+    pontos: number;
   }>();
 
   // Seed from equipe
   equipe.forEach((m) => {
     vendedorMap.set(m.email, {
       nome: m.nome || m.email.split("@")[0],
-      propostas: 0, volume: 0, comissao: 0, leads: 0,
+      propostas: 0, propostasDigitadas: 0, volume: 0, comissao: 0, leads: 0, pontos: 0,
       metaPropostas: null, metaVolume: null, metaLeads: null, metaComissao: null,
     });
   });
@@ -110,7 +107,7 @@ export function RankingClient({
     } else {
       vendedorMap.set(m.vendedorEmail, {
         nome: m.vendedorNome || m.vendedorEmail.split("@")[0],
-        propostas: 0, volume: 0, comissao: 0, leads: 0,
+        propostas: 0, propostasDigitadas: 0, volume: 0, comissao: 0, leads: 0, pontos: 0,
         metaPropostas: m.metaPropostas, metaVolume: m.metaVolume,
         metaLeads: m.metaLeads, metaComissao: m.metaComissao,
       });
@@ -123,9 +120,15 @@ export function RankingClient({
     const v = vendedorMap.get(p.vendedorEmail);
     if (v) {
       v.propostas = p._count;
-      v.volume = p._sum.valorLiberado || 0;
-      v.comissao = p._sum.valorComissao || 0;
+      v.volume = p._sum?.valorLiberado || 0;
+      v.comissao = p._sum?.valorComissao || 0;
     }
+  });
+
+  propostasDigitadas.forEach((p) => {
+    if (!p.vendedorEmail) return;
+    const v = vendedorMap.get(p.vendedorEmail);
+    if (v) v.propostasDigitadas = p._count;
   });
 
   leadsCriados.forEach((l) => {
@@ -134,49 +137,62 @@ export function RankingClient({
     if (v) v.leads = l._count;
   });
 
-  // Sort by volume desc
+  // Calcular Pontos de Gamificação
+  vendedorMap.forEach((v) => {
+    // 1 Ponto a cada R$ 100 pagos
+    const pontosVolume = Math.floor(v.volume / 100);
+    // 50 Pontos por proposta digitada
+    const pontosDigitadas = v.propostasDigitadas * 50;
+    // 10 Pontos por lead criado/atendido
+    const pontosLeads = v.leads * 10;
+    
+    v.pontos = pontosVolume + pontosDigitadas + pontosLeads;
+  });
+
+  // Sort by PONTOS desc
   const ranking = Array.from(vendedorMap.entries())
     .map(([email, data]) => ({ email, ...data }))
-    .sort((a, b) => b.volume - a.volume);
+    .sort((a, b) => b.pontos - a.pontos);
 
   const totalVolume = ranking.reduce((s, r) => s + r.volume, 0);
-  const totalPropostas = ranking.reduce((s, r) => s + r.propostas, 0);
-  const totalLeads = ranking.reduce((s, r) => s + r.leads, 0);
+  const totalPontos = ranking.reduce((s, r) => s + r.pontos, 0);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-zinc-50 to-white dark:from-zinc-950 dark:to-black">
       <div className="max-w-7xl mx-auto px-6 py-10 space-y-8">
         {/* Header */}
-        <header>
-          <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 mb-1">
-            <Trophy className="h-5 w-5" />
-            <span className="text-xs uppercase tracking-widest font-semibold">Ranking</span>
+        <header className="flex items-center justify-between">
+          <div>
+            <div className="flex items-center gap-2 text-orange-500 mb-1">
+              <Trophy className="h-5 w-5" />
+              <span className="text-xs uppercase tracking-widest font-bold">Ranking XP</span>
+            </div>
+            <h1 className="text-3xl md:text-4xl font-black tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-orange-500 to-amber-500">
+              Corridão de Vendas - {meses[mesAtual]}
+            </h1>
+            <p className="text-zinc-600 dark:text-zinc-400 mt-1 font-medium">
+              Acumule pontos digitando, convertendo e faturando alto!
+            </p>
           </div>
-          <h1 className="text-3xl md:text-4xl font-bold tracking-tight">
-            {meses[mesAtual]} {anoAtual}
-          </h1>
-          <p className="text-zinc-600 dark:text-zinc-400 mt-1">
-            Performance da equipe · {ranking.length} vendedor{ranking.length !== 1 ? "es" : ""}
-          </p>
+          <div className="hidden md:flex flex-col items-end">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">Total de Pontos (Equipe)</span>
+            <span className="text-4xl font-black text-orange-500 tabular-nums flex items-center gap-2">
+               {totalPontos.toLocaleString()} <Flame className="h-8 w-8" />
+            </span>
+          </div>
         </header>
 
-        {/* KPI Global */}
-        <div className="grid grid-cols-3 gap-4">
-          <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 text-center">
-            <TrendingUp className="h-5 w-5 text-violet-500 mx-auto mb-2" />
-            <p className="text-2xl font-bold tabular-nums">{fmt(totalVolume)}</p>
-            <p className="text-xs text-zinc-500">Volume Total</p>
-          </div>
-          <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 text-center">
-            <Target className="h-5 w-5 text-emerald-500 mx-auto mb-2" />
-            <p className="text-2xl font-bold tabular-nums">{totalPropostas}</p>
-            <p className="text-xs text-zinc-500">Propostas Pagas</p>
-          </div>
-          <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 text-center">
-            <Users className="h-5 w-5 text-indigo-500 mx-auto mb-2" />
-            <p className="text-2xl font-bold tabular-nums">{totalLeads}</p>
-            <p className="text-xs text-zinc-500">Leads no Mês</p>
-          </div>
+        {/* Info Box */}
+        <div className="bg-orange-50 dark:bg-orange-950/20 border border-orange-200 dark:border-orange-900 rounded-xl p-4 flex items-start gap-3">
+           <Flame className="w-5 h-5 text-orange-500 shrink-0 mt-0.5" />
+           <div>
+              <h4 className="font-bold text-orange-800 dark:text-orange-400 text-sm">Como funciona a pontuação?</h4>
+              <p className="text-xs text-orange-700/80 dark:text-orange-300/80 mt-1">
+                 💸 <strong>Pagos:</strong> 1 Ponto a cada R$ 100 de volume pago.<br/>
+                 ✍️ <strong>Digitados:</strong> 50 Pontos por cada proposta digitada aguardando no banco.<br/>
+                 🎯 <strong>Leads:</strong> 10 Pontos por cada lead novo na esteira.
+              </p>
+           </div>
         </div>
 
         {/* Ranking Cards */}
@@ -187,72 +203,69 @@ export function RankingClient({
             <p className="text-sm text-zinc-400 mt-1">Adicione membros em Configurações.</p>
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-4">
             {ranking.map((v, i) => {
-              const pctVolume = pct(v.volume, v.metaVolume);
-              const pctProp = pct(v.propostas, v.metaPropostas);
-              const pctLeads = pct(v.leads, v.metaLeads);
-              const avgPct = Math.round(
-                ([pctVolume, pctProp, pctLeads].filter(Boolean).reduce((a, b) => a + b, 0)) /
-                Math.max([pctVolume, pctProp, pctLeads].filter(Boolean).length, 1)
-              );
-              const streak = getStreakLabel(avgPct);
-
+              const isPodium = i < 3;
+              
               return (
                 <div
                   key={v.email}
-                  className={`rounded-2xl border p-5 transition hover:shadow-md ${
+                  className={`rounded-2xl border p-5 transition hover:shadow-lg relative overflow-hidden ${
                     i === 0
-                      ? "border-amber-300 dark:border-amber-700 bg-gradient-to-r from-amber-50/50 to-white dark:from-amber-950/20 dark:to-zinc-900"
+                      ? "border-amber-400 dark:border-amber-600 bg-gradient-to-r from-amber-50 to-white dark:from-amber-950/40 dark:to-zinc-900"
+                      : i === 1 ? "border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/20"
+                      : i === 2 ? "border-orange-300/50 dark:border-orange-900/50 bg-orange-50/30 dark:bg-orange-900/10"
                       : "border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900"
                   }`}
                 >
-                  <div className="flex items-center gap-4 mb-4">
-                    {/* Position */}
-                    <div className="flex items-center justify-center h-10 w-10 rounded-full bg-zinc-100 dark:bg-zinc-800 shrink-0">
-                      {getRankIcon(i)}
-                    </div>
+                  {i === 0 && <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-amber-300/30 to-transparent rounded-bl-full" />}
+                  
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
+                     <div className="flex items-center gap-4">
+                        <div className={`flex items-center justify-center h-12 w-12 rounded-full shrink-0 shadow-sm ${
+                           i === 0 ? "bg-gradient-to-br from-amber-300 to-amber-500 shadow-amber-500/30" : 
+                           i === 1 ? "bg-gradient-to-br from-zinc-200 to-zinc-400 shadow-zinc-500/30" : 
+                           i === 2 ? "bg-gradient-to-br from-orange-300 to-orange-500 shadow-orange-500/30" : 
+                           "bg-zinc-100 dark:bg-zinc-800"
+                        }`}>
+                           {isPodium ? <Crown className="h-6 w-6 text-white" /> : <span className="font-bold text-zinc-500">{i + 1}º</span>}
+                        </div>
+                        
+                        <div>
+                           <p className="font-black text-lg text-zinc-900 dark:text-white leading-tight">{v.nome}</p>
+                           <p className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold">Volume: {fmt(v.volume)}</p>
+                        </div>
+                     </div>
 
-                    {/* Name */}
-                    <div className="flex-1">
-                      <p className="font-bold text-sm">{v.nome}</p>
-                      <p className={`text-xs font-semibold ${streak.color}`}>
-                        {streak.label}
-                      </p>
-                    </div>
+                     <div className="flex items-center gap-6 md:gap-10">
+                        {/* Breakdown */}
+                        <div className="flex items-center gap-4 text-center">
+                           <div>
+                              <p className="text-xs text-zinc-500 font-semibold mb-0.5"><DollarSign className="w-3 h-3 inline text-emerald-500" /> Pagos</p>
+                              <p className="font-bold tabular-nums">{v.propostas}</p>
+                           </div>
+                           <div className="w-px h-8 bg-zinc-200 dark:bg-zinc-800" />
+                           <div>
+                              <p className="text-xs text-zinc-500 font-semibold mb-0.5"><FileDigit className="w-3 h-3 inline text-violet-500" /> Digit.</p>
+                              <p className="font-bold tabular-nums">{v.propostasDigitadas}</p>
+                           </div>
+                           <div className="w-px h-8 bg-zinc-200 dark:bg-zinc-800" />
+                           <div>
+                              <p className="text-xs text-zinc-500 font-semibold mb-0.5"><Users className="w-3 h-3 inline text-blue-500" /> Leads</p>
+                              <p className="font-bold tabular-nums">{v.leads}</p>
+                           </div>
+                        </div>
 
-                    {/* Position number */}
-                    <span className="text-3xl font-black text-zinc-200 dark:text-zinc-800 tabular-nums">
-                      #{i + 1}
-                    </span>
-                  </div>
-
-                  {/* Progress bars */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                    <ProgressBar
-                      icon={<DollarSign className="h-3.5 w-3.5" />}
-                      label="Volume"
-                      value={fmt(v.volume)}
-                      meta={v.metaVolume ? fmt(v.metaVolume) : null}
-                      pct={pctVolume}
-                      color="bg-violet-500"
-                    />
-                    <ProgressBar
-                      icon={<Target className="h-3.5 w-3.5" />}
-                      label="Propostas"
-                      value={String(v.propostas)}
-                      meta={v.metaPropostas ? String(v.metaPropostas) : null}
-                      pct={pctProp}
-                      color="bg-emerald-500"
-                    />
-                    <ProgressBar
-                      icon={<Users className="h-3.5 w-3.5" />}
-                      label="Leads"
-                      value={String(v.leads)}
-                      meta={v.metaLeads ? String(v.metaLeads) : null}
-                      pct={pctLeads}
-                      color="bg-indigo-500"
-                    />
+                        {/* Pontos Totais */}
+                        <div className="text-right shrink-0 min-w-[120px]">
+                           <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">Pontos XP</p>
+                           <p className={`text-3xl font-black tabular-nums flex justify-end items-center gap-1 ${
+                              i === 0 ? "text-amber-500" : "text-orange-500"
+                           }`}>
+                              {v.pontos.toLocaleString()} <Flame className="h-6 w-6" />
+                           </p>
+                        </div>
+                     </div>
                   </div>
                 </div>
               );
@@ -260,44 +273,6 @@ export function RankingClient({
           </div>
         )}
       </div>
-    </div>
-  );
-}
-
-function ProgressBar({
-  icon,
-  label,
-  value,
-  meta,
-  pct: pctValue,
-  color,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-  meta: string | null;
-  pct: number;
-  color: string;
-}) {
-  return (
-    <div>
-      <div className="flex items-center justify-between mb-1">
-        <span className="flex items-center gap-1 text-[11px] text-zinc-500">
-          {icon} {label}
-        </span>
-        <span className="text-[11px] font-semibold tabular-nums">
-          {value}{meta ? ` / ${meta}` : ""}
-        </span>
-      </div>
-      <div className="h-2 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
-        <div
-          className={`h-full rounded-full transition-all duration-700 ${color}`}
-          style={{ width: `${Math.max(pctValue, 2)}%` }}
-        />
-      </div>
-      {meta && (
-        <p className="text-[10px] text-right text-zinc-400 mt-0.5 tabular-nums">{pctValue}%</p>
-      )}
     </div>
   );
 }

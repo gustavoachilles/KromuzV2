@@ -107,6 +107,10 @@ export function LeadsClient({
   const router = useRouter();
   const [leads, setLeads] = useState(leadsIniciais);
   const [modal, setModal] = useState(false);
+  const [aberto, setAberto] = useState(false);
+  const [lead, setLead] = useState<any>(null);
+  const [revelarCpf, setRevelarCpf] = useState(false);
+  const [revelarTel, setRevelarTel] = useState(false);
   const [modalColuna, setModalColuna] = useState(false);
   const [colunaNome, setColunaNome] = useState("");
   const [colunaCor, setColunaCor] = useState("#8b5cf6");
@@ -124,6 +128,101 @@ export function LeadsClient({
   });
   
   const [novaColunaNome, setNovaColunaNome] = useState("");
+
+  // AI States
+  const [tabModal, setTabModal] = useState<"dados" | "refin">("dados");
+  const [textoHiscon, setTextoHiscon] = useState("");
+  const [analisandoHiscon, setAnalisandoHiscon] = useState(false);
+  const [resultadoRefin, setResultadoRefin] = useState<any>(null);
+  const [validandoDoc, setValidandoDoc] = useState<string | null>(null);
+
+  async function analisarHiscon() {
+    if (!textoHiscon) return;
+    setAnalisandoHiscon(true);
+    try {
+      const res = await fetch("/api/ai/refin-hunter", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ textoHiscon })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      setResultadoRefin(data);
+      toast.success("Oportunidades encontradas com sucesso!");
+    } catch (err: any) {
+      toast.error(err.message || "Erro ao analisar HISCON");
+    } finally {
+      setAnalisandoHiscon(false);
+    }
+  }
+
+  async function gerarPropostaUmClique(op: any) {
+    if (!form.id) return toast.error("Salve o lead antes de gerar a proposta.");
+    
+    let tipoOperacao = "PORTABILIDADE";
+    if (op.acaoSugerida?.toLowerCase().includes("refin")) tipoOperacao = "REFINANCIAMENTO";
+
+    try {
+      const res = await fetch("/api/propostas", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          clienteNome: form.nome,
+          clienteCpf: form.cpf ? form.cpf.replace(/\D/g, '') : undefined,
+          clienteTelefone: form.telefone,
+          numeroBeneficio: form.numeroBeneficio,
+          especieBeneficio: form.especieBeneficio ? Number(form.especieBeneficio) : undefined,
+          leadId: form.id,
+          tipoOperacao,
+          bancoNome: op.bancoOrigem,
+          valorParcela: Number(op.parcelaAtual) || 0,
+          valorLiberado: Number(op.trocoEstimado) || 0,
+          observacoes: `Gerada via Refin Hunter. Motivo IA: ${op.motivo}`,
+        })
+      });
+      if (!res.ok) throw new Error(await res.text());
+      toast.success("🚀 Proposta Rascunho gerada com sucesso!");
+    } catch (err: any) {
+      toast.error(err.message || "Erro ao gerar proposta.");
+    }
+  }
+
+  async function validarDocumento(fileUrl: string) {
+    setValidandoDoc(fileUrl);
+    try {
+      const res = await fetch("/api/ai/ocr-docs", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ base64Image: fileUrl })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      
+      const cpfLead = form.cpf ? form.cpf.replace(/\D/g, '') : null;
+      const confereCpf = data.cpfExtraido && cpfLead && data.cpfExtraido.includes(cpfLead);
+      
+      toast.custom(() => (
+        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-4 shadow-xl max-w-sm">
+          <h3 className="font-bold text-sm flex items-center gap-2 mb-2">
+            ✨ Validação Concluída
+          </h3>
+          <p className="text-xs text-zinc-600 dark:text-zinc-400 mb-1"><strong>Doc:</strong> {data.tipoDocumento}</p>
+          <p className="text-xs text-zinc-600 dark:text-zinc-400 mb-1"><strong>Nome:</strong> {data.nomeExtraido || "N/A"}</p>
+          <p className={`text-xs font-bold ${confereCpf ? 'text-emerald-600' : 'text-amber-600'} mb-2`}>
+             {confereCpf ? '✅ CPF exato.' : '⚠️ Atenção: CPF não identificado ou divergente.'}
+          </p>
+          <p className={`text-[10px] p-2 rounded ${data.legivel ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'}`}>
+            {data.observacoes}
+          </p>
+        </div>
+      ), { duration: 10000 });
+      
+    } catch (err: any) {
+      toast.error(err.message || "Erro na validação do documento.");
+    } finally {
+      setValidandoDoc(null);
+    }
+  }
 
   // Funções de Máscara
   const formatCPF = (v: string) => {
@@ -435,7 +534,23 @@ export function LeadsClient({
                               <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps} onClick={() => abrirModalEditar(lead)}
                                 className={`bg-white dark:bg-zinc-950 rounded-xl p-4 border border-zinc-200 dark:border-zinc-800 shadow-sm flex flex-col gap-3 transition-shadow cursor-pointer ${snapshot.isDragging ? 'shadow-xl ring-2 ring-violet-500/50 opacity-90' : 'hover:shadow-md'}`}>
                                 <div className="flex items-start justify-between gap-2">
-                                  <p className="font-bold text-sm leading-tight text-zinc-900 dark:text-zinc-100 line-clamp-2">{lead.nome}</p>
+                                  <div className="flex-1">
+                                    <p className="font-bold text-sm leading-tight text-zinc-900 dark:text-zinc-100 line-clamp-2">{lead.nome}</p>
+                                    <div className="flex items-center gap-2 mt-1">
+                                       <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border ${
+                                          (lead as any).score >= 80 ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 
+                                          (lead as any).score >= 50 ? 'bg-amber-50 text-amber-700 border-amber-200' : 
+                                          'bg-blue-50 text-blue-700 border-blue-200'
+                                       }`}>
+                                         Score: {(lead as any).score || 0}
+                                       </span>
+                                       {(lead as any).score >= 80 && (
+                                         <span className="flex items-center gap-0.5 text-[10px] text-amber-600 font-bold">
+                                           🔥 Quente
+                                         </span>
+                                       )}
+                                    </div>
+                                  </div>
                                   <GripVertical className="h-4 w-4 text-zinc-300 shrink-0" />
                                 </div>
                                 <div className="flex flex-col gap-1.5 text-xs text-zinc-500 dark:text-zinc-400">
@@ -530,7 +645,183 @@ export function LeadsClient({
               <button onClick={() => setModal(false)} className="text-zinc-400 hover:text-zinc-600 transition"><X className="h-5 w-5" /></button>
             </div>
             
-            <form onSubmit={salvarLead} className="flex-1 overflow-y-auto p-6 space-y-6">
+            <div className="flex items-center gap-6 px-6 border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50">
+              <button 
+                type="button"
+                onClick={() => setTabModal("dados")}
+                className={`py-3 text-sm font-bold border-b-2 transition ${tabModal === "dados" ? "border-violet-600 text-violet-600" : "border-transparent text-zinc-500 hover:text-zinc-700"}`}
+              >
+                Dados do Cliente
+              </button>
+              <button 
+                type="button"
+                onClick={() => setTabModal("refin")}
+                className={`py-3 text-sm font-bold border-b-2 flex items-center gap-1 transition ${tabModal === "refin" ? "border-amber-500 text-amber-600" : "border-transparent text-zinc-500 hover:text-zinc-700"}`}
+              >
+                ✨ Refin Hunter
+              </button>
+            </div>
+            
+            {tabModal === "refin" && (
+              <div className="flex-1 overflow-y-auto p-6 bg-zinc-50 dark:bg-zinc-950/50">
+                <div className="max-w-2xl mx-auto space-y-6">
+                  <div className="bg-white dark:bg-zinc-900 p-6 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
+                    <h3 className="font-bold text-lg text-amber-600 mb-2 flex items-center gap-2">
+                      🤖 Motor de Inteligência Comercial
+                    </h3>
+                    <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-4">
+                      Cole o texto bruto do extrato HISCON (INSS) do cliente abaixo. A IA vai analisar os contratos ativos e caçar oportunidades de Refinanciamento ou Portabilidade com troco.
+                    </p>
+                    <textarea 
+                      value={textoHiscon}
+                      onChange={e => setTextoHiscon(e.target.value)}
+                      placeholder="Cole o HISCON aqui..."
+                      className="w-full h-40 p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 text-sm focus:ring-2 focus:ring-amber-500 font-mono resize-none mb-4"
+                    />
+                    <button 
+                      type="button"
+                      onClick={analisarHiscon}
+                      disabled={analisandoHiscon || !textoHiscon}
+                      className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold py-3 rounded-xl hover:opacity-90 transition disabled:opacity-50"
+                    >
+                      {analisandoHiscon ? <Loader2 className="w-5 h-5 animate-spin" /> : "Caçar Oportunidades ✨"}
+                    </button>
+                  </div>
+
+                  {resultadoRefin && (
+                    <div className="space-y-4">
+                      <div className="p-4 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-xl">
+                        <p className="text-sm text-emerald-800 dark:text-emerald-300 font-medium">
+                          {resultadoRefin.analiseGeral}
+                        </p>
+                      </div>
+
+                      <h4 className="font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider text-xs">Oportunidades Encontradas:</h4>
+                      
+                      {resultadoRefin.oportunidades?.map((op: any, i: number) => (
+                        <div key={i} className="bg-white dark:bg-zinc-900 p-5 rounded-2xl border border-amber-200 shadow-lg shadow-amber-500/10">
+                          <div className="flex justify-between items-start mb-3">
+                            <div>
+                              <span className="text-[10px] font-bold uppercase tracking-wider bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full mb-1 inline-block">
+                                {op.acaoSugerida}
+                              </span>
+                              <h4 className="font-black text-lg">{op.bancoOrigem}</h4>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-xs text-zinc-500">Troco Estimado</p>
+                              <p className="text-xl font-black text-emerald-600">R$ {op.trocoEstimado}</p>
+                            </div>
+                          </div>
+                          
+                          <div className="grid grid-cols-2 gap-4 mb-4">
+                            <div className="p-3 bg-zinc-50 dark:bg-zinc-800/50 rounded-lg">
+                              <p className="text-[10px] text-zinc-500 uppercase font-bold">Parcela Atual</p>
+                              <p className="font-medium">R$ {op.parcelaAtual}</p>
+                            </div>
+                            <div className="p-3 bg-zinc-50 dark:bg-zinc-800/50 rounded-lg">
+                              <p className="text-[10px] text-zinc-500 uppercase font-bold">Saldo Devedor</p>
+                              <p className="font-medium">R$ {op.saldoDevedorEstimado}</p>
+                            </div>
+                          </div>
+                          
+                          <p className="text-xs text-zinc-600 dark:text-zinc-400 border-t border-zinc-100 dark:border-zinc-800 pt-3 mb-4">
+                            💡 <strong>Motivo:</strong> {op.motivo}
+                          </p>
+
+                          <button 
+                            type="button"
+                            onClick={() => gerarPropostaUmClique(op)}
+                            className="w-full bg-emerald-50 text-emerald-600 hover:bg-emerald-100 dark:bg-emerald-950/30 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 font-bold py-2.5 rounded-xl transition flex items-center justify-center gap-2 text-sm"
+                          >
+                            🚀 Gerar Proposta {op.acaoSugerida.includes('Refin') ? 'de Refinanciamento' : 'de Portabilidade'}
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+            )}
+
+            {tabModal === "inss" && (
+              <div className="flex-1 overflow-y-auto p-6 bg-zinc-50 dark:bg-black">
+                 <div className="max-w-2xl mx-auto space-y-6">
+                    <div className="bg-blue-600 text-white p-6 rounded-2xl shadow-sm relative overflow-hidden">
+                       <div className="absolute top-0 right-0 p-4 opacity-20">
+                          <svg width="100" height="100" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                       </div>
+                       <h2 className="text-xl font-bold mb-2 flex items-center gap-2">
+                         <span className="bg-white text-blue-600 px-2 py-0.5 rounded text-xs uppercase tracking-wider font-black">Gov.br</span>
+                         Extrator Inteligente INSS
+                       </h2>
+                       <p className="text-blue-100 text-sm">
+                         Conecte diretamente ao Meu INSS do cliente. Nossa automação RPA entrará no portal, quebrará os captchas, fará o download do HISCON (Extrato de Empréstimos) e importará todas as margens e contratos de volta para o Kromuz em alguns minutos.
+                       </p>
+                    </div>
+
+                    <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 shadow-sm">
+                       <div className="space-y-4">
+                          <div className="space-y-2">
+                            <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">CPF do Cliente</label>
+                            <input 
+                               value={form.cpf}
+                               readOnly
+                               className="w-full rounded-lg border border-zinc-200 bg-zinc-100 dark:bg-zinc-800 dark:border-zinc-700 px-4 py-3 text-sm font-bold text-zinc-500 cursor-not-allowed" 
+                            />
+                            <p className="text-[10px] text-zinc-500">O CPF é puxado automaticamente do cadastro do Lead.</p>
+                          </div>
+                          <div className="space-y-2">
+                            <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Senha do Gov.br *</label>
+                            <input 
+                               type="password"
+                               placeholder="Digite a senha fornecida pelo cliente"
+                               id="inss-senha-gov"
+                               className="w-full rounded-lg border border-zinc-200 bg-white dark:bg-zinc-950 dark:border-zinc-800 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                            />
+                          </div>
+                          
+                          <div className="pt-4">
+                             <button 
+                               type="button"
+                               onClick={async () => {
+                                  const senha = (document.getElementById('inss-senha-gov') as HTMLInputElement).value;
+                                  if (!senha) return alert("Digite a senha do Gov.br");
+                                  const btn = document.getElementById('btn-inss-enviar');
+                                  if(btn) { btn.innerHTML = "Enviando para o Robô..."; btn.setAttribute('disabled', 'true'); }
+                                  try {
+                                    const res = await fetch('/api/integracoes/meu-inss', {
+                                      method: 'POST',
+                                      headers: { 'Content-Type': 'application/json' },
+                                      body: JSON.stringify({ leadId: lead?.id, cpf: form.cpf, senha })
+                                    });
+                                    if(res.ok) {
+                                      alert("Sucesso! Tarefa enviada para a fila do robô RPA. O HISCON aparecerá nos anexos e no Refin Hunter quando concluído.");
+                                      setActiveTab("refin");
+                                    } else {
+                                      throw new Error("Falha na api");
+                                    }
+                                  } catch(e) {
+                                    alert("Erro ao conectar com a fila RPA.");
+                                    if(btn) { btn.innerHTML = "Iniciar Extração Automática"; btn.removeAttribute('disabled'); }
+                                  }
+                               }}
+                               id="btn-inss-enviar"
+                               className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition flex justify-center items-center gap-2"
+                             >
+                               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="m12 16 4-4-4-4"/><path d="M8 12h8"/></svg>
+                               Iniciar Extração Automática
+                             </button>
+                             <p className="text-[10px] text-center text-zinc-400 mt-3 flex justify-center items-center gap-1">
+                               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                               As credenciais são criptografadas e descartadas após a extração.
+                             </p>
+                          </div>
+                       </div>
+                    </div>
+                 </div>
+              </div>
+            )}
+
+            <form onSubmit={salvarLead} className={`flex-1 overflow-y-auto p-6 space-y-6 ${tabModal !== "dados" ? "hidden" : ""}`}>
               {erro && <div className="rounded-lg bg-red-50 border border-red-200 text-red-700 px-4 py-3 text-sm font-medium">{erro}</div>}
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -547,13 +838,55 @@ export function LeadsClient({
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">CPF</label>
-                      <input value={form.cpf} onChange={e => setForm({ ...form, cpf: formatCPF(e.target.value) })} placeholder="000.000.000-00" maxLength={14}
-                        className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500" />
+                      <div className="relative group">
+                        <input 
+                          type={revelarCpf ? "text" : "password"} 
+                          value={form.cpf} 
+                          readOnly={!revelarCpf}
+                          onChange={e => setForm({ ...form, cpf: formatCPF(e.target.value) })} 
+                          placeholder="***.***.***-**" 
+                          maxLength={14}
+                          className={`w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 transition-all ${!revelarCpf ? 'blur-[3px] select-none' : ''}`} 
+                        />
+                        <button 
+                          type="button"
+                          onClick={() => {
+                            if (!revelarCpf) {
+                              fetch('/api/logs', { method: 'POST', body: JSON.stringify({ tipo: 'VISUALIZACAO_DADOS', recurso: 'LEAD', recursoId: lead?.id, descricao: 'Visualizou CPF do cliente' }) });
+                            }
+                            setRevelarCpf(!revelarCpf);
+                          }}
+                          className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-zinc-400 hover:text-violet-600 transition"
+                        >
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                        </button>
+                      </div>
                     </div>
                     <div className="space-y-2">
                       <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Telefone</label>
-                      <input value={form.telefone} onChange={e => setForm({ ...form, telefone: formatTelefone(e.target.value) })} placeholder="(11) 99999-0000" maxLength={15}
-                        className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500" />
+                      <div className="relative">
+                        <input 
+                          type={revelarTel ? "text" : "password"}
+                          value={form.telefone} 
+                          readOnly={!revelarTel}
+                          onChange={e => setForm({ ...form, telefone: formatTelefone(e.target.value) })} 
+                          placeholder="(**) *****-****" 
+                          maxLength={15}
+                          className={`w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 transition-all ${!revelarTel ? 'blur-[3px] select-none' : ''}`} 
+                        />
+                        <button 
+                          type="button"
+                          onClick={() => {
+                            if (!revelarTel) {
+                              fetch('/api/logs', { method: 'POST', body: JSON.stringify({ tipo: 'VISUALIZACAO_DADOS', recurso: 'LEAD', recursoId: lead?.id, descricao: 'Visualizou Telefone do cliente' }) });
+                            }
+                            setRevelarTel(!revelarTel);
+                          }}
+                          className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-zinc-400 hover:text-violet-600 transition"
+                        >
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                        </button>
+                      </div>
                     </div>
                   </div>
 
@@ -713,9 +1046,19 @@ export function LeadsClient({
                                 <p className="text-[10px] text-zinc-500">{file.tamanho ? (file.tamanho / 1024).toFixed(1) + ' KB' : 'Salvo'}</p>
                               </div>
                             </div>
-                            <a href={file.url} download={file.nome} className="text-xs font-medium text-violet-600 hover:text-violet-700 bg-violet-50 hover:bg-violet-100 px-2 py-1 rounded">
-                              Baixar
-                            </a>
+                            <div className="flex items-center gap-2">
+                              <button 
+                                type="button" 
+                                onClick={() => validarDocumento(file.url)}
+                                disabled={validandoDoc === file.url}
+                                className="text-[10px] font-bold text-amber-600 hover:text-amber-700 bg-amber-50 hover:bg-amber-100 px-2 py-1 rounded transition flex items-center gap-1 disabled:opacity-50"
+                              >
+                                {validandoDoc === file.url ? <Loader2 className="w-3 h-3 animate-spin" /> : "✨ Validar"}
+                              </button>
+                              <a href={file.url} download={file.nome} className="text-xs font-medium text-violet-600 hover:text-violet-700 bg-violet-50 hover:bg-violet-100 px-2 py-1 rounded">
+                                Baixar
+                              </a>
+                            </div>
                           </div>
                         ))}
                         {arquivosPendentes.map((file, i) => (

@@ -1,201 +1,141 @@
 "use client";
 
-import { useState } from "react";
-import {
-  ScrollText,
-  Filter,
-  User,
-  Clock,
-  PenLine,
-  Plus,
-  Trash2,
-  Link2,
-  Upload,
-  Eye,
+import React, { useState } from "react";
+import { 
+  Shield, 
+  Search, 
+  Filter, 
+  Calendar, 
+  User, 
+  Activity, 
+  PlusCircle, 
+  Edit, 
+  Trash2, 
+  ArrowRightLeft,
+  FileDown
 } from "lucide-react";
 
-type LogEntry = {
-  id: string;
-  usuarioEmail: string;
-  usuarioNome: string | null;
-  acao: string;
-  entidade: string;
-  entidadeId: string | null;
-  entidadeNome: string | null;
-  detalhes: any;
-  ip: string | null;
-  createdAt: string | Date;
-};
+export function AuditoriaClient({ logs: initLogs }: { logs: any[] }) {
+  const [logs, setLogs] = useState(initLogs);
+  const [busca, setBusca] = useState("");
 
-const acaoConfig: Record<string, { icon: React.ReactNode; color: string; label: string }> = {
-  criou: { icon: <Plus className="h-3.5 w-3.5" />, color: "text-emerald-600 bg-emerald-50 dark:text-emerald-400 dark:bg-emerald-950/40", label: "Criou" },
-  editou: { icon: <PenLine className="h-3.5 w-3.5" />, color: "text-amber-600 bg-amber-50 dark:text-amber-400 dark:bg-amber-950/40", label: "Editou" },
-  deletou: { icon: <Trash2 className="h-3.5 w-3.5" />, color: "text-red-600 bg-red-50 dark:text-red-400 dark:bg-red-950/40", label: "Deletou" },
-  importou: { icon: <Upload className="h-3.5 w-3.5" />, color: "text-violet-600 bg-violet-50 dark:text-violet-400 dark:bg-violet-950/40", label: "Importou" },
-  vinculou: { icon: <Link2 className="h-3.5 w-3.5" />, color: "text-indigo-600 bg-indigo-50 dark:text-indigo-400 dark:bg-indigo-950/40", label: "Vinculou" },
-  desvinculou: { icon: <Link2 className="h-3.5 w-3.5" />, color: "text-zinc-600 bg-zinc-100 dark:text-zinc-400 dark:bg-zinc-800", label: "Desvinculou" },
-  visualizou: { icon: <Eye className="h-3.5 w-3.5" />, color: "text-sky-600 bg-sky-50 dark:text-sky-400 dark:bg-sky-950/40", label: "Visualizou" },
-};
+  const getIcon = (acao: string) => {
+    const a = acao.toLowerCase();
+    if (a.includes("criou") || a.includes("adicionou")) return <PlusCircle className="w-4 h-4 text-emerald-500" />;
+    if (a.includes("editou") || a.includes("alterou")) return <Edit className="w-4 h-4 text-amber-500" />;
+    if (a.includes("deletou") || a.includes("removeu")) return <Trash2 className="w-4 h-4 text-red-500" />;
+    if (a.includes("vinculou") || a.includes("transferiu")) return <ArrowRightLeft className="w-4 h-4 text-blue-500" />;
+    if (a.includes("importou")) return <FileDown className="w-4 h-4 text-violet-500" />;
+    return <Activity className="w-4 h-4 text-zinc-400" />;
+  };
 
-const entidadeLabel: Record<string, string> = {
-  regra: "Regra",
-  banco: "Banco",
-  produto: "Produto",
-  convenio: "Convênio",
-  tabela: "Tabela",
-  empresa: "Empresa",
-  usuario: "Usuário",
-  importacao: "Importação",
-};
-
-export function AuditoriaClient({ logs: logsIniciais }: { logs: LogEntry[] }) {
-  const [logs] = useState(logsIniciais);
-  const [filtroEntidade, setFiltroEntidade] = useState("");
-  const [filtroAcao, setFiltroAcao] = useState("");
-  const [expandido, setExpandido] = useState<string | null>(null);
-
-  const filtrados = logs.filter((l) => {
-    if (filtroEntidade && l.entidade !== filtroEntidade) return false;
-    if (filtroAcao && l.acao !== filtroAcao) return false;
-    return true;
-  });
-
-  const entidadesPresentes = [...new Set(logs.map((l) => l.entidade))];
-  const acoesPresentes = [...new Set(logs.map((l) => l.acao))];
+  const filteredLogs = logs.filter(log => 
+    log.usuarioEmail.toLowerCase().includes(busca.toLowerCase()) ||
+    log.acao.toLowerCase().includes(busca.toLowerCase()) ||
+    log.entidade.toLowerCase().includes(busca.toLowerCase()) ||
+    (log.entidadeNome && log.entidadeNome.toLowerCase().includes(busca.toLowerCase()))
+  );
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-zinc-50 to-white dark:from-zinc-950 dark:to-black">
-      <div className="max-w-5xl mx-auto px-6 py-10 space-y-8">
-        {/* Header */}
-        <header>
-          <div className="flex items-center gap-2 text-violet-600 dark:text-violet-400 mb-1">
-            <ScrollText className="h-5 w-5" />
-            <span className="text-xs uppercase tracking-widest font-semibold">Auditoria</span>
-          </div>
-          <h1 className="text-3xl md:text-4xl font-bold tracking-tight">Log de Auditoria</h1>
-          <p className="text-zinc-600 dark:text-zinc-400 mt-1">
-            {logs.length} registro{logs.length !== 1 ? "s" : ""} · {filtrados.length} exibido{filtrados.length !== 1 ? "s" : ""}
+    <div className="max-w-6xl mx-auto space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-white flex items-center gap-2">
+            <Shield className="w-6 h-6 text-violet-600" />
+            Logs de Auditoria
+          </h1>
+          <p className="text-zinc-500 dark:text-zinc-400 mt-1">
+            Rastreabilidade total das ações realizadas por todos os usuários.
           </p>
-        </header>
+        </div>
+      </div>
 
-        {/* Filtros */}
-        <div className="flex flex-wrap gap-3">
-          <div className="flex items-center gap-2 text-sm text-zinc-500">
-            <Filter className="h-4 w-4" />
-            Filtrar:
+      <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm overflow-hidden">
+        <div className="p-4 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50 flex flex-col md:flex-row gap-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+            <input 
+              type="text" 
+              placeholder="Filtrar por usuário, ação ou entidade..." 
+              value={busca}
+              onChange={e => setBusca(e.target.value)}
+              className="w-full pl-9 pr-4 py-2 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg text-sm focus:ring-2 focus:ring-violet-500 focus:outline-none"
+            />
           </div>
-          <select
-            value={filtroEntidade}
-            onChange={(e) => setFiltroEntidade(e.target.value)}
-            className="rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/50"
-          >
-            <option value="">Todas as entidades</option>
-            {entidadesPresentes.map((e) => (
-              <option key={e} value={e}>{entidadeLabel[e] || e}</option>
-            ))}
-          </select>
-          <select
-            value={filtroAcao}
-            onChange={(e) => setFiltroAcao(e.target.value)}
-            className="rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/50"
-          >
-            <option value="">Todas as ações</option>
-            {acoesPresentes.map((a) => (
-              <option key={a} value={a}>{acaoConfig[a]?.label || a}</option>
-            ))}
-          </select>
+          <div className="flex gap-2">
+            <button className="flex items-center gap-2 px-3 py-2 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg text-xs font-medium text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 transition">
+              <Calendar className="w-3.5 h-3.5" /> Últimos 30 dias
+            </button>
+            <button className="flex items-center gap-2 px-3 py-2 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg text-xs font-medium text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 transition">
+              <Filter className="w-3.5 h-3.5" /> Mais Filtros
+            </button>
+          </div>
         </div>
 
-        {/* Timeline */}
-        {filtrados.length === 0 ? (
-          <div className="text-center py-20">
-            <ScrollText className="h-12 w-12 text-zinc-300 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-zinc-600">Nenhum registro de auditoria</h3>
-            <p className="text-sm text-zinc-400 mt-1">Ações realizadas na plataforma aparecerão aqui.</p>
-          </div>
-        ) : (
-          <div className="space-y-2">
-            {filtrados.map((log) => {
-              const cfg = acaoConfig[log.acao] || acaoConfig.editou;
-              const aberto = expandido === log.id;
-
-              return (
-                <div
-                  key={log.id}
-                  className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 overflow-hidden"
-                >
-                  <div
-                    className="flex items-center gap-3 px-5 py-3.5 cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-800/30 transition"
-                    onClick={() => setExpandido(aberto ? null : log.id)}
-                  >
-                    {/* Ação badge */}
-                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium shrink-0 ${cfg.color}`}>
-                      {cfg.icon}
-                      {cfg.label}
-                    </span>
-
-                    {/* Descrição */}
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm">
-                        <span className="font-medium text-zinc-900 dark:text-zinc-100">
-                          {entidadeLabel[log.entidade] || log.entidade}
-                        </span>
-                        {log.entidadeNome && (
-                          <span className="text-zinc-500"> · {log.entidadeNome}</span>
-                        )}
-                      </p>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="border-b border-zinc-100 dark:border-zinc-800 text-[11px] uppercase tracking-wider text-zinc-500 font-bold">
+                <th className="px-6 py-3">Data/Hora</th>
+                <th className="px-6 py-3">Usuário</th>
+                <th className="px-6 py-3">Ação</th>
+                <th className="px-6 py-3">Entidade</th>
+                <th className="px-6 py-3 text-right">IP</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
+              {filteredLogs.map((log) => (
+                <tr key={log.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition group">
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-xs font-medium text-zinc-900 dark:text-zinc-100">
+                      {new Date(log.createdAt).toLocaleDateString()}
                     </div>
-
-                    {/* Usuário */}
-                    <div className="flex items-center gap-1.5 text-xs text-zinc-500 shrink-0">
-                      <User className="h-3 w-3" />
-                      <span className="truncate max-w-[120px]">{log.usuarioNome || log.usuarioEmail}</span>
+                    <div className="text-[10px] text-zinc-500">
+                      {new Date(log.createdAt).toLocaleTimeString()}
                     </div>
-
-                    {/* Data */}
-                    <div className="flex items-center gap-1.5 text-xs text-zinc-400 tabular-nums shrink-0">
-                      <Clock className="h-3 w-3" />
-                      {new Date(log.createdAt).toLocaleDateString("pt-BR", {
-                        day: "2-digit",
-                        month: "2-digit",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </div>
-                  </div>
-
-                  {/* Detalhes expandidos */}
-                  {aberto && log.detalhes && (
-                    <div className="border-t border-zinc-100 dark:border-zinc-800 px-5 py-4 bg-zinc-50/50 dark:bg-zinc-800/20">
-                      <h4 className="text-xs text-zinc-500 uppercase tracking-wider font-medium mb-2">
-                        Detalhes da alteração
-                      </h4>
-                      <div className="space-y-1.5 text-xs font-mono">
-                        {Object.entries(log.detalhes).map(([campo, val]: [string, any]) => (
-                          <div key={campo} className="flex items-start gap-2">
-                            <span className="text-zinc-500 shrink-0 w-36 truncate">{campo}:</span>
-                            {val && typeof val === "object" && "de" in val ? (
-                              <span>
-                                <span className="text-red-500 line-through">{String(val.de ?? "—")}</span>
-                                {" → "}
-                                <span className="text-emerald-600 font-medium">{String(val.para ?? "—")}</span>
-                              </span>
-                            ) : (
-                              <span className="text-zinc-700 dark:text-zinc-300">{JSON.stringify(val)}</span>
-                            )}
-                          </div>
-                        ))}
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-[10px] font-bold text-zinc-600">
+                        {log.usuarioNome?.substring(0,2).toUpperCase() || log.usuarioEmail.substring(0,2).toUpperCase()}
                       </div>
-                      {log.ip && (
-                        <p className="text-[10px] text-zinc-400 mt-3">IP: {log.ip}</p>
-                      )}
+                      <div className="min-w-0">
+                        <div className="text-xs font-bold text-zinc-900 dark:text-zinc-100 truncate">{log.usuarioNome || "Sistema"}</div>
+                        <div className="text-[10px] text-zinc-500 truncate">{log.usuarioEmail}</div>
+                      </div>
                     </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        )}
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-2 text-xs font-semibold text-zinc-700 dark:text-zinc-300">
+                      {getIcon(log.acao)}
+                      {log.acao}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="text-xs font-medium text-zinc-900 dark:text-zinc-100">
+                      {log.entidade}
+                    </div>
+                    <div className="text-[10px] text-zinc-500 italic">
+                      {log.entidadeNome || "N/A"}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 text-right">
+                    <span className="text-[10px] font-mono text-zinc-400 bg-zinc-50 dark:bg-zinc-800 px-1.5 py-0.5 rounded">
+                      {log.ip || "0.0.0.0"}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+              {filteredLogs.length === 0 && (
+                <tr>
+                  <td colSpan={5} className="px-6 py-12 text-center text-zinc-400 text-sm">
+                    Nenhum registro encontrado para esta busca.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

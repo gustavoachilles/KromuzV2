@@ -5,16 +5,41 @@ import { Send, Plus, Users, Clock, CheckCircle2, Play, AlertCircle, X } from "lu
 
 export function DisparosClient({ campanhas, canais, sessao }: { campanhas: any[], canais: any[], sessao: any }) {
   const [modalNovo, setModalNovo] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [form, setForm] = useState({
+    nome: "",
+    canalId: canais[0]?.id || "",
+    filtro: "todos",
+    mensagem: ""
+  });
   
-  const getStatusColor = (status: string) => {
-    switch(status) {
-      case "AGENDADA": return "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400";
-      case "EXECUTANDO": return "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400";
-      case "CONCLUIDA": return "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400";
-      case "CANCELADA": return "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400";
-      default: return "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-400";
+  const getStatusColor = (status: string) => { ... }; // Unchanged
+
+  async function handleSubmit() {
+    if (!form.nome || !form.mensagem || !form.canalId) {
+      alert("Preencha todos os campos obrigatórios.");
+      return;
     }
-  };
+
+    setLoading(true);
+    try {
+      const res = await fetch("/api/campanhas", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form)
+      });
+
+      if (!res.ok) throw new Error("Erro ao criar campanha");
+      
+      alert("🚀 Campanha iniciada com sucesso! O sistema está disparando as mensagens em segundo plano.");
+      setModalNovo(false);
+      window.location.reload(); // Refresh para ver na lista
+    } catch (err) {
+      alert("Erro ao iniciar campanha.");
+    } finally {
+      setLoading(false);
+    }
+  }
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">
@@ -93,25 +118,39 @@ export function DisparosClient({ campanhas, canais, sessao }: { campanhas: any[]
             <div className="flex-1 overflow-y-auto p-6 space-y-6">
               <div className="space-y-2">
                 <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Nome da Campanha</label>
-                <input type="text" placeholder="Ex: Black Friday Consignado" className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-950 px-4 py-2 text-sm focus:ring-2 focus:ring-violet-500 focus:outline-none" />
+                <input 
+                  type="text" 
+                  value={form.nome}
+                  onChange={e => setForm({...form, nome: e.target.value})}
+                  placeholder="Ex: Black Friday Consignado" 
+                  className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-950 px-4 py-2 text-sm focus:ring-2 focus:ring-violet-500 focus:outline-none" 
+                />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Canal de Disparo</label>
-                  <select className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-950 px-4 py-2 text-sm focus:ring-2 focus:ring-violet-500 focus:outline-none">
+                  <select 
+                    value={form.canalId}
+                    onChange={e => setForm({...form, canalId: e.target.value})}
+                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-950 px-4 py-2 text-sm focus:ring-2 focus:ring-violet-500 focus:outline-none"
+                  >
+                    <option value="">Selecione um canal</option>
                     {canais.map((c: any) => (
-                      <option key={c.id} value={c.id}>{c.nomeCanal} ({c.tipo})</option>
+                      <option key={c.id} value={c.id}>{c.nomeCanal}</option>
                     ))}
-                    {canais.length === 0 && <option value="">Nenhum canal ativo</option>}
                   </select>
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Filtro da Base</label>
-                  <select className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-950 px-4 py-2 text-sm focus:ring-2 focus:ring-violet-500 focus:outline-none">
+                  <select 
+                    value={form.filtro}
+                    onChange={e => setForm({...form, filtro: e.target.value})}
+                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-950 px-4 py-2 text-sm focus:ring-2 focus:ring-violet-500 focus:outline-none"
+                  >
                     <option value="todos">Todos os Leads</option>
-                    <option value="recusados">Apenas Recusados (&gt; 30 dias)</option>
-                    <option value="aprovados">Apenas Aprovados/Pagos</option>
+                    <option value="NOVO">Apenas Leads Novos</option>
+                    <option value="QUALIFICADO">Apenas Qualificados</option>
                   </select>
                 </div>
               </div>
@@ -121,7 +160,13 @@ export function DisparosClient({ campanhas, canais, sessao }: { campanhas: any[]
                   Mensagem
                   <span className="text-xs text-zinc-400">Variáveis: {"{nome}"}, {"{banco}"}</span>
                 </label>
-                <textarea rows={5} placeholder="Olá {nome}! Temos uma novidade..." className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-950 px-4 py-3 text-sm focus:ring-2 focus:ring-violet-500 focus:outline-none resize-none"></textarea>
+                <textarea 
+                  rows={5} 
+                  value={form.mensagem}
+                  onChange={e => setForm({...form, mensagem: e.target.value})}
+                  placeholder="Olá {nome}! Temos uma novidade..." 
+                  className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-950 px-4 py-3 text-sm focus:ring-2 focus:ring-violet-500 focus:outline-none resize-none"
+                ></textarea>
               </div>
 
               <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-900/50 rounded-lg p-4 flex gap-3 text-sm text-amber-800 dark:text-amber-400">
@@ -132,8 +177,13 @@ export function DisparosClient({ campanhas, canais, sessao }: { campanhas: any[]
 
             <div className="p-6 border-t border-zinc-100 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/50 flex justify-end gap-3 shrink-0 rounded-b-2xl">
               <button onClick={() => setModalNovo(false)} className="px-4 py-2 text-sm font-medium text-zinc-600 hover:bg-zinc-100 rounded-lg transition">Cancelar</button>
-              <button className="flex items-center gap-2 bg-violet-600 hover:bg-violet-700 text-white px-5 py-2 rounded-lg text-sm font-bold shadow-lg shadow-violet-500/30 transition">
-                <Play className="w-4 h-4" /> Iniciar Disparo
+              <button 
+                onClick={handleSubmit}
+                disabled={loading}
+                className="flex items-center gap-2 bg-violet-600 hover:bg-violet-700 text-white px-5 py-2 rounded-lg text-sm font-bold shadow-lg shadow-violet-500/30 transition disabled:opacity-50"
+              >
+                {loading ? <Clock className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
+                {loading ? "Iniciando..." : "Iniciar Disparo"}
               </button>
             </div>
           </div>

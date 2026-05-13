@@ -55,10 +55,15 @@ model Empresa {
   metas                Meta[]
   simulacoes           SimulacaoCredito[]
   faturasBanco         FaturaBanco[]
+  conhecimentoBevi     ConhecimentoBevi[]
 
   canais               CanalComunicacao[]
   conversas            Conversa[]
   campanhas            CampanhaDisparo[]
+  filaRpa              FilaRpa[]
+  campanhasMarketing   CampanhaMarketing[]
+  logsAtividades       LogAtividade[]
+  regrasComissao       RegraComissao[]
   
   planoSaaS            PlanoSaaS? @relation(fields: [planoSaasId], references: [id])
   faturasSaaS          FaturaSaaS[]
@@ -84,12 +89,20 @@ model UsuarioPerfil {
   percentualFixo      Float?   @map("percentual_fixo")
   regrasFaixas        Json?    @map("regras_faixas") // Array de objetos { minVolume, percentual }
 
+  // Rede de Parceiros (Master / Sub)
+  masterId            String?  @map("master_id") @db.Uuid
+  percentualSplitMaster Float? @map("percentual_split_master") // ex: 20% fica pro Master
+
   ativo               Boolean  @default(true)
   createdAt           DateTime @default(now()) @map("created_at")
   updatedAt           DateTime @updatedAt @map("updated_at")
 
   empresa Empresa @relation(fields: [empresaId], references: [id], onDelete: Cascade)
   conversas Conversa[]
+  logsAtividades LogAtividade[]
+  
+  master              UsuarioPerfil? @relation("RedeParceiros", fields: [masterId], references: [id], onDelete: SetNull)
+  subCorretores       UsuarioPerfil[] @relation("RedeParceiros")
 
   @@index([empresaId])
   @@index([authUserId])
@@ -508,8 +521,12 @@ model Proposta {
   convenioNome    String?        @map("convenio_nome")
   vendedorEmail   String?        @map("vendedor_email")
   vendedorNome    String?        @map("vendedor_nome")
-  observacoes     String?
 
+  // Rastreio de Gargalos
+  historicoStatus Json?    @map("historico_status") @db.JsonB @default("[]")
+
+  observacoes     String?
+  
   // Datas do funil
   digitadaEm      DateTime?      @map("digitada_em")
   aprovadaEm      DateTime?      @map("aprovada_em")
@@ -565,6 +582,13 @@ model Lead {
   vendedorEmail   String?    @map("vendedor_email")
   vendedorNome    String?    @map("vendedor_nome")
 
+  // Marketing e UTMs
+  utmSource       String?    @map("utm_source")
+  utmMedium       String?    @map("utm_medium")
+  utmCampaign     String?    @map("utm_campaign")
+  campanhaId      String?    @map("campanha_id") @db.Uuid
+  campanha        CampanhaMarketing? @relation(fields: [campanhaId], references: [id], onDelete: SetNull)
+
   // Operação potencial
   tipoOperacao    TipoOperacao? @map("tipo_operacao")
   valorLiberado   Float?        @map("valor_liberado")
@@ -575,6 +599,7 @@ model Lead {
   ultimoContato   DateTime?  @map("ultimo_contato")
   proximoContato  DateTime?  @map("proximo_contato")
   motivoPerda     String?    @map("motivo_perda")
+  score           Int        @default(0)
 
   createdAt       DateTime   @default(now()) @map("created_at")
   updatedAt       DateTime   @updatedAt @map("updated_at")
@@ -681,6 +706,34 @@ model SimulacaoCredito {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// BASE DE CONHECIMENTO & RAG (Sprint 19)
+// ─────────────────────────────────────────────────────────────────────────────
+
+model ConhecimentoBevi {
+  id              String   @id @default(uuid()) @db.Uuid
+  empresaId       String   @map("empresa_id") @db.Uuid // Permite isolar conhecimento por tenant se necessário
+  
+  categoria       String   // INSS, FGTS, SIAPE, etc.
+  pasta           String   // Nome do banco ou órgão (Icred, Pan, Acre, etc.)
+  tituloArtigo    String   @map("titulo_artigo")
+  urlOrigem       String   @map("url_origem")
+  
+  conteudoChunk   String   @map("conteudo_chunk") @db.Text // Pedaço do Markdown
+  
+  // Usamos Unsupported("vector") no Prisma client para pgvector
+  embedding       Unsupported("vector(768)")? // Tamanho do vetor Gemini flash/Google
+  
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  empresa         Empresa  @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+
+  @@index([empresaId, categoria])
+  @@map("conhecimento_bevi")
+  @@schema("public")
+}
+
+
+// ─────────────────────────────────────────────────────────────────────────────
 // OMNICHANNEL & AUTOMAÇÃO DE IA (Sprint 18)
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -743,17 +796,20 @@ model Mensagem {
   conversaId      String   @map("conversa_id") @db.Uuid
   
   remetente       String   // LEAD, VENDEDOR, IA, SISTEMA
+  tipo            String   @default("WHATSAPP") // WHATSAPP, INTERNA
   conteudo        String   @db.Text
   tipoConteudo    String   @default("TEXTO") @map("tipo_conteudo") // TEXTO, IMAGEM, AUDIO, ARQUIVO
   urlMidia        String?  @map("url_midia")
   
   lida            Boolean  @default(false)
+  agendadoPara    DateTime? @map("agendado_para")
   
   createdAt       DateTime @default(now()) @map("created_at")
 
   conversa        Conversa @relation(fields: [conversaId], references: [id], onDelete: Cascade)
 
   @@index([conversaId, createdAt])
+  @@index([agendadoPara])
   @@map("mensagem")
   @@schema("public")
 }
@@ -820,5 +876,87 @@ model FaturaSaaS {
   @@index([empresaId])
   @@index([status])
   @@map("fatura_saas")
+  @@schema("public")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MEGA EXPANSÃO (FASE 4) - RPA E MARKETING
+// ─────────────────────────────────────────────────────────────────────────────
+
+model FilaRpa {
+  id              String   @id @default(uuid()) @db.Uuid
+  empresaId       String   @map("empresa_id") @db.Uuid
+  tipo            String   // EXTRACAO_INSS, DIGITACAO_PROPOSTA
+  referenciaId    String   @map("referencia_id") @db.Uuid // Lead ID ou Proposta ID
+  payload         Json     @default("{}") @db.JsonB
+  status          String   @default("PENDENTE") // PENDENTE, PROCESSANDO, CONCLUIDO, FALHA
+  tentativas      Int      @default(0)
+  logs            String?  @db.Text
+  resultadoUrl    String?  @map("resultado_url")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  empresa Empresa @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+
+  @@index([empresaId, status])
+  @@map("fila_rpa")
+  @@schema("public")
+}
+
+model CampanhaMarketing {
+  id              String   @id @default(uuid()) @db.Uuid
+  empresaId       String   @map("empresa_id") @db.Uuid
+  nome            String
+  origem          String   // FACEBOOK, GOOGLE
+  custoTotal      Float    @default(0) @map("custo_total")
+  leadsGerados    Int      @default(0) @map("leads_gerados")
+  dataInicio      DateTime @map("data_inicio")
+  dataFim         DateTime? @map("data_fim")
+  ativo           Boolean  @default(true)
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  empresa Empresa @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  leads   Lead[]
+
+  @@index([empresaId, ativo])
+  @@map("campanha_marketing")
+  @@schema("public")
+}
+
+model LogAtividade {
+  id              String   @id @default(uuid()) @db.Uuid
+  empresaId       String   @map("empresa_id") @db.Uuid
+  usuarioId       String   @map("usuario_id") @db.Uuid
+  tipo            String   // ALTERACAO_STATUS, VISUALIZACAO_DADOS, LOGIN, CRIACAO
+  recurso         String   // LEAD, PROPOSTA, USUARIO
+  recursoId       String   @map("recurso_id")
+  descricao       String   @db.Text
+  ip              String?
+  userAgent       String?  @map("user_agent")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  empresa Empresa @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  usuario UsuarioPerfil @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@index([empresaId, recurso, recursoId])
+  @@map("log_atividade")
+  @@schema("public")
+}
+
+model RegraComissao {
+  id              String   @id @default(uuid()) @db.Uuid
+  empresaId       String   @map("empresa_id") @db.Uuid
+  nome            String
+  banco           String?
+  convenio        String?  @map("convenio")
+  tipoOperacao    String?  @map("tipo_operacao")
+  percentualSplit Float    @map("percentual_split") // Quanto do total vai para o sub-corretor
+  ativo           Boolean  @default(true)
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  empresa Empresa @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+
+  @@index([empresaId, banco, ativo])
+  @@map("regra_comissao")
   @@schema("public")
 }

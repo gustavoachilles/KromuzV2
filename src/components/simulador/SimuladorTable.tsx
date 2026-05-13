@@ -6,46 +6,36 @@ import { SimuladorTableRow } from "./SimuladorTableRow";
 interface SimuladorTableProps {
   contratos: ContratoAtivo[];
   oportunidades: Oportunidade[];
+  onOpenInsight?: (context: any) => void;
 }
 
-export function SimuladorTable({ contratos, oportunidades }: SimuladorTableProps) {
-  if (contratos.length === 0) {
-    return (
-      <div className="text-center p-8 bg-slate-50 rounded-xl border border-dashed border-slate-300">
-        <p className="text-slate-500 italic">Nenhum contrato ativo encontrado no benefício.</p>
-      </div>
-    );
-  }
-
+export function SimuladorTable({ contratos, oportunidades, onOpenInsight }: SimuladorTableProps) {
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-x-auto">
-      <div className="bg-slate-800 px-4 py-3 border-b border-slate-700 rounded-t-xl">
-        <h3 className="text-white font-bold text-sm">PORTABILIDADE E REFINANCIAMENTO</h3>
-      </div>
-      
+    <div className="overflow-x-auto bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
       <table className="w-full text-left border-collapse">
         <thead>
-          <tr className="bg-slate-50 border-b border-slate-200">
-            <th className="p-3 text-xs font-semibold text-slate-500 uppercase w-[40px] text-center">Sel.</th>
-            <th className="p-3 text-xs font-semibold text-slate-500 uppercase">Banco</th>
-            <th className="p-3 text-xs font-semibold text-slate-500 uppercase">Contrato</th>
-            <th className="p-3 text-xs font-semibold text-slate-500 uppercase text-center">Averbação</th>
-            <th className="p-3 text-xs font-semibold text-slate-500 uppercase text-center">Início Desc.</th>
-            <th className="p-3 text-xs font-semibold text-slate-500 uppercase text-center">Final Desc.</th>
-            <th className="p-3 text-xs font-semibold text-slate-500 uppercase text-center">Valor Contrato</th>
-            <th className="p-3 text-xs font-semibold text-slate-500 uppercase text-center">Taxa</th>
-            <th className="p-3 text-xs font-semibold text-slate-500 uppercase text-center">Valor Parcela</th>
-            <th className="p-3 text-xs font-semibold text-slate-500 uppercase text-center">Pagas / Total</th>
-            <th className="p-3 text-xs font-semibold text-slate-500 uppercase text-center">Quitação</th>
-            <th className="p-3 text-xs font-semibold text-slate-500 uppercase text-center"></th>
+          <tr className="bg-zinc-50 dark:bg-zinc-800/50 border-b border-zinc-200 dark:border-zinc-800">
+            <th className="p-3 text-xs font-bold text-zinc-500 uppercase tracking-wider text-center w-[50px]">Alt.</th>
+            <th className="p-3 text-xs font-bold text-zinc-500 uppercase tracking-wider">Banco Original</th>
+            <th className="p-3 text-xs font-bold text-zinc-500 uppercase tracking-wider">Espécie</th>
+            <th className="p-3 text-xs font-bold text-zinc-500 uppercase tracking-wider text-center">Início</th>
+            <th className="p-3 text-xs font-bold text-zinc-500 uppercase tracking-wider text-center">Fim</th>
+            <th className="p-3 text-xs font-bold text-zinc-500 uppercase tracking-wider text-center">Averbado</th>
+            <th className="p-3 text-xs font-bold text-zinc-500 uppercase tracking-wider text-center">Digitado</th>
+            <th className="p-3 text-xs font-bold text-zinc-500 uppercase tracking-wider text-center">Taxa</th>
+            <th className="p-3 text-xs font-bold text-zinc-500 uppercase tracking-wider text-center">Parcela</th>
+            <th className="p-3 text-xs font-bold text-zinc-500 uppercase tracking-wider text-center">Prazo (Pg/Rest)</th>
+            <th className="p-3 text-xs font-bold text-zinc-500 uppercase tracking-wider text-center">S.D. Estimado</th>
+            <th className="p-3 text-xs font-bold text-zinc-500 uppercase tracking-wider text-center">Opções</th>
           </tr>
         </thead>
-        <tbody>
+        <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
           {contratos.map((contrato) => (
             <SimuladorTableRow 
               key={contrato.id} 
               contrato={contrato} 
               oportunidades={oportunidades} 
+              onOpenInsight={onOpenInsight}
             />
           ))}
         </tbody>

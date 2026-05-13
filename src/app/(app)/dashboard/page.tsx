@@ -30,6 +30,9 @@ export default async function DashboardPage() {
     totalPropostasPagas,
     propostasStats,
     rankingVendedores,
+    totalChunks,
+    totalConversasAtivas,
+    totalMensagensIA,
   ] = await Promise.all([
     prisma.banco.count({ where: { empresaId: eid, ativo: true } }),
     prisma.banco.count({ where: { empresaId: eid, ativo: true, ativoSimulacao: true } }),
@@ -73,6 +76,10 @@ export default async function DashboardPage() {
       orderBy: { _sum: { valorLiberado: "desc" } },
       take: 5,
     }),
+    // NOVOS DADOS IA & OMNICHANNEL
+    prisma.conhecimentoBevi.count(), // Cérebro RAG (Global)
+    prisma.conversa.count({ where: { empresaId: eid, status: { not: "FECHADO" } } }),
+    prisma.mensagem.count({ where: { remetente: "IA", conversa: { empresaId: eid } } }),
   ]);
 
   const volumeTotal = propostasStats.find(p => p.status === "PAGA")?._sum.valorLiberado || 0;
@@ -104,6 +111,9 @@ export default async function DashboardPage() {
         totalPropostasPagas,
         volumeTotal,
         comissaoTotal,
+        totalChunks,
+        totalConversasAtivas,
+        totalMensagensIA,
       }}
       funilData={funilData}
       rankingVendedores={rankingVendedores}

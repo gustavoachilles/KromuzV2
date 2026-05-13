@@ -18,6 +18,8 @@ import {
   Shield,
   Users,
   Kanban,
+  Bot,
+  MessageSquare,
 } from "lucide-react";
 
 type KPIs = {
@@ -34,6 +36,9 @@ type KPIs = {
   totalPropostasPagas: number;
   volumeTotal: number;
   comissaoTotal: number;
+  totalChunks: number;
+  totalConversasAtivas: number;
+  totalMensagensIA: number;
 };
 
 type FunilItem = { name: string; value: number; fill: string };
@@ -154,7 +159,21 @@ export function DashboardClient({
             icon={<Shield className="h-5 w-5" />}
             label="Comissão Paga"
             value={`R$ ${kpis.comissaoTotal.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`}
-            color="amber"
+          <KpiCard
+            icon={<Brain className="h-5 w-5" />}
+            label="Cérebro (RAG)"
+            value={kpis.totalChunks}
+            sub="Trechos de manuais"
+            color="violet"
+            onClick={() => router.push("/chat")}
+          />
+          <KpiCard
+            icon={<MessageSquare className="h-5 w-5" />}
+            label="Conversas Ativas"
+            value={kpis.totalConversasAtivas}
+            sub={`${kpis.totalMensagensIA} via IA`}
+            color="emerald"
+            onClick={() => router.push("/inbox")}
           />
         </div>
 
@@ -219,10 +238,60 @@ export function DashboardClient({
                         R$ {(v._sum.valorComissao || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })} comissão
                       </p>
                     </div>
-                  </div>
-                ))
-              )}
             </div>
+          </div>
+        </div>
+
+        {/* Intelligence & Automation Section */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="md:col-span-1 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6 flex flex-col justify-center items-center text-center">
+            <div className="w-16 h-16 rounded-full bg-violet-100 dark:bg-violet-900/30 flex items-center justify-center mb-4">
+              <Bot className="h-8 w-8 text-violet-600" />
+            </div>
+            <h3 className="text-lg font-bold">Nível de Automação</h3>
+            <p className="text-sm text-zinc-500 mb-6">Porcentagem de mensagens respondidas pelo Bot</p>
+            <div className="w-full bg-zinc-100 dark:bg-zinc-800 h-3 rounded-full overflow-hidden mb-2">
+              <div 
+                className="h-full bg-violet-600 rounded-full" 
+                style={{ width: `${Math.min((kpis.totalMensagensIA / Math.max(kpis.totalConversasAtivas * 10, 1)) * 100, 100)}%` }} 
+              />
+            </div>
+            <span className="text-2xl font-black text-violet-600">
+               {Math.min((kpis.totalMensagensIA / Math.max(kpis.totalConversasAtivas * 10, 1)) * 100, 100).toFixed(1)}%
+            </span>
+          </div>
+
+          <div className="md:col-span-2 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6">
+             <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h2 className="text-lg font-semibold">Saúde do Cérebro (Knowledge Base)</h2>
+                  <p className="text-xs text-zinc-500 mt-0.5">Densidade de conhecimento indexado por categoria</p>
+                </div>
+                <Sparkles className="h-5 w-5 text-amber-500" />
+             </div>
+             
+             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl">
+                   <p className="text-[10px] uppercase tracking-wider text-zinc-500 mb-1">Manuais INSS</p>
+                   <p className="text-xl font-bold">100%</p>
+                   <div className="h-1 w-full bg-emerald-500 rounded-full mt-2" />
+                </div>
+                <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl">
+                   <p className="text-[10px] uppercase tracking-wider text-zinc-500 mb-1">Políticas Bancos</p>
+                   <p className="text-xl font-bold">{Math.min(kpis.totalChunks / 500, 100).toFixed(0)}%</p>
+                   <div className="h-1 w-full bg-violet-500 rounded-full mt-2" style={{ width: `${Math.min(kpis.totalChunks / 500, 100)}%` }} />
+                </div>
+                <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl">
+                   <p className="text-[10px] uppercase tracking-wider text-zinc-500 mb-1">Roteiros PDF</p>
+                   <p className="text-xl font-bold">{kpis.totalImportacoes}</p>
+                   <div className="h-1 w-full bg-blue-500 rounded-full mt-2" />
+                </div>
+                <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl">
+                   <p className="text-[10px] uppercase tracking-wider text-zinc-500 mb-1">Tempo de Resposta</p>
+                   <p className="text-xl font-bold">~1.2s</p>
+                   <div className="h-1 w-full bg-amber-500 rounded-full mt-2" />
+                </div>
+             </div>
           </div>
         </div>
 

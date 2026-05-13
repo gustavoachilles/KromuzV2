@@ -39,40 +39,54 @@ export default async function DashFinanceiroPage() {
     })
   );
 
-  // Por banco (top 10)
-  const porBanco = await prisma.proposta.groupBy({
-    by: ["bancoNome"],
-    where: { empresaId: eid, status: "PAGA" },
-    _sum: { valorLiberado: true, valorComissao: true },
-    _count: true,
-    orderBy: { _sum: { valorLiberado: "desc" } },
-    take: 10,
-  });
-
-  // Totais gerais
-  const totais = await prisma.proposta.aggregate({
-    where: { empresaId: eid, status: "PAGA" },
-    _sum: { valorLiberado: true, valorComissao: true },
-    _count: true,
-  });
-
-  // Faturas Geradas
-  const faturas = await prisma.faturaBanco.findMany({
-    where: { empresaId: eid },
-    include: { _count: { select: { propostas: true } } },
-    orderBy: { createdAt: "desc" },
-  });
-
-  // Propostas Pagas mas sem Fatura gerada (para gerar novo lote)
-  const propostasPendentes = await prisma.proposta.findMany({
-    where: { empresaId: eid, status: "PAGA", faturaBancoId: null },
-    select: { id: true, bancoNome: true, valorComissao: true },
-  });
+  const [porBanco, porVendedor, totais, faturas, propostasPendentes] = await Promise.all([
+    // Por banco (top 10)
+    prisma.proposta.groupBy({
+      by: ["bancoNome"],
+      where: { empresaId: eid, status: "PAGA" },
+      _sum: { valorLiberado: true, valorComissao: true },
+      _count: true,
+      orderBy: { _sum: { valorLiberado: "desc" } },
+      take: 10,
+    }),
+    // Por vendedor
+    prisma.proposta.groupBy({
+      by: ["vendedorEmail", "vendedorNome"],
+      where: { empresaId: eid, status: "PAGA" },
+      _sum: { valorLiberado: true, valorComissao: true },
+      _count: true,
+      orderBy: { _sum: { valorLiberado: "desc" } },
+    }),
+    // Totais gerais
+    prisma.proposta.aggregate({
+      where: { empresaId: eid, status: "PAGA" },
+      _sum: { valorLiberado: true, valorComissao: true },
+      _count: true,
+    }),
+    // Faturas Geradas
+    prisma.faturaBanco.findMany({
+      where: { empresaId: eid },
+      include: { _count: { select: { propostas: true } } },
+      orderBy: { createdAt: "desc" },
+    }),
+    // Propostas Pagas mas sem Fatura gerada
+    prisma.proposta.findMany({
+      where: { empresaId: eid, status: "PAGA", faturaBancoId: null },
+      select: { id: true, bancoNome: true, valorComissao: true },
+    }),
+    // Usuarios com Hierarquia
+    prisma.usuarioPerfil.findMany({
+      where: { empresaId: eid },
+      select: { id: true, email: true, nome: true, masterId: true, percentualSplitMaster: true },
+    })
+  ]);
 
   return (
     <DashFinanceiroClient
       meses={resultados}
       porBanco={porBanco}
+      porVendedor={porVendedor}
+      usuarios={usuarios}
       totais={{
         volume: totais._sum.valorLiberado || 0,
         comissao: totais._sum.valorComissao || 0,

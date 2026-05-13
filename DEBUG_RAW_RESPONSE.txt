@@ -1,0 +1,7 @@
+<analise>
+- Facta: Regra "idade mínima 21 anos e máxima 72 anos, 11 meses e 29 dias". Cliente tem 60 anos. 60 está dentro do limite. 
+- O prazo máximo para o cliente de 60 anos é de 96 meses. O cliente está solicitando 96 meses, que é o prazo máximo permitido. APROVADO.
+- O cliente deve ter pelo menos 6 parcelas pagas para refinanciamento, e a proposta deve ser feita com contrato ativo e em dia. Não há informações sobre o status do contrato do cliente, mas se atender a essa condição, a proposta pode ser aprovada.
+</analise>
+
+A análise indica que o cliente de 60 anos está dentro dos limites de idade para o refinanciamento no Banco Facta e pode solicitar o prazo máximo de 96 meses. No entanto, é importante garantir que o cliente tenha pelo menos 6 parcelas pagas e que o contrato esteja ativo e em dia para que a proposta seja aprovada.

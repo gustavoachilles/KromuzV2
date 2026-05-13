@@ -6,8 +6,14 @@ export type ResultadoExtracaoHiscon =
   | { ok: false; erro: string; isRetryable: boolean };
 
 const PROMPT_HISCON = `Você é um especialista em análise de Crédito Consignado (INSS).
-Extraia os dados do HISCON PDF em anexo e retorne EXCLUSIVAMENTE um JSON seguindo exatamente esta estrutura:
+Extraia os dados do HISCON PDF em anexo.
 
+COMO O SEU CÉREBRO FUNCIONA (OBRIGATÓRIO):
+Para não errar nos cálculos matemáticos (como calcular as parcelas pagas baseadas na data de início), você DEVE obrigatoriamente iniciar sua resposta com uma tag <analise>.
+Dentro da tag, você vai detalhar seu raciocínio passo a passo: "Contrato X começou em 01/2025. Estamos em maio de 2026. Logo, pagou 16 parcelas".
+Somente APÓS fechar a tag </analise>, retorne EXCLUSIVAMENTE o JSON estruturado.
+
+ESTRUTURA OBRIGATÓRIA DO JSON (logo após fechar a tag de análise):
 {
   "dados_cliente": {
     "nome": "NOME COMPLETO",
@@ -39,11 +45,11 @@ Extraia os dados do HISCON PDF em anexo e retorne EXCLUSIVAMENTE um JSON seguind
   ]
 }
 
-Considere o ano atual como 2026. IMPORTANTE: 
-1. Se o HISCON trouxer apenas a 'Competência de Início do Desconto' ou 'Data de Início', calcule as 'parcelas_pagas' sendo a quantidade de meses desde a Data de Início até hoje (Ex: se iniciou em 01/2025, pagou umas 16 parcelas). Nunca retorne 0 se a data de inicio for antiga.
+Considere o ano atual como 2026 (Mês atual: Maio de 2026). IMPORTANTE: 
+1. Use o bloco <analise> para calcular as 'parcelas_pagas' (quantidade de meses desde a Data de Início até maio de 2026).
 2. Nomeie o banco QI sempre como 'QI SOCIEDADE DE CREDITO DIRETO S A'.
-3. Se não houver saldo devedor, tente estimar ou extraia o 'Valor Emprestado' se disponível.
-Não adicione nenhum texto antes ou depois do JSON.`;
+3. Use o bloco <analise> para estimar o saldo devedor se não estiver explícito.
+Nunca escreva nada após o final do JSON.`;
 
 export async function processarHisconV3(pdfBufferBase64: string): Promise<ResultadoExtracaoHiscon> {
   const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;

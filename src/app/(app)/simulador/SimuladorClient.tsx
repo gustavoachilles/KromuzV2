@@ -4,8 +4,9 @@ import { useState } from "react";
 import { UploadHiscon } from "@/components/simulador/UploadHiscon";
 import { Oportunidade, ClienteSimulacao, ContratoAtivo } from "@/lib/motor-regras/simulador";
 import { SimuladorTable } from "@/components/simulador/SimuladorTable";
-import { Calculator, FileText, RefreshCw, Wallet, CreditCard, ArrowRightLeft, UserCircle2, ArrowLeft, Search, CheckCircle2 } from "lucide-react";
+import { Calculator, FileText, RefreshCw, Wallet, CreditCard, ArrowRightLeft, UserCircle2, ArrowLeft, Search, CheckCircle2, Sparkles } from "lucide-react";
 import { toast } from "sonner";
+import { AiInsightModal } from "@/components/simulador/AiInsightModal";
 
 interface SimulacaoResult {
   cliente: ClienteSimulacao;
@@ -25,6 +26,10 @@ export function SimuladorClient({ empresaId, convenios }: { empresaId: string, c
     margem: ""
   });
   const [isCalculando, setIsCalculando] = useState(false);
+  const [insightModal, setInsightModal] = useState<{ open: boolean, context: any }>({ 
+    open: false, 
+    context: {} 
+  });
 
   async function handleSimularManual(e: React.FormEvent) {
     e.preventDefault();
@@ -236,20 +241,39 @@ export function SimuladorClient({ empresaId, convenios }: { empresaId: string, c
           ) : (
             <div className="space-y-3">
               {novoEmprestimo.map((op, idx) => (
-                <div key={idx} className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
+                <div key={idx} className="bg-white dark:bg-zinc-900 p-5 rounded-xl border border-slate-200 dark:border-zinc-800 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
                   <div className="absolute top-0 left-0 w-1 h-full bg-emerald-500" />
                   <div className="flex justify-between items-start">
                     <div>
-                      <h4 className="font-bold text-slate-900">{op.bancoNome}</h4>
+                      <h4 className="font-bold text-slate-900 dark:text-white">{op.bancoNome}</h4>
                       <p className="text-xs text-slate-500">{op.produtoNome}</p>
                     </div>
-                    <div className="text-right">
-                      <p className="text-xs text-slate-500 font-medium uppercase">Valor Liberado</p>
-                      <p className="text-lg font-black text-emerald-600">R$ {op.valorLiberado.toFixed(2)}</p>
+                    <div className="flex items-center gap-4">
+                      <button 
+                        onClick={() => setInsightModal({
+                          open: true,
+                          context: {
+                            bancoNome: op.bancoNome,
+                            produtoNome: op.produtoNome,
+                            clienteEspecie: cliente.especie,
+                            clienteIdade: cliente.idade,
+                            valorParcela: op.valorParcela,
+                            prazo: op.prazo
+                          }
+                        })}
+                        className="p-2 bg-violet-100 dark:bg-violet-900/30 text-violet-600 dark:text-violet-400 rounded-lg hover:bg-violet-200 dark:hover:bg-violet-900/50 transition-colors shadow-sm"
+                        title="Ver Insight da IA"
+                      >
+                        <Sparkles className="w-4 h-4" />
+                      </button>
+                      <div className="text-right">
+                        <p className="text-xs text-slate-500 font-medium uppercase">Valor Liberado</p>
+                        <p className="text-lg font-black text-emerald-600">R$ {op.valorLiberado.toFixed(2)}</p>
+                      </div>
                     </div>
                   </div>
-                  <div className="mt-4 flex items-center justify-between text-sm bg-slate-50 p-2 rounded-lg">
-                    <span className="text-slate-600">
+                  <div className="mt-4 flex items-center justify-between text-sm bg-slate-50 dark:bg-zinc-800/50 p-2 rounded-lg">
+                    <span className="text-slate-600 dark:text-zinc-400">
                       <strong>{op.prazo}x</strong> de R$ {op.valorParcela.toFixed(2)}
                     </span>
                     <span className="text-slate-500 font-medium">{op.taxaJuros}% a.m</span>
@@ -260,6 +284,12 @@ export function SimuladorClient({ empresaId, convenios }: { empresaId: string, c
           )}
         </div>
 
+        <AiInsightModal 
+          isOpen={insightModal.open}
+          onClose={() => setInsightModal({ ...insightModal, open: false })}
+          context={insightModal.context}
+        />
+
         {/* Coluna: Oportunidades em Contratos Ativos (Port/Refin) */}
         <div className="space-y-4">
           <div className="flex items-center space-x-2 pb-2 border-b border-slate-200">
@@ -268,7 +298,11 @@ export function SimuladorClient({ empresaId, convenios }: { empresaId: string, c
           </div>
 
           <div className="space-y-4">
-            <SimuladorTable contratos={contratos} oportunidades={oportunidades} />
+            <SimuladorTable 
+              contratos={contratos} 
+              oportunidades={oportunidades} 
+              onOpenInsight={(ctx) => setInsightModal({ open: true, context: { ...ctx, clienteIdade: cliente.idade } })}
+            />
           </div>
         </div>
 

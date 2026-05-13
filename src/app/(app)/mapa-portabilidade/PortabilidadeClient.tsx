@@ -96,13 +96,38 @@ export function PortabilidadeClient({
             <p className="text-sm text-zinc-400 mt-1">Configure regras com tipo PORTABILIDADE em Regras.</p>
           </div>
         ) : (
-          <div className="space-y-4">
+        {/* Economic Radar Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          <div className="lg:col-span-1 rounded-2xl border border-sky-200 dark:border-sky-900 bg-sky-50 dark:bg-sky-950/30 p-6">
+             <div className="flex items-center gap-2 text-sky-700 dark:text-sky-400 mb-4">
+                <TrendingDown className="w-5 h-5" />
+                <h3 className="font-bold text-sm">Radar de Economia</h3>
+             </div>
+             <div className="space-y-4">
+                <div className="p-3 bg-white dark:bg-zinc-900 rounded-xl border border-sky-100 dark:border-sky-900/50 shadow-sm">
+                   <p className="text-[10px] text-zinc-500 uppercase font-bold mb-1">Cenário de Mercado</p>
+                   <p className="text-sm font-semibold">Dívida de R$ 50.000,00</p>
+                   <p className="text-xs text-zinc-400 italic">Taxa Origem: 1.80% a.m.</p>
+                </div>
+                <div className="p-3 bg-emerald-500 text-white rounded-xl shadow-lg">
+                   <p className="text-[10px] uppercase font-bold opacity-80">Melhor Taxa Hoje</p>
+                   <p className="text-xl font-black">{menorTaxaGeral.toFixed(2)}% a.m.</p>
+                </div>
+                <div className="pt-2">
+                   <p className="text-xs text-zinc-600 dark:text-zinc-400">
+                     Um cliente com este perfil economizaria aproximadamente <span className="font-bold text-sky-600 dark:text-sky-400">R$ {((1.80 - menorTaxaGeral) * 500).toFixed(0)}/mês</span> na parcela.
+                   </p>
+                </div>
+             </div>
+          </div>
+
+          <div className="lg:col-span-3 space-y-4">
             {bancosOrdenados.map((b) => {
               const totalPortBanco = b.propostas.reduce((s, p) => s + p._count, 0);
               const volumePortBanco = b.propostas.reduce((s, p) => s + (p._sum.valorLiberado || 0), 0);
 
               return (
-                <div key={b.banco} className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 overflow-hidden">
+                <div key={b.banco} className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 overflow-hidden hover:border-sky-400 transition-colors">
                   <div className="px-6 py-4 border-b border-zinc-100 dark:border-zinc-800 flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div className="h-10 w-10 rounded-lg bg-sky-100 dark:bg-sky-900 flex items-center justify-center">
@@ -130,7 +155,7 @@ export function PortabilidadeClient({
                           <th className="text-right px-4 py-2 text-zinc-500 font-medium">Prazo</th>
                           <th className="text-right px-4 py-2 text-zinc-500 font-medium">Taxa a.m.</th>
                           <th className="text-right px-4 py-2 text-zinc-500 font-medium">Coeficiente</th>
-                          <th className="text-right px-4 py-2 text-zinc-500 font-medium">Comissão</th>
+                          <th className="text-right px-4 py-2 text-zinc-500 font-medium text-amber-600">Comissão Repasse</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
@@ -142,9 +167,9 @@ export function PortabilidadeClient({
                               <span className="text-emerald-600 font-semibold">{t.taxaJurosMensal.toFixed(2)}%</span>
                             </td>
                             <td className="px-4 py-2.5 text-right tabular-nums">{t.coeficiente.toFixed(6)}</td>
-                            <td className="px-4 py-2.5 text-right tabular-nums">
+                            <td className="px-4 py-2.5 text-right tabular-nums font-bold text-amber-600">
                               {t.comissaoFlatPct != null ? (
-                                <span className="text-amber-600">{t.comissaoFlatPct}%</span>
+                                <span>{t.comissaoFlatPct}%</span>
                               ) : "—"}
                             </td>
                           </tr>
@@ -156,6 +181,7 @@ export function PortabilidadeClient({
               );
             })}
           </div>
+        </div>
         )}
       </div>
     </div>
