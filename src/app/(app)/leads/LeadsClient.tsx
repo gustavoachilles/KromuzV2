@@ -76,7 +76,7 @@ const formataErroZod = (errStr: string) => {
     if (Array.isArray(p)) {
       return p.map(e => `Campo ${e.path.join('.')}: ${e.message}`).join(' | ');
     }
-  } catch {}
+  } catch { }
   return errStr;
 };
 
@@ -115,7 +115,7 @@ export function LeadsClient({
   const [colunaNome, setColunaNome] = useState("");
   const [colunaCor, setColunaCor] = useState("#8b5cf6");
   const [inboxDrawerOpen, setInboxDrawerOpen] = useState(false);
-  const [integracaoModal, setIntegracaoModal] = useState<{aberto: boolean, leadId: string, banco: string} | null>(null);
+  const [integracaoModal, setIntegracaoModal] = useState<{ aberto: boolean, leadId: string, banco: string } | null>(null);
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
 
@@ -126,7 +126,7 @@ export function LeadsClient({
     origem: "manual", canalContato: "", observacoes: "",
     arquivosExistem: [] as any[],
   });
-  
+
   const [novaColunaNome, setNovaColunaNome] = useState("");
 
   // AI States
@@ -158,7 +158,7 @@ export function LeadsClient({
 
   async function gerarPropostaUmClique(op: any) {
     if (!form.id) return toast.error("Salve o lead antes de gerar a proposta.");
-    
+
     let tipoOperacao = "PORTABILIDADE";
     if (op.acaoSugerida?.toLowerCase().includes("refin")) tipoOperacao = "REFINANCIAMENTO";
 
@@ -197,10 +197,10 @@ export function LeadsClient({
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
-      
+
       const cpfLead = form.cpf ? form.cpf.replace(/\D/g, '') : null;
       const confereCpf = data.cpfExtraido && cpfLead && data.cpfExtraido.includes(cpfLead);
-      
+
       toast.custom(() => (
         <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-4 shadow-xl max-w-sm">
           <h3 className="font-bold text-sm flex items-center gap-2 mb-2">
@@ -209,14 +209,14 @@ export function LeadsClient({
           <p className="text-xs text-zinc-600 dark:text-zinc-400 mb-1"><strong>Doc:</strong> {data.tipoDocumento}</p>
           <p className="text-xs text-zinc-600 dark:text-zinc-400 mb-1"><strong>Nome:</strong> {data.nomeExtraido || "N/A"}</p>
           <p className={`text-xs font-bold ${confereCpf ? 'text-emerald-600' : 'text-amber-600'} mb-2`}>
-             {confereCpf ? '✅ CPF exato.' : '⚠️ Atenção: CPF não identificado ou divergente.'}
+            {confereCpf ? '✅ CPF exato.' : '⚠️ Atenção: CPF não identificado ou divergente.'}
           </p>
           <p className={`text-[10px] p-2 rounded ${data.legivel ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'}`}>
             {data.observacoes}
           </p>
         </div>
       ), { duration: 10000 });
-      
+
     } catch (err: any) {
       toast.error(err.message || "Erro na validação do documento.");
     } finally {
@@ -334,7 +334,7 @@ export function LeadsClient({
 
     const payload: any = { ...form };
     delete payload.arquivosExistem; // Remove auxiliary property before sending
-    
+
     if (payload.cpf) payload.cpf = payload.cpf.replace(/\D/g, '');
     if (payload.telefone) payload.telefone = payload.telefone.replace(/\D/g, '');
 
@@ -362,9 +362,9 @@ export function LeadsClient({
       ...payload,
       valorLiberado: payload.valorLiberado ? Number(payload.valorLiberado) : undefined,
       especieBeneficio: payload.especieBeneficio ? Number(payload.especieBeneficio) : undefined,
-      margemLivre: payload.margemLivre ? Number(payload.margemLivre.replace(',','.')) : undefined,
-      margemRmc: payload.margemRmc ? Number(payload.margemRmc.replace(',','.')) : undefined,
-      margemRcc: payload.margemRcc ? Number(payload.margemRcc.replace(',','.')) : undefined,
+      margemLivre: payload.margemLivre ? Number(payload.margemLivre.replace(',', '.')) : undefined,
+      margemRmc: payload.margemRmc ? Number(payload.margemRmc.replace(',', '.')) : undefined,
+      margemRcc: payload.margemRcc ? Number(payload.margemRcc.replace(',', '.')) : undefined,
       arquivos: base64Files.length > 0 ? base64Files : undefined
     };
 
@@ -393,10 +393,10 @@ export function LeadsClient({
 
   async function deletarLead(id: string) {
     if (!confirm("Tem certeza que deseja excluir permanentemente este lead?")) return;
-    
+
     setSalvando(true);
     setErro(null);
-    
+
     const res = await fetch(`/api/leads/${id}`, { method: "DELETE" });
     if (!res.ok) {
       const data = await res.json();
@@ -404,7 +404,7 @@ export function LeadsClient({
       setSalvando(false);
       return;
     }
-    
+
     toast.success("Lead excluído com sucesso!");
     setModal(false);
     setSalvando(false);
@@ -416,13 +416,13 @@ export function LeadsClient({
     e.preventDefault();
     if (!novaColunaNome) return;
     setSalvando(true);
-    
+
     await fetch("/api/leads/pipeline-colunas", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ nome: novaColunaNome, cor: "bg-zinc-500" }),
     });
-    
+
     setModalColuna(false);
     setSalvando(false);
     setNovaColunaNome("");
@@ -453,7 +453,7 @@ export function LeadsClient({
     }
 
     if (newStatus === "PAGO" || newStatus === "Pago") {
-      try { await fetch(`/api/leads/${draggableId}/comissao`, { method: "POST" }); } catch (e) {}
+      try { await fetch(`/api/leads/${draggableId}/comissao`, { method: "POST" }); } catch (e) { }
     }
 
     router.refresh();
@@ -462,14 +462,14 @@ export function LeadsClient({
   async function handleIntegracaoConfirm(integrar: boolean) {
     if (!integracaoModal) return;
     setSalvando(true);
-    
+
     try {
       const res = await fetch("/api/propostas/integrar", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ leadId: integracaoModal.leadId })
       });
-      
+
       const data = await res.json();
       if (!res.ok) {
         toast.error(data.error || "Erro ao processar integração.");
@@ -537,18 +537,17 @@ export function LeadsClient({
                                   <div className="flex-1">
                                     <p className="font-bold text-sm leading-tight text-zinc-900 dark:text-zinc-100 line-clamp-2">{lead.nome}</p>
                                     <div className="flex items-center gap-2 mt-1">
-                                       <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border ${
-                                          (lead as any).score >= 80 ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 
-                                          (lead as any).score >= 50 ? 'bg-amber-50 text-amber-700 border-amber-200' : 
-                                          'bg-blue-50 text-blue-700 border-blue-200'
-                                       }`}>
-                                         Score: {(lead as any).score || 0}
-                                       </span>
-                                       {(lead as any).score >= 80 && (
-                                         <span className="flex items-center gap-0.5 text-[10px] text-amber-600 font-bold">
-                                           🔥 Quente
-                                         </span>
-                                       )}
+                                      <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border ${(lead as any).score >= 80 ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                                          (lead as any).score >= 50 ? 'bg-amber-50 text-amber-700 border-amber-200' :
+                                            'bg-blue-50 text-blue-700 border-blue-200'
+                                        }`}>
+                                        Score: {(lead as any).score || 0}
+                                      </span>
+                                      {(lead as any).score >= 80 && (
+                                        <span className="flex items-center gap-0.5 text-[10px] text-amber-600 font-bold">
+                                          🔥 Quente
+                                        </span>
+                                      )}
                                     </div>
                                   </div>
                                   <GripVertical className="h-4 w-4 text-zinc-300 shrink-0" />
@@ -557,7 +556,7 @@ export function LeadsClient({
                                   {lead.telefone && (
                                     <div className="flex items-center justify-between gap-2 group/btn">
                                       <span className="flex items-center gap-1.5"><Phone className="h-3 w-3" />{mascaraTelefone(lead.telefone)}</span>
-                                      <a 
+                                      <a
                                         href={getWhatsAppLink(lead.telefone, "")} target="_blank" rel="noreferrer"
                                         onClick={(e) => e.stopPropagation()}
                                         className="opacity-0 group-hover/btn:opacity-100 flex items-center gap-1 bg-[#25D366] text-white px-2 py-0.5 rounded text-[10px] font-bold transition hover:bg-[#1DA851]"
@@ -610,7 +609,7 @@ export function LeadsClient({
                         Roteiros Rápidos
                       </div>
                       {WHATSAPP_SCRIPTS.map(script => (
-                        <a 
+                        <a
                           key={script.id}
                           target="_blank" rel="noreferrer"
                           href={getWhatsAppLink(form.telefone, script.template.replace('{nome}', form.nome ? form.nome.split(' ')[0] : 'Cliente').replace('{banco}', form.bancoPreferido || 'banco'))}
@@ -619,7 +618,7 @@ export function LeadsClient({
                           {script.label}
                         </a>
                       ))}
-                      <a 
+                      <a
                         target="_blank" rel="noreferrer"
                         href={getWhatsAppLink(form.telefone, "")}
                         className="block px-4 py-2 text-xs font-semibold text-violet-600 dark:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-900/20 transition bg-zinc-50 dark:bg-zinc-900/50"
@@ -630,8 +629,8 @@ export function LeadsClient({
                   </div>
                 )}
                 {form.id && (
-                  <button 
-                    type="button" 
+                  <button
+                    type="button"
                     onClick={() => {
                       setModal(false);
                       setInboxDrawerOpen(true);
@@ -644,16 +643,16 @@ export function LeadsClient({
               </div>
               <button onClick={() => setModal(false)} className="text-zinc-400 hover:text-zinc-600 transition"><X className="h-5 w-5" /></button>
             </div>
-            
+
             <div className="flex items-center gap-6 px-6 border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50">
-              <button 
+              <button
                 type="button"
                 onClick={() => setTabModal("dados")}
                 className={`py-3 text-sm font-bold border-b-2 transition ${tabModal === "dados" ? "border-violet-600 text-violet-600" : "border-transparent text-zinc-500 hover:text-zinc-700"}`}
               >
                 Dados do Cliente
               </button>
-              <button 
+              <button
                 type="button"
                 onClick={() => setTabModal("refin")}
                 className={`py-3 text-sm font-bold border-b-2 flex items-center gap-1 transition ${tabModal === "refin" ? "border-amber-500 text-amber-600" : "border-transparent text-zinc-500 hover:text-zinc-700"}`}
@@ -661,7 +660,7 @@ export function LeadsClient({
                 ✨ Refin Hunter
               </button>
             </div>
-            
+
             {tabModal === "refin" && (
               <div className="flex-1 overflow-y-auto p-6 bg-zinc-50 dark:bg-zinc-950/50">
                 <div className="max-w-2xl mx-auto space-y-6">
@@ -672,13 +671,13 @@ export function LeadsClient({
                     <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-4">
                       Cole o texto bruto do extrato HISCON (INSS) do cliente abaixo. A IA vai analisar os contratos ativos e caçar oportunidades de Refinanciamento ou Portabilidade com troco.
                     </p>
-                    <textarea 
+                    <textarea
                       value={textoHiscon}
                       onChange={e => setTextoHiscon(e.target.value)}
                       placeholder="Cole o HISCON aqui..."
                       className="w-full h-40 p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 text-sm focus:ring-2 focus:ring-amber-500 font-mono resize-none mb-4"
                     />
-                    <button 
+                    <button
                       type="button"
                       onClick={analisarHiscon}
                       disabled={analisandoHiscon || !textoHiscon}
@@ -697,7 +696,7 @@ export function LeadsClient({
                       </div>
 
                       <h4 className="font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider text-xs">Oportunidades Encontradas:</h4>
-                      
+
                       {resultadoRefin.oportunidades?.map((op: any, i: number) => (
                         <div key={i} className="bg-white dark:bg-zinc-900 p-5 rounded-2xl border border-amber-200 shadow-lg shadow-amber-500/10">
                           <div className="flex justify-between items-start mb-3">
@@ -712,7 +711,7 @@ export function LeadsClient({
                               <p className="text-xl font-black text-emerald-600">R$ {op.trocoEstimado}</p>
                             </div>
                           </div>
-                          
+
                           <div className="grid grid-cols-2 gap-4 mb-4">
                             <div className="p-3 bg-zinc-50 dark:bg-zinc-800/50 rounded-lg">
                               <p className="text-[10px] text-zinc-500 uppercase font-bold">Parcela Atual</p>
@@ -723,12 +722,12 @@ export function LeadsClient({
                               <p className="font-medium">R$ {op.saldoDevedorEstimado}</p>
                             </div>
                           </div>
-                          
+
                           <p className="text-xs text-zinc-600 dark:text-zinc-400 border-t border-zinc-100 dark:border-zinc-800 pt-3 mb-4">
                             💡 <strong>Motivo:</strong> {op.motivo}
                           </p>
 
-                          <button 
+                          <button
                             type="button"
                             onClick={() => gerarPropostaUmClique(op)}
                             className="w-full bg-emerald-50 text-emerald-600 hover:bg-emerald-100 dark:bg-emerald-950/30 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 font-bold py-2.5 rounded-xl transition flex items-center justify-center gap-2 text-sm"
@@ -742,434 +741,434 @@ export function LeadsClient({
                 </div>
             )}
 
-            {tabModal === "inss" && (
-              <div className="flex-1 overflow-y-auto p-6 bg-zinc-50 dark:bg-black">
-                 <div className="max-w-2xl mx-auto space-y-6">
-                    <div className="bg-blue-600 text-white p-6 rounded-2xl shadow-sm relative overflow-hidden">
-                       <div className="absolute top-0 right-0 p-4 opacity-20">
-                          <svg width="100" height="100" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                       </div>
-                       <h2 className="text-xl font-bold mb-2 flex items-center gap-2">
-                         <span className="bg-white text-blue-600 px-2 py-0.5 rounded text-xs uppercase tracking-wider font-black">Gov.br</span>
-                         Extrator Inteligente INSS
-                       </h2>
-                       <p className="text-blue-100 text-sm">
-                         Conecte diretamente ao Meu INSS do cliente. Nossa automação RPA entrará no portal, quebrará os captchas, fará o download do HISCON (Extrato de Empréstimos) e importará todas as margens e contratos de volta para o Kromuz em alguns minutos.
-                       </p>
-                    </div>
+                {tabModal === "inss" && (
+                  <div className="flex-1 overflow-y-auto p-6 bg-zinc-50 dark:bg-black">
+                    <div className="max-w-2xl mx-auto space-y-6">
+                      <div className="bg-blue-600 text-white p-6 rounded-2xl shadow-sm relative overflow-hidden">
+                        <div className="absolute top-0 right-0 p-4 opacity-20">
+                          <svg width="100" height="100" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>
+                        </div>
+                        <h2 className="text-xl font-bold mb-2 flex items-center gap-2">
+                          <span className="bg-white text-blue-600 px-2 py-0.5 rounded text-xs uppercase tracking-wider font-black">Gov.br</span>
+                          Extrator Inteligente INSS
+                        </h2>
+                        <p className="text-blue-100 text-sm">
+                          Conecte diretamente ao Meu INSS do cliente. Nossa automação RPA entrará no portal, quebrará os captchas, fará o download do HISCON (Extrato de Empréstimos) e importará todas as margens e contratos de volta para o Kromuz em alguns minutos.
+                        </p>
+                      </div>
 
-                    <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 shadow-sm">
-                       <div className="space-y-4">
+                      <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 shadow-sm">
+                        <div className="space-y-4">
                           <div className="space-y-2">
                             <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">CPF do Cliente</label>
-                            <input 
-                               value={form.cpf}
-                               readOnly
-                               className="w-full rounded-lg border border-zinc-200 bg-zinc-100 dark:bg-zinc-800 dark:border-zinc-700 px-4 py-3 text-sm font-bold text-zinc-500 cursor-not-allowed" 
+                            <input
+                              value={form.cpf}
+                              readOnly
+                              className="w-full rounded-lg border border-zinc-200 bg-zinc-100 dark:bg-zinc-800 dark:border-zinc-700 px-4 py-3 text-sm font-bold text-zinc-500 cursor-not-allowed"
                             />
                             <p className="text-[10px] text-zinc-500">O CPF é puxado automaticamente do cadastro do Lead.</p>
                           </div>
                           <div className="space-y-2">
                             <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Senha do Gov.br *</label>
-                            <input 
-                               type="password"
-                               placeholder="Digite a senha fornecida pelo cliente"
-                               id="inss-senha-gov"
-                               className="w-full rounded-lg border border-zinc-200 bg-white dark:bg-zinc-950 dark:border-zinc-800 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                            <input
+                              type="password"
+                              placeholder="Digite a senha fornecida pelo cliente"
+                              id="inss-senha-gov"
+                              className="w-full rounded-lg border border-zinc-200 bg-white dark:bg-zinc-950 dark:border-zinc-800 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
                           </div>
-                          
+
                           <div className="pt-4">
-                             <button 
-                               type="button"
-                               onClick={async () => {
-                                  const senha = (document.getElementById('inss-senha-gov') as HTMLInputElement).value;
-                                  if (!senha) return alert("Digite a senha do Gov.br");
-                                  const btn = document.getElementById('btn-inss-enviar');
-                                  if(btn) { btn.innerHTML = "Enviando para o Robô..."; btn.setAttribute('disabled', 'true'); }
-                                  try {
-                                    const res = await fetch('/api/integracoes/meu-inss', {
-                                      method: 'POST',
-                                      headers: { 'Content-Type': 'application/json' },
-                                      body: JSON.stringify({ leadId: lead?.id, cpf: form.cpf, senha })
-                                    });
-                                    if(res.ok) {
-                                      alert("Sucesso! Tarefa enviada para a fila do robô RPA. O HISCON aparecerá nos anexos e no Refin Hunter quando concluído.");
-                                      setActiveTab("refin");
-                                    } else {
-                                      throw new Error("Falha na api");
-                                    }
-                                  } catch(e) {
-                                    alert("Erro ao conectar com a fila RPA.");
-                                    if(btn) { btn.innerHTML = "Iniciar Extração Automática"; btn.removeAttribute('disabled'); }
+                            <button
+                              type="button"
+                              onClick={async () => {
+                                const senha = (document.getElementById('inss-senha-gov') as HTMLInputElement).value;
+                                if (!senha) return alert("Digite a senha do Gov.br");
+                                const btn = document.getElementById('btn-inss-enviar');
+                                if (btn) { btn.innerHTML = "Enviando para o Robô..."; btn.setAttribute('disabled', 'true'); }
+                                try {
+                                  const res = await fetch('/api/integracoes/meu-inss', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ leadId: lead?.id, cpf: form.cpf, senha })
+                                  });
+                                  if (res.ok) {
+                                    alert("Sucesso! Tarefa enviada para a fila do robô RPA. O HISCON aparecerá nos anexos e no Refin Hunter quando concluído.");
+                                    setActiveTab("refin");
+                                  } else {
+                                    throw new Error("Falha na api");
                                   }
-                               }}
-                               id="btn-inss-enviar"
-                               className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition flex justify-center items-center gap-2"
-                             >
-                               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="m12 16 4-4-4-4"/><path d="M8 12h8"/></svg>
-                               Iniciar Extração Automática
-                             </button>
-                             <p className="text-[10px] text-center text-zinc-400 mt-3 flex justify-center items-center gap-1">
-                               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                               As credenciais são criptografadas e descartadas após a extração.
-                             </p>
+                                } catch (e) {
+                                  alert("Erro ao conectar com a fila RPA.");
+                                  if (btn) { btn.innerHTML = "Iniciar Extração Automática"; btn.removeAttribute('disabled'); }
+                                }
+                              }}
+                              id="btn-inss-enviar"
+                              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition flex justify-center items-center gap-2"
+                            >
+                              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><path d="m12 16 4-4-4-4" /><path d="M8 12h8" /></svg>
+                              Iniciar Extração Automática
+                            </button>
+                            <p className="text-[10px] text-center text-zinc-400 mt-3 flex justify-center items-center gap-1">
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg>
+                              As credenciais são criptografadas e descartadas após a extração.
+                            </p>
                           </div>
-                       </div>
-                    </div>
-                 </div>
-              </div>
-            )}
-
-            <form onSubmit={salvarLead} className={`flex-1 overflow-y-auto p-6 space-y-6 ${tabModal !== "dados" ? "hidden" : ""}`}>
-              {erro && <div className="rounded-lg bg-red-50 border border-red-200 text-red-700 px-4 py-3 text-sm font-medium">{erro}</div>}
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {/* Coluna 1: Dados Pessoais */}
-                <div className="space-y-4">
-                  <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2">Dados do Cliente</h3>
-                  
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Nome Completo *</label>
-                    <input required value={form.nome} onChange={e => setForm({ ...form, nome: e.target.value })}
-                      className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500" />
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">CPF</label>
-                      <div className="relative group">
-                        <input 
-                          type={revelarCpf ? "text" : "password"} 
-                          value={form.cpf} 
-                          readOnly={!revelarCpf}
-                          onChange={e => setForm({ ...form, cpf: mascaraCpf(e.target.value) })} 
-                          placeholder="***.***.***-**" 
-                          maxLength={14}
-                          className={`w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 transition-all ${!revelarCpf ? 'blur-[3px] select-none' : ''}`}
-                        />
-                        <button 
-                          type="button"
-                          onClick={() => {
-                            if (!revelarCpf) {
-                              fetch('/api/logs', { method: 'POST', body: JSON.stringify({ tipo: 'VISUALIZACAO_DADOS', recurso: 'LEAD', recursoId: lead?.id, descricao: 'Visualizou CPF do cliente' }) });
-                            }
-                            setRevelarCpf(!revelarCpf);
-                          }}
-                          className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-zinc-400 hover:text-violet-600 transition"
-                        >
-                          {revelarCpf ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                        </button>
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Telefone</label>
-                      <div className="relative">
-                        <input 
-                          type={revelarTel ? "text" : "password"}
-                          value={form.telefone} 
-                          readOnly={!revelarTel}
-                          onChange={e => setForm({ ...form, telefone: mascaraTelefone(e.target.value) })} 
-                          placeholder="(**) *****-****" 
-                          maxLength={15}
-                          className={`w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 transition-all ${!revelarTel ? 'blur-[3px] select-none' : ''}`}
-                        />
-                        <button 
-                          type="button"
-                          onClick={() => {
-                            if (!revelarTel) {
-                              fetch('/api/logs', { method: 'POST', body: JSON.stringify({ tipo: 'VISUALIZACAO_DADOS', recurso: 'LEAD', recursoId: lead?.id, descricao: 'Visualizou Telefone do cliente' }) });
-                            }
-                            setRevelarTel(!revelarTel);
-                          }}
-                          className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-zinc-400 hover:text-violet-600 transition"
-                        >
-                          {revelarTel ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                        </button>
+                        </div>
                       </div>
                     </div>
                   </div>
+                )}
 
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">E-mail</label>
-                    <input type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} placeholder="email@exemplo.com"
-                      className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500" />
-                  </div>
+                <form onSubmit={salvarLead} className={`flex-1 overflow-y-auto p-6 space-y-6 ${tabModal !== "dados" ? "hidden" : ""}`}>
+                  {erro && <div className="rounded-lg bg-red-50 border border-red-200 text-red-700 px-4 py-3 text-sm font-medium">{erro}</div>}
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">UF (Estado)</label>
-                      <select value={form.uf} onChange={e => setForm({ ...form, uf: e.target.value, cidade: "" })}
-                        className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500">
-                        <option value="">Selecione UF</option>
-                        {estadosIBGE.map(est => <option key={est.id} value={est.sigla}>{est.nome}</option>)}
-                      </select>
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Cidade</label>
-                      <input list="cidades-list" value={form.cidade} onChange={e => setForm({ ...form, cidade: e.target.value })} disabled={!form.uf} placeholder="Pesquise a cidade"
-                        className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 disabled:opacity-50" />
-                      <datalist id="cidades-list">
-                        {cidadesIBGE.map(cid => <option key={cid.id} value={cid.nome} />)}
-                      </datalist>
-                    </div>
-                  </div>
-                </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    {/* Coluna 1: Dados Pessoais */}
+                    <div className="space-y-4">
+                      <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2">Dados do Cliente</h3>
 
-                {/* Coluna 2: Dados Operacionais */}
-                <div className="space-y-4">
-                  <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2">Detalhes da Operação</h3>
-                  
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">NB (Benefício)</label>
-                      <input value={form.numeroBeneficio} onChange={e => setForm({ ...form, numeroBeneficio: e.target.value })}
-                        className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500" />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Espécie INSS</label>
-                      <input list="especies-list" value={form.especieBeneficio} onChange={e => setForm({ ...form, especieBeneficio: e.target.value })} placeholder="Pesquise a espécie"
-                        className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500" />
-                      <datalist id="especies-list">
-                        {INSS_ESPECIES.map(esp => <option key={esp.id} value={`${esp.id} - ${esp.nome}`} />)}
-                      </datalist>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-3 gap-3">
-                    <div className="space-y-2">
-                      <label className="text-[11px] font-medium text-zinc-700 dark:text-zinc-300">Livre (R$)</label>
-                      <input type="number" step="0.01" value={form.margemLivre} onChange={e => setForm({ ...form, margemLivre: e.target.value })}
-                        className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500" />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-[11px] font-medium text-zinc-700 dark:text-zinc-300">RMC (R$)</label>
-                      <input type="number" step="0.01" value={form.margemRmc} onChange={e => setForm({ ...form, margemRmc: e.target.value })}
-                        className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500" />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-[11px] font-medium text-zinc-700 dark:text-zinc-300">RCC (R$)</label>
-                      <input type="number" step="0.01" value={form.margemRcc} onChange={e => setForm({ ...form, margemRcc: e.target.value })}
-                        className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500" />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Banco Preferido</label>
-                      <select value={form.bancoPreferido} onChange={e => setForm({ ...form, bancoPreferido: e.target.value })}
-                        className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500">
-                        <option value="">Selecione Banco...</option>
-                        {bancos.map(b => <option key={b.id} value={b.nome}>{b.nome}</option>)}
-                      </select>
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Convênio</label>
-                      <select value={form.convenioNome} onChange={e => setForm({ ...form, convenioNome: e.target.value })}
-                        className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500">
-                        <option value="">Selecione Convênio...</option>
-                        {convenios.map(c => <option key={c.id} value={c.nome}>{c.nome}</option>)}
-                      </select>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Tipo de Operação</label>
-                      <select value={form.tipoOperacao} onChange={e => setForm({ ...form, tipoOperacao: e.target.value })}
-                        className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500">
-                        <option value="">—</option>
-                        <option value="EMPRESTIMO_CONSIGNADO">Margem Nova</option>
-                        <option value="REFINANCIAMENTO">Refinanciamento</option>
-                        <option value="PORTABILIDADE">Portabilidade</option>
-                        <option value="PORTABILIDADE_REFIN">Port + Refin</option>
-                        <option value="CARTAO_CONSIGNADO">Cartão RMC</option>
-                        <option value="CARTAO_BENEFICIO">Cartão RCC</option>
-                      </select>
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Valor Liberado (R$)</label>
-                      <input type="text" value={form.valorLiberado} onChange={e => setForm({ ...form, valorLiberado: formatMoedaInput(e.target.value) })} placeholder="0.00"
-                        className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 font-bold text-emerald-700" />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2 pt-2">
-                    <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Observações</label>
-                    <textarea value={form.observacoes} onChange={e => setForm({ ...form, observacoes: e.target.value })} rows={2}
-                      className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 resize-none" />
-                  </div>
-                </div>
-              </div>
-
-              {/* Seção de Documentos / Anexos */}
-              <div className="mt-8 pt-6 border-t border-zinc-200 dark:border-zinc-800">
-                <div className="flex items-center gap-2 mb-4">
-                  <Paperclip className="h-5 w-5 text-violet-500" />
-                  <h3 className="text-sm font-bold text-zinc-700 dark:text-zinc-300">Documentos Anexos</h3>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* Área de Upload (Drag & Drop) */}
-                  <div 
-                    onClick={() => fileInputRef.current?.click()}
-                    className="border-2 border-dashed border-zinc-300 dark:border-zinc-700 rounded-xl p-6 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-900 transition"
-                  >
-                    <UploadCloud className="h-8 w-8 text-zinc-400 mb-2" />
-                    <p className="text-sm font-semibold text-zinc-600 dark:text-zinc-400">Clique para anexar arquivos</p>
-                    <p className="text-xs text-zinc-400 mt-1">PDF, JPG ou PNG (Máx 5MB)</p>
-                    <input 
-                      type="file" 
-                      multiple 
-                      className="hidden" 
-                      ref={fileInputRef} 
-                      onChange={handleFileChange}
-                      accept=".pdf,image/jpeg,image/png"
-                    />
-                  </div>
-
-                  {/* Lista de Arquivos */}
-                  <div className="space-y-2 max-h-[160px] overflow-y-auto pr-2">
-                    {(arquivosPendentes.length === 0 && (!form.arquivosExistem || form.arquivosExistem.length === 0)) ? (
-                      <div className="h-full flex items-center justify-center text-sm text-zinc-500 italic">
-                        Nenhum documento anexado.
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Nome Completo *</label>
+                        <input required value={form.nome} onChange={e => setForm({ ...form, nome: e.target.value })}
+                          className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500" />
                       </div>
-                    ) : (
-                      <>
-                        {/* Arquivos já salvos */}
-                        {form.arquivosExistem && form.arquivosExistem.map((file, i) => (
-                          <div key={`saved-${i}`} className="flex items-center justify-between p-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-lg">
-                            <div className="flex items-center gap-3 overflow-hidden">
-                              <FileText className="h-5 w-5 text-emerald-500 flex-shrink-0" />
-                              <div className="truncate">
-                                <p className="text-xs font-semibold truncate">{file.nome}</p>
-                                <p className="text-[10px] text-zinc-500">{file.tamanho ? (file.tamanho / 1024).toFixed(1) + ' KB' : 'Salvo'}</p>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <button 
-                                type="button" 
-                                onClick={() => validarDocumento(file.url)}
-                                disabled={validandoDoc === file.url}
-                                className="text-[10px] font-bold text-amber-600 hover:text-amber-700 bg-amber-50 hover:bg-amber-100 px-2 py-1 rounded transition flex items-center gap-1 disabled:opacity-50"
-                              >
-                                {validandoDoc === file.url ? <Loader2 className="w-3 h-3 animate-spin" /> : "✨ Validar"}
-                              </button>
-                              <a href={file.url} download={file.nome} className="text-xs font-medium text-violet-600 hover:text-violet-700 bg-violet-50 hover:bg-violet-100 px-2 py-1 rounded">
-                                Baixar
-                              </a>
-                            </div>
-                          </div>
-                        ))}
-                        {arquivosPendentes.map((file, i) => (
-                          <div key={i} className="flex items-center justify-between p-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-lg">
-                            <div className="flex items-center gap-3 overflow-hidden">
-                              <FileText className="h-5 w-5 text-blue-500 flex-shrink-0" />
-                              <div className="truncate">
-                                <p className="text-xs font-semibold truncate">{file.name}</p>
-                                <p className="text-[10px] text-zinc-500">{(file.size / 1024).toFixed(1)} KB</p>
-                              </div>
-                            </div>
-                            <button type="button" onClick={() => removerArquivoPendente(i)} className="text-zinc-400 hover:text-red-500 p-1">
-                              <Trash2 className="h-4 w-4" />
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">CPF</label>
+                          <div className="relative group">
+                            <input
+                              type={revelarCpf ? "text" : "password"}
+                              value={form.cpf}
+                              readOnly={!revelarCpf}
+                              onChange={e => setForm({ ...form, cpf: mascaraCpf(e.target.value) })}
+                              placeholder="***.***.***-**"
+                              maxLength={14}
+                              className={`w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 transition-all ${!revelarCpf ? 'blur-[3px] select-none' : ''}`}
+                            />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (!revelarCpf) {
+                                  fetch('/api/logs', { method: 'POST', body: JSON.stringify({ tipo: 'VISUALIZACAO_DADOS', recurso: 'LEAD', recursoId: lead?.id, descricao: 'Visualizou CPF do cliente' }) });
+                                }
+                                setRevelarCpf(!revelarCpf);
+                              }}
+                              className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-zinc-400 hover:text-violet-600 transition"
+                            >
+                              {revelarCpf ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                             </button>
                           </div>
-                        ))}
-                      </>
-                    )}
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Telefone</label>
+                          <div className="relative">
+                            <input
+                              type={revelarTel ? "text" : "password"}
+                              value={form.telefone}
+                              readOnly={!revelarTel}
+                              onChange={e => setForm({ ...form, telefone: mascaraTelefone(e.target.value) })}
+                              placeholder="(**) *****-****"
+                              maxLength={15}
+                              className={`w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 transition-all ${!revelarTel ? 'blur-[3px] select-none' : ''}`}
+                            />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (!revelarTel) {
+                                  fetch('/api/logs', { method: 'POST', body: JSON.stringify({ tipo: 'VISUALIZACAO_DADOS', recurso: 'LEAD', recursoId: lead?.id, descricao: 'Visualizou Telefone do cliente' }) });
+                                }
+                                setRevelarTel(!revelarTel);
+                              }}
+                              className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-zinc-400 hover:text-violet-600 transition"
+                            >
+                              {revelarTel ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">E-mail</label>
+                        <input type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} placeholder="email@exemplo.com"
+                          className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500" />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">UF (Estado)</label>
+                          <select value={form.uf} onChange={e => setForm({ ...form, uf: e.target.value, cidade: "" })}
+                            className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500">
+                            <option value="">Selecione UF</option>
+                            {estadosIBGE.map(est => <option key={est.id} value={est.sigla}>{est.nome}</option>)}
+                          </select>
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Cidade</label>
+                          <input list="cidades-list" value={form.cidade} onChange={e => setForm({ ...form, cidade: e.target.value })} disabled={!form.uf} placeholder="Pesquise a cidade"
+                            className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 disabled:opacity-50" />
+                          <datalist id="cidades-list">
+                            {cidadesIBGE.map(cid => <option key={cid.id} value={cid.nome} />)}
+                          </datalist>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Coluna 2: Dados Operacionais */}
+                    <div className="space-y-4">
+                      <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2">Detalhes da Operação</h3>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">NB (Benefício)</label>
+                          <input value={form.numeroBeneficio} onChange={e => setForm({ ...form, numeroBeneficio: e.target.value })}
+                            className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500" />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Espécie INSS</label>
+                          <input list="especies-list" value={form.especieBeneficio} onChange={e => setForm({ ...form, especieBeneficio: e.target.value })} placeholder="Pesquise a espécie"
+                            className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500" />
+                          <datalist id="especies-list">
+                            {INSS_ESPECIES.map(esp => <option key={esp.id} value={`${esp.id} - ${esp.nome}`} />)}
+                          </datalist>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-3 gap-3">
+                        <div className="space-y-2">
+                          <label className="text-[11px] font-medium text-zinc-700 dark:text-zinc-300">Livre (R$)</label>
+                          <input type="number" step="0.01" value={form.margemLivre} onChange={e => setForm({ ...form, margemLivre: e.target.value })}
+                            className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500" />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-[11px] font-medium text-zinc-700 dark:text-zinc-300">RMC (R$)</label>
+                          <input type="number" step="0.01" value={form.margemRmc} onChange={e => setForm({ ...form, margemRmc: e.target.value })}
+                            className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500" />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-[11px] font-medium text-zinc-700 dark:text-zinc-300">RCC (R$)</label>
+                          <input type="number" step="0.01" value={form.margemRcc} onChange={e => setForm({ ...form, margemRcc: e.target.value })}
+                            className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500" />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Banco Preferido</label>
+                          <select value={form.bancoPreferido} onChange={e => setForm({ ...form, bancoPreferido: e.target.value })}
+                            className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500">
+                            <option value="">Selecione Banco...</option>
+                            {bancos.map(b => <option key={b.id} value={b.nome}>{b.nome}</option>)}
+                          </select>
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Convênio</label>
+                          <select value={form.convenioNome} onChange={e => setForm({ ...form, convenioNome: e.target.value })}
+                            className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500">
+                            <option value="">Selecione Convênio...</option>
+                            {convenios.map(c => <option key={c.id} value={c.nome}>{c.nome}</option>)}
+                          </select>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Tipo de Operação</label>
+                          <select value={form.tipoOperacao} onChange={e => setForm({ ...form, tipoOperacao: e.target.value })}
+                            className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500">
+                            <option value="">—</option>
+                            <option value="EMPRESTIMO_CONSIGNADO">Margem Nova</option>
+                            <option value="REFINANCIAMENTO">Refinanciamento</option>
+                            <option value="PORTABILIDADE">Portabilidade</option>
+                            <option value="PORTABILIDADE_REFIN">Port + Refin</option>
+                            <option value="CARTAO_CONSIGNADO">Cartão RMC</option>
+                            <option value="CARTAO_BENEFICIO">Cartão RCC</option>
+                          </select>
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Valor Liberado (R$)</label>
+                          <input type="text" value={form.valorLiberado} onChange={e => setForm({ ...form, valorLiberado: formatMoedaInput(e.target.value) })} placeholder="0.00"
+                            className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 font-bold text-emerald-700" />
+                        </div>
+                      </div>
+
+                      <div className="space-y-2 pt-2">
+                        <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Observações</label>
+                        <textarea value={form.observacoes} onChange={e => setForm({ ...form, observacoes: e.target.value })} rows={2}
+                          className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 resize-none" />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Seção de Documentos / Anexos */}
+                  <div className="mt-8 pt-6 border-t border-zinc-200 dark:border-zinc-800">
+                    <div className="flex items-center gap-2 mb-4">
+                      <Paperclip className="h-5 w-5 text-violet-500" />
+                      <h3 className="text-sm font-bold text-zinc-700 dark:text-zinc-300">Documentos Anexos</h3>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {/* Área de Upload (Drag & Drop) */}
+                      <div
+                        onClick={() => fileInputRef.current?.click()}
+                        className="border-2 border-dashed border-zinc-300 dark:border-zinc-700 rounded-xl p-6 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-900 transition"
+                      >
+                        <UploadCloud className="h-8 w-8 text-zinc-400 mb-2" />
+                        <p className="text-sm font-semibold text-zinc-600 dark:text-zinc-400">Clique para anexar arquivos</p>
+                        <p className="text-xs text-zinc-400 mt-1">PDF, JPG ou PNG (Máx 5MB)</p>
+                        <input
+                          type="file"
+                          multiple
+                          className="hidden"
+                          ref={fileInputRef}
+                          onChange={handleFileChange}
+                          accept=".pdf,image/jpeg,image/png"
+                        />
+                      </div>
+
+                      {/* Lista de Arquivos */}
+                      <div className="space-y-2 max-h-[160px] overflow-y-auto pr-2">
+                        {(arquivosPendentes.length === 0 && (!form.arquivosExistem || form.arquivosExistem.length === 0)) ? (
+                          <div className="h-full flex items-center justify-center text-sm text-zinc-500 italic">
+                            Nenhum documento anexado.
+                          </div>
+                        ) : (
+                          <>
+                            {/* Arquivos já salvos */}
+                            {form.arquivosExistem && form.arquivosExistem.map((file, i) => (
+                              <div key={`saved-${i}`} className="flex items-center justify-between p-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-lg">
+                                <div className="flex items-center gap-3 overflow-hidden">
+                                  <FileText className="h-5 w-5 text-emerald-500 flex-shrink-0" />
+                                  <div className="truncate">
+                                    <p className="text-xs font-semibold truncate">{file.nome}</p>
+                                    <p className="text-[10px] text-zinc-500">{file.tamanho ? (file.tamanho / 1024).toFixed(1) + ' KB' : 'Salvo'}</p>
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <button
+                                    type="button"
+                                    onClick={() => validarDocumento(file.url)}
+                                    disabled={validandoDoc === file.url}
+                                    className="text-[10px] font-bold text-amber-600 hover:text-amber-700 bg-amber-50 hover:bg-amber-100 px-2 py-1 rounded transition flex items-center gap-1 disabled:opacity-50"
+                                  >
+                                    {validandoDoc === file.url ? <Loader2 className="w-3 h-3 animate-spin" /> : "✨ Validar"}
+                                  </button>
+                                  <a href={file.url} download={file.nome} className="text-xs font-medium text-violet-600 hover:text-violet-700 bg-violet-50 hover:bg-violet-100 px-2 py-1 rounded">
+                                    Baixar
+                                  </a>
+                                </div>
+                              </div>
+                            ))}
+                            {arquivosPendentes.map((file, i) => (
+                              <div key={i} className="flex items-center justify-between p-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-lg">
+                                <div className="flex items-center gap-3 overflow-hidden">
+                                  <FileText className="h-5 w-5 text-blue-500 flex-shrink-0" />
+                                  <div className="truncate">
+                                    <p className="text-xs font-semibold truncate">{file.name}</p>
+                                    <p className="text-[10px] text-zinc-500">{(file.size / 1024).toFixed(1)} KB</p>
+                                  </div>
+                                </div>
+                                <button type="button" onClick={() => removerArquivoPendente(i)} className="text-zinc-400 hover:text-red-500 p-1">
+                                  <Trash2 className="h-4 w-4" />
+                                </button>
+                              </div>
+                            ))}
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-between items-center pt-6 shrink-0 mt-4 border-t border-zinc-100 dark:border-zinc-800">
+                    <div>
+                      {form.id && (perfilUsuario === "admin" || perfilUsuario === "gerente") && (
+                        <button type="button" onClick={() => deletarLead(form.id)} disabled={salvando}
+                          className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-xl transition">
+                          <Trash2 className="h-4 w-4" /> Excluir Lead
+                        </button>
+                      )}
+                    </div>
+                    <div className="flex gap-3">
+                      <button type="button" onClick={() => setModal(false)} className="px-5 py-2.5 text-sm font-medium text-zinc-600 hover:bg-zinc-100 rounded-xl transition">Cancelar</button>
+                      <button type="submit" disabled={salvando}
+                        className="flex items-center gap-2 rounded-xl bg-violet-600 px-6 py-2.5 text-sm font-semibold text-white shadow-lg shadow-violet-500/30 hover:bg-violet-700 transition">
+                        {salvando ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                        {salvando ? "Salvando..." : (form.id ? "Salvar Alterações" : "Criar Lead")}
+                      </button>
+                    </div>
+                  </div>
+                </form>
+              </div>
+        </div>
+      )}
+
+          {modalColuna && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+              <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-2xl w-full max-w-sm mx-4">
+                <div className="flex items-center justify-between p-6 border-b border-zinc-100 dark:border-zinc-800">
+                  <h2 className="text-lg font-semibold">Nova Coluna</h2>
+                  <button onClick={() => setModalColuna(false)} className="text-zinc-400 hover:text-zinc-600 transition"><X className="h-5 w-5" /></button>
+                </div>
+                <form onSubmit={criarColuna} className="p-6 space-y-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Nome da Coluna *</label>
+                    <input required value={novaColunaNome} onChange={e => setNovaColunaNome(e.target.value)} placeholder="Ex: CONTRATO ASSINADO"
+                      className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 uppercase" />
+                  </div>
+                  <div className="flex justify-end gap-3 pt-2">
+                    <button type="button" onClick={() => setModalColuna(false)} className="px-4 py-2 text-sm text-zinc-600">Cancelar</button>
+                    <button type="submit" disabled={salvando}
+                      className="flex items-center gap-2 rounded-xl bg-violet-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg">
+                      {salvando ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+                      {salvando ? "Criando..." : "Criar Coluna"}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+
+          {/* Modal de Integração Automática */}
+          {integracaoModal?.aberto && (
+            <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm">
+              <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-2xl w-full max-w-md mx-4 overflow-hidden">
+                <div className="p-6 text-center">
+                  <div className="w-16 h-16 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Building2 className="w-8 h-8" />
+                  </div>
+                  <h2 className="text-xl font-bold mb-2">Integração Bancária</h2>
+                  <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-6">
+                    Este Lead foi movido para VENDIDO. Deseja enviar a proposta automaticamente via API/Robô para o <strong>{integracaoModal.banco}</strong>?
+                  </p>
+                  <div className="flex flex-col gap-3">
+                    <button
+                      onClick={() => handleIntegracaoConfirm(true)}
+                      disabled={salvando}
+                      className="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 text-white font-bold shadow-lg shadow-emerald-500/30 hover:opacity-90 transition disabled:opacity-50"
+                    >
+                      {salvando ? "Processando..." : `Sim, enviar para o ${integracaoModal.banco}`}
+                    </button>
+                    <button
+                      onClick={() => handleIntegracaoConfirm(false)}
+                      disabled={salvando}
+                      className="w-full py-3 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 font-bold hover:bg-zinc-200 dark:hover:bg-zinc-700 transition disabled:opacity-50"
+                    >
+                      {salvando ? "Processando..." : "Não, apenas registrar na Esteira Interna"}
+                    </button>
                   </div>
                 </div>
               </div>
-
-              <div className="flex justify-between items-center pt-6 shrink-0 mt-4 border-t border-zinc-100 dark:border-zinc-800">
-                <div>
-                  {form.id && (perfilUsuario === "admin" || perfilUsuario === "gerente") && (
-                    <button type="button" onClick={() => deletarLead(form.id)} disabled={salvando}
-                      className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-xl transition">
-                      <Trash2 className="h-4 w-4" /> Excluir Lead
-                    </button>
-                  )}
-                </div>
-                <div className="flex gap-3">
-                  <button type="button" onClick={() => setModal(false)} className="px-5 py-2.5 text-sm font-medium text-zinc-600 hover:bg-zinc-100 rounded-xl transition">Cancelar</button>
-                  <button type="submit" disabled={salvando}
-                    className="flex items-center gap-2 rounded-xl bg-violet-600 px-6 py-2.5 text-sm font-semibold text-white shadow-lg shadow-violet-500/30 hover:bg-violet-700 transition">
-                    {salvando ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-                    {salvando ? "Salvando..." : (form.id ? "Salvar Alterações" : "Criar Lead")}
-                  </button>
-                </div>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {modalColuna && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-2xl w-full max-w-sm mx-4">
-            <div className="flex items-center justify-between p-6 border-b border-zinc-100 dark:border-zinc-800">
-              <h2 className="text-lg font-semibold">Nova Coluna</h2>
-              <button onClick={() => setModalColuna(false)} className="text-zinc-400 hover:text-zinc-600 transition"><X className="h-5 w-5" /></button>
             </div>
-            <form onSubmit={criarColuna} className="p-6 space-y-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Nome da Coluna *</label>
-                <input required value={novaColunaNome} onChange={e => setNovaColunaNome(e.target.value)} placeholder="Ex: CONTRATO ASSINADO"
-                  className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 uppercase" />
-              </div>
-              <div className="flex justify-end gap-3 pt-2">
-                <button type="button" onClick={() => setModalColuna(false)} className="px-4 py-2 text-sm text-zinc-600">Cancelar</button>
-                <button type="submit" disabled={salvando}
-                  className="flex items-center gap-2 rounded-xl bg-violet-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg">
-                  {salvando ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-                  {salvando ? "Criando..." : "Criar Coluna"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+          )}
 
-      {/* Modal de Integração Automática */}
-      {integracaoModal?.aberto && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm">
-          <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-2xl w-full max-w-md mx-4 overflow-hidden">
-            <div className="p-6 text-center">
-              <div className="w-16 h-16 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Building2 className="w-8 h-8" />
-              </div>
-              <h2 className="text-xl font-bold mb-2">Integração Bancária</h2>
-              <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-6">
-                Este Lead foi movido para VENDIDO. Deseja enviar a proposta automaticamente via API/Robô para o <strong>{integracaoModal.banco}</strong>?
-              </p>
-              <div className="flex flex-col gap-3">
-                <button
-                  onClick={() => handleIntegracaoConfirm(true)}
-                  disabled={salvando}
-                  className="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 text-white font-bold shadow-lg shadow-emerald-500/30 hover:opacity-90 transition disabled:opacity-50"
-                >
-                  {salvando ? "Processando..." : `Sim, enviar para o ${integracaoModal.banco}`}
-                </button>
-                <button
-                  onClick={() => handleIntegracaoConfirm(false)}
-                  disabled={salvando}
-                  className="w-full py-3 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 font-bold hover:bg-zinc-200 dark:hover:bg-zinc-700 transition disabled:opacity-50"
-                >
-                  {salvando ? "Processando..." : "Não, apenas registrar na Esteira Interna"}
-                </button>
-              </div>
-            </div>
-          </div>
+          {/* Drawer Omnichannel */}
+          <InboxDrawer
+            isOpen={inboxDrawerOpen}
+            onClose={() => setInboxDrawerOpen(false)}
+            lead={form}
+            sessao={{ perfilSlug: perfilUsuario }}
+          />
         </div>
-      )}
-      
-      {/* Drawer Omnichannel */}
-      <InboxDrawer 
-        isOpen={inboxDrawerOpen} 
-        onClose={() => setInboxDrawerOpen(false)} 
-        lead={form} 
-        sessao={{ perfilSlug: perfilUsuario }} 
-      />
-    </div>
-  );
+      );
 }
