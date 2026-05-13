@@ -739,6 +739,7 @@ export function LeadsClient({
                     </div>
                   )}
                 </div>
+              </div>
             )}
 
                 {tabModal === "inss" && (
