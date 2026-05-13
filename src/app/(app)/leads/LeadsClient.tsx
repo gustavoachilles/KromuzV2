@@ -843,7 +843,7 @@ export function LeadsClient({
                           type={revelarCpf ? "text" : "password"} 
                           value={form.cpf} 
                           readOnly={!revelarCpf}
-                          onChange={e => setForm({ ...form, cpf: formatCPF(e.target.value) })} 
+                          onChange={e => setForm({ ...form, cpf: mascaraCpf(e.target.value) })} 
                           placeholder="***.***.***-**" 
                           maxLength={14}
                           className={`w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 transition-all ${!revelarCpf ? 'blur-[3px] select-none' : ''}`} 
@@ -869,7 +869,7 @@ export function LeadsClient({
                           type={revelarTel ? "text" : "password"}
                           value={form.telefone} 
                           readOnly={!revelarTel}
-                          onChange={e => setForm({ ...form, telefone: formatTelefone(e.target.value) })} 
+                          onChange={e => setForm({ ...form, telefone: mascaraTelefone(e.target.value) })} 
                           placeholder="(**) *****-****" 
                           maxLength={15}
                           className={`w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 transition-all ${!revelarTel ? 'blur-[3px] select-none' : ''}`} 
