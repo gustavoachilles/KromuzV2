@@ -846,7 +846,7 @@ export function LeadsClient({
                           onChange={e => setForm({ ...form, cpf: mascaraCpf(e.target.value) })} 
                           placeholder="***.***.***-**" 
                           maxLength={14}
-                          className={`w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 transition-all ${!revelarCpf ? 'blur-[3px] select-none' : ''}`} 
+                          className={`w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 transition-all ${!revelarCpf ? 'blur-[3px] select-none' : ''}`}
                         />
                         <button 
                           type="button"
@@ -872,7 +872,7 @@ export function LeadsClient({
                           onChange={e => setForm({ ...form, telefone: mascaraTelefone(e.target.value) })} 
                           placeholder="(**) *****-****" 
                           maxLength={15}
-                          className={`w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 transition-all ${!revelarTel ? 'blur-[3px] select-none' : ''}`} 
+                          className={`w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 transition-all ${!revelarTel ? 'blur-[3px] select-none' : ''}`}
                         />
                         <button 
                           type="button"
