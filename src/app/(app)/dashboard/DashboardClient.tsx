@@ -240,6 +240,9 @@ export function DashboardClient({
                         R$ {(v._sum.valorComissao || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })} comissão
                       </p>
                     </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         </div>
