@@ -3,11 +3,16 @@ import { sendEvolutionText } from "@/lib/evolution";
 
 export async function runCampaign(campanhaId: string) {
   const campanha = await prisma.campanhaDisparo.findUnique({
-    where: { id: campanhaId },
-    include: { canal: true }
+    where: { id: campanhaId }
   });
 
-  if (!campanha || !campanha.canal) return;
+  if (!campanha) return;
+
+  const canal = await prisma.canalComunicacao.findUnique({
+    where: { id: campanha.canalId }
+  });
+
+  if (!canal) return;
 
   // 1. Marcar como executando
   await prisma.campanhaDisparo.update({
@@ -27,7 +32,7 @@ export async function runCampaign(campanhaId: string) {
   });
 
   let sucessos = 0;
-  const credenciais = campanha.canal.credenciaisApi as { apiUrl?: string, apiKey?: string };
+  const credenciais = canal.credenciaisApi as { apiUrl?: string, apiKey?: string };
 
   if (!credenciais?.apiUrl || !credenciais?.apiKey) {
     await prisma.campanhaDisparo.update({
@@ -47,7 +52,7 @@ export async function runCampaign(campanhaId: string) {
       await sendEvolutionText(
         credenciais.apiUrl,
         credenciais.apiKey,
-        campanha.canal.identificador!,
+        canal.identificador!,
         lead.telefone!,
         mensagemFinal
       );
