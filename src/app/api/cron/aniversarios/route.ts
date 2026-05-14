@@ -46,8 +46,7 @@ export async function GET(req: NextRequest) {
               nome: `🎂 Aniversariantes - ${diaAtual}/${mesAtual}`,
               mensagemTemplate: "Olá {nome}! A Kromuz deseja um feliz aniversário! 🥳 E como presente, liberamos uma simulação especial de margem para você com taxas reduzidas. Posso consultar?",
               status: "AGENDADA",
-              dataAgendamento: hoje,
-              contatosTotais: aniversariantes.length
+              dataAgendamento: hoje
             }
           });
 
