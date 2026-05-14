@@ -23,7 +23,7 @@ export async function PATCH(req: Request) {
     await prisma.auditLog.create({
       data: {
         empresaId: sessao.empresaId,
-        usuarioEmail: sessao.userEmail || "Sistema",
+        usuarioEmail: sessao.email || "Sistema",
         usuarioNome: sessao.nomeUsuario,
         acao: "Editou",
         entidade: "Configurações",
