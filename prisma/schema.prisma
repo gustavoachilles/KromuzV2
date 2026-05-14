@@ -64,6 +64,7 @@ model Empresa {
   campanhasMarketing   CampanhaMarketing[]
   logsAtividades       LogAtividade[]
   regrasComissao       RegraComissao[]
+  cargos               Cargo[]
   
   planoSaaS            PlanoSaaS? @relation(fields: [planoSaasId], references: [id])
   faturasSaaS          FaturaSaaS[]
@@ -81,6 +82,7 @@ model UsuarioPerfil {
   nome                String?
   perfilSlug          String   @default("vendedor") @map("perfil_slug")
   isSuperAdmin        Boolean  @default(false) @map("is_super_admin")
+  cargoId             String?  @map("cargo_id") @db.Uuid
   
   // Regras de Remuneração
   tipoRemuneracao     String   @default("SEM_COMISSAO") @map("tipo_remuneracao") // SEM_COMISSAO, PERCENTUAL_FIXO, FAIXAS_META
@@ -98,6 +100,7 @@ model UsuarioPerfil {
   updatedAt           DateTime @updatedAt @map("updated_at")
 
   empresa Empresa @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  cargo   Cargo?  @relation(fields: [cargoId], references: [id], onDelete: SetNull)
   conversas Conversa[]
   logsAtividades LogAtividade[]
   
@@ -107,6 +110,27 @@ model UsuarioPerfil {
   @@index([empresaId])
   @@index([authUserId])
   @@map("usuario_perfil")
+  @@schema("public")
+}
+
+model Cargo {
+  id          String   @id @default(uuid()) @db.Uuid
+  empresaId   String   @map("empresa_id") @db.Uuid
+  nome        String
+  slug        String
+  descricao   String?
+  permissoes  Json     @default("{}") @db.JsonB
+  isDefault   Boolean  @default(false) @map("is_default")
+  isSistema   Boolean  @default(false) @map("is_sistema")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  empresa     Empresa        @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  usuarios    UsuarioPerfil[]
+
+  @@unique([empresaId, slug])
+  @@index([empresaId])
+  @@map("cargo")
   @@schema("public")
 }
 

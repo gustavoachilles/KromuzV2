@@ -3,107 +3,95 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Brain, FileText, Layers, Settings, Calculator, BookOpen, BarChart3, Shield, Package, ScrollText, Kanban, Users, DollarSign, Target, Trophy, Upload, ArrowRightLeft, PieChart, CreditCard } from "lucide-react";
+import type { Permissoes } from "@/lib/permissions";
 
-export function SidebarNav({ perfilSlug = "vendedor" }: { perfilSlug?: string }) {
+export function SidebarNav({ permissoes }: { permissoes: Permissoes }) {
   const pathname = usePathname() ?? "";
 
-  const isAdmin   = perfilSlug === "admin";
-  const isGerente = perfilSlug === "gerente" || isAdmin;
+  const p = (mod: string) => permissoes[mod] === true;
 
   return (
     <nav className="flex-1 px-3 py-2 space-y-0.5 text-sm overflow-y-auto">
-      <NavLink href="/dashboard" icon={<BarChart3 className="h-4 w-4" />} active={pathname === "/dashboard"}>
-        Dashboard
-      </NavLink>
-      {isGerente && (
+      {p("dashboard") && (
+        <NavLink href="/dashboard" icon={<BarChart3 className="h-4 w-4" />} active={pathname === "/dashboard"}>
+          Dashboard
+        </NavLink>
+      )}
+      {p("financeiro") && (
         <NavLink href="/dashboard-financeiro" icon={<DollarSign className="h-4 w-4" />} active={pathname === "/dashboard-financeiro"}>
           Financeiro
         </NavLink>
       )}
-      {isGerente && (
+      {p("vendedores") && (
         <NavLink href="/vendedores" icon={<PieChart className="h-4 w-4" />} active={pathname === "/vendedores"}>
           Vendedores
         </NavLink>
       )}
 
-      <SectionLabel>CRM</SectionLabel>
-      <NavLink href="/leads" icon={<Users className="h-4 w-4" />} active={pathname === "/leads"}>
-        Leads
-      </NavLink>
-      <NavLink href="/esteira" icon={<Kanban className="h-4 w-4" />} active={pathname === "/esteira"}>
-        Esteira
-      </NavLink>
-      <NavLink href="/comissoes" icon={<DollarSign className="h-4 w-4" />} active={pathname === "/comissoes"}>
-        Comissões
-      </NavLink>
-      <NavLink href="/metas" icon={<Target className="h-4 w-4" />} active={pathname === "/metas"}>
-        Metas
-      </NavLink>
-      <NavLink href="/ranking" icon={<Trophy className="h-4 w-4" />} active={pathname === "/ranking"}>
-        Ranking
-      </NavLink>
-
-      <SectionLabel>Inteligência</SectionLabel>
-      <NavLink href="/simulador" icon={<Calculator className="h-4 w-4" />} active={pathname === "/simulador"}>
-        Simulador
-      </NavLink>
-      {isGerente && (
-        <NavLink href="/motor-regras" icon={<Brain className="h-4 w-4" />} active={pathname === "/motor-regras"}>
-          Motor de Regras
-        </NavLink>
+      {(p("leads") || p("esteira") || p("comissoes") || p("metas") || p("ranking")) && (
+        <SectionLabel>CRM</SectionLabel>
       )}
-      {isGerente && (
-        <NavLink href="/roteiros" icon={<FileText className="h-4 w-4" />} active={pathname === "/roteiros"}>
-          Roteiros
-        </NavLink>
+      {p("leads") && (
+        <NavLink href="/leads" icon={<Users className="h-4 w-4" />} active={pathname === "/leads"}>Leads</NavLink>
       )}
-      <NavLink href="/mapa-portabilidade" icon={<ArrowRightLeft className="h-4 w-4" />} active={pathname === "/mapa-portabilidade"}>
-        Mapa Port.
-      </NavLink>
+      {p("esteira") && (
+        <NavLink href="/esteira" icon={<Kanban className="h-4 w-4" />} active={pathname === "/esteira"}>Esteira</NavLink>
+      )}
+      {p("comissoes") && (
+        <NavLink href="/comissoes" icon={<DollarSign className="h-4 w-4" />} active={pathname === "/comissoes"}>Comissões</NavLink>
+      )}
+      {p("metas") && (
+        <NavLink href="/metas" icon={<Target className="h-4 w-4" />} active={pathname === "/metas"}>Metas</NavLink>
+      )}
+      {p("ranking") && (
+        <NavLink href="/ranking" icon={<Trophy className="h-4 w-4" />} active={pathname === "/ranking"}>Ranking</NavLink>
+      )}
 
-      {isGerente && (
+      {(p("simulador") || p("motor_regras") || p("roteiros") || p("mapa_port")) && (
+        <SectionLabel>Inteligência</SectionLabel>
+      )}
+      {p("simulador") && (
+        <NavLink href="/simulador" icon={<Calculator className="h-4 w-4" />} active={pathname === "/simulador"}>Simulador</NavLink>
+      )}
+      {p("motor_regras") && (
+        <NavLink href="/motor-regras" icon={<Brain className="h-4 w-4" />} active={pathname === "/motor-regras"}>Motor de Regras</NavLink>
+      )}
+      {p("roteiros") && (
+        <NavLink href="/roteiros" icon={<FileText className="h-4 w-4" />} active={pathname === "/roteiros"}>Roteiros</NavLink>
+      )}
+      {p("mapa_port") && (
+        <NavLink href="/mapa-portabilidade" icon={<ArrowRightLeft className="h-4 w-4" />} active={pathname === "/mapa-portabilidade"}>Mapa Port.</NavLink>
+      )}
+
+      {(p("cadastro") || p("importacao")) && (
+        <SectionLabel>Cadastro</SectionLabel>
+      )}
+      {p("cadastro") && (
         <>
-          <SectionLabel>Cadastro</SectionLabel>
-          <NavLink href="/regras" icon={<BookOpen className="h-4 w-4" />} active={pathname.startsWith("/regras")}>
-            Regras
-          </NavLink>
-          <NavLink href="/bancos" icon={<Layers className="h-4 w-4" />} active={pathname.startsWith("/bancos")}>
-            Bancos
-          </NavLink>
-          <NavLink href="/produtos" icon={<Package className="h-4 w-4" />} active={pathname.startsWith("/produtos")}>
-            Produtos
-          </NavLink>
-          <NavLink href="/convenios" icon={<Shield className="h-4 w-4" />} active={pathname.startsWith("/convenios")}>
-            Convênios
-          </NavLink>
-          <NavLink href="/importacao" icon={<Upload className="h-4 w-4" />} active={pathname === "/importacao"}>
-            Importar
-          </NavLink>
+          <NavLink href="/regras" icon={<BookOpen className="h-4 w-4" />} active={pathname.startsWith("/regras")}>Regras</NavLink>
+          <NavLink href="/bancos" icon={<Layers className="h-4 w-4" />} active={pathname.startsWith("/bancos")}>Bancos</NavLink>
+          <NavLink href="/produtos" icon={<Package className="h-4 w-4" />} active={pathname.startsWith("/produtos")}>Produtos</NavLink>
+          <NavLink href="/convenios" icon={<Shield className="h-4 w-4" />} active={pathname.startsWith("/convenios")}>Convênios</NavLink>
         </>
       )}
+      {p("importacao") && (
+        <NavLink href="/importacao" icon={<Upload className="h-4 w-4" />} active={pathname === "/importacao"}>Importar</NavLink>
+      )}
 
-      {isGerente && (
-        <>
-          <SectionLabel>Sistema</SectionLabel>
-          <NavLink href="/relatorios" icon={<BarChart3 className="h-4 w-4" />} active={pathname === "/relatorios"}>
-            Relatórios
-          </NavLink>
-          {isAdmin && (
-            <NavLink href="/auditoria" icon={<ScrollText className="h-4 w-4" />} active={pathname === "/auditoria"}>
-              Auditoria
-            </NavLink>
-          )}
-          {isAdmin && (
-            <NavLink href="/configuracoes" icon={<Settings className="h-4 w-4" />} active={pathname === "/configuracoes"}>
-              Configurações
-            </NavLink>
-          )}
-          {isAdmin && (
-            <NavLink href="/assinatura" icon={<CreditCard className="h-4 w-4" />} active={pathname === "/assinatura"}>
-              Minha Assinatura
-            </NavLink>
-          )}
-        </>
+      {(p("relatorios") || p("auditoria") || p("configuracoes") || p("assinatura")) && (
+        <SectionLabel>Sistema</SectionLabel>
+      )}
+      {p("relatorios") && (
+        <NavLink href="/relatorios" icon={<BarChart3 className="h-4 w-4" />} active={pathname === "/relatorios"}>Relatórios</NavLink>
+      )}
+      {p("auditoria") && (
+        <NavLink href="/auditoria" icon={<ScrollText className="h-4 w-4" />} active={pathname === "/auditoria"}>Auditoria</NavLink>
+      )}
+      {p("configuracoes") && (
+        <NavLink href="/configuracoes" icon={<Settings className="h-4 w-4" />} active={pathname === "/configuracoes"}>Configurações</NavLink>
+      )}
+      {p("assinatura") && (
+        <NavLink href="/assinatura" icon={<CreditCard className="h-4 w-4" />} active={pathname === "/assinatura"}>Minha Assinatura</NavLink>
       )}
     </nav>
   );

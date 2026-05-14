@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { 
   Settings, 
@@ -14,8 +14,12 @@ import {
   Lock,
   Globe,
   Bell,
-  Pencil
+  Pencil,
+  Plus,
+  Trash2,
+  Shield
 } from "lucide-react";
+import { MODULOS_SISTEMA, type Permissoes } from "@/lib/permissions";
 
 export function ConfiguracoesClient({ empresa, usuarios, bancos, sessao }: any) {
   const router = useRouter();
@@ -139,6 +143,97 @@ export function ConfiguracoesClient({ empresa, usuarios, bancos, sessao }: any) 
     setIsAddModalOpen(true);
   }
 
+  // ─── CARGOS STATE ────────────────────────────────────
+  const [cargos, setCargos] = useState<any[]>([]);
+  const [editingCargo, setEditingCargo] = useState<any>(null);
+  const [cargoForm, setCargoForm] = useState({ nome: "", slug: "", descricao: "", permissoes: {} as Permissoes });
+  const [isCargoModalOpen, setIsCargoModalOpen] = useState(false);
+  const [loadingCargos, setLoadingCargos] = useState(false);
+
+  async function fetchCargos() {
+    const res = await fetch("/api/configuracoes/cargos");
+    if (res.ok) setCargos(await res.json());
+  }
+
+  useEffect(() => {
+    if (tab === "cargos") {
+      fetchCargos();
+    }
+  }, [tab]);
+
+  async function seedCargos() {
+    setLoadingCargos(true);
+    await fetch("/api/configuracoes/cargos/seed", { method: "POST" });
+    await fetchCargos();
+    setLoadingCargos(false);
+  }
+
+  function openCargoModal(cargo?: any) {
+    if (cargo) {
+      setEditingCargo(cargo);
+      setCargoForm({ nome: cargo.nome, slug: cargo.slug, descricao: cargo.descricao || "", permissoes: cargo.permissoes || {} });
+    } else {
+      setEditingCargo(null);
+      const defaultPerms: Permissoes = {};
+      MODULOS_SISTEMA.forEach(m => { defaultPerms[m.slug] = false; });
+      setCargoForm({ nome: "", slug: "", descricao: "", permissoes: defaultPerms });
+    }
+    setIsCargoModalOpen(true);
+  }
+
+  async function handleSaveCargo() {
+    setSaving(true);
+    try {
+      if (editingCargo) {
+        const res = await fetch("/api/configuracoes/cargos", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: editingCargo.id, nome: cargoForm.nome, descricao: cargoForm.descricao, permissoes: cargoForm.permissoes })
+        });
+        if (!res.ok) { const e = await res.json(); throw new Error(e.error); }
+        alert("\u2705 Cargo atualizado!");
+      } else {
+        const res = await fetch("/api/configuracoes/cargos", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(cargoForm)
+        });
+        if (!res.ok) { const e = await res.json(); throw new Error(e.error); }
+        alert("\u2705 Cargo criado!");
+      }
+      setIsCargoModalOpen(false);
+      await fetchCargos();
+    } catch (e: any) {
+      alert(e.message);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleDeleteCargo(id: string) {
+    if (!confirm("Tem certeza que deseja excluir este cargo?")) return;
+    const res = await fetch("/api/configuracoes/cargos", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id })
+    });
+    if (!res.ok) { const e = await res.json(); alert(e.error); return; }
+    await fetchCargos();
+  }
+
+  function togglePerm(slug: string) {
+    setCargoForm(prev => ({
+      ...prev,
+      permissoes: { ...prev.permissoes, [slug]: !prev.permissoes[slug] }
+    }));
+  }
+
+  function toggleAll(checked: boolean) {
+    const p: Permissoes = {};
+    MODULOS_SISTEMA.forEach(m => { p[m.slug] = checked; });
+    setCargoForm(prev => ({ ...prev, permissoes: p }));
+  }
+
   return (
     <div className="max-w-6xl mx-auto">
       <div className="flex flex-col md:flex-row gap-8">
@@ -150,6 +245,7 @@ export function ConfiguracoesClient({ empresa, usuarios, bancos, sessao }: any) 
           <TabButton active={tab === "empresa"} onClick={() => setTab("empresa")} icon={<Building2 />} label="Dados da Empresa" />
           <TabButton active={tab === "branding"} onClick={() => setTab("branding")} icon={<Palette />} label="Identidade Visual" />
           <TabButton active={tab === "usuarios"} onClick={() => setTab("usuarios")} icon={<Users />} label="Equipe & Acessos" />
+          <TabButton active={tab === "cargos"} onClick={() => setTab("cargos")} icon={<Shield />} label="Cargos & Permissões" />
           <TabButton active={tab === "seguranca"} onClick={() => setTab("seguranca")} icon={<ShieldCheck />} label="Segurança" />
           <TabButton active={tab === "notificacoes"} onClick={() => setTab("notificacoes")} icon={<Bell />} label="Notificações" />
         </aside>
@@ -331,8 +427,142 @@ export function ConfiguracoesClient({ empresa, usuarios, bancos, sessao }: any) 
               </div>
             </div>
           )}
+
+          {tab === "cargos" && (
+            <div className="p-8">
+              <div className="flex justify-between items-center mb-6">
+                <div>
+                  <h2 className="text-lg font-bold">Cargos & Permissões</h2>
+                  <p className="text-sm text-zinc-500">Defina os cargos e controle o acesso de cada um aos módulos do sistema.</p>
+                </div>
+                <div className="flex gap-2">
+                  {cargos.length === 0 && (
+                    <button onClick={seedCargos} disabled={loadingCargos}
+                      className="flex items-center gap-2 bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 px-4 py-2 rounded-lg text-xs font-bold transition hover:opacity-80 disabled:opacity-50">
+                      {loadingCargos ? "Criando..." : "Gerar Cargos Padrão"}
+                    </button>
+                  )}
+                  <button onClick={() => openCargoModal()}
+                    className="flex items-center gap-2 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 px-4 py-2 rounded-lg text-xs font-bold transition hover:opacity-80">
+                    <Plus className="w-4 h-4" /> Novo Cargo
+                  </button>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                {cargos.map((c: any) => (
+                  <div key={c.id} className="flex items-center justify-between p-4 bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800 rounded-xl">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-brand/10 flex items-center justify-center">
+                        <Shield className="w-5 h-5 text-brand" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold flex items-center gap-2">
+                          {c.nome}
+                          {c.isSistema && <span className="text-[9px] bg-brand/10 text-brand px-1.5 py-0.5 rounded font-bold">SISTEMA</span>}
+                        </p>
+                        <p className="text-xs text-zinc-500">
+                          {Object.values(c.permissoes || {}).filter(Boolean).length} de {MODULOS_SISTEMA.length} módulos · {c._count?.usuarios || 0} usuário(s)
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button onClick={() => openCargoModal(c)}
+                        className="p-2 hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded-lg transition text-zinc-400">
+                        <Pencil className="w-4 h-4" />
+                      </button>
+                      {!c.isSistema && (
+                        <button onClick={() => handleDeleteCargo(c.id)}
+                          className="p-2 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition text-zinc-400 hover:text-red-500">
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+                {cargos.length === 0 && (
+                  <p className="text-center text-zinc-400 py-12">Nenhum cargo criado. Clique em &quot;Gerar Cargos Padrão&quot; para começar.</p>
+                )}
+              </div>
+            </div>
+          )}
         </main>
       </div>
+
+      {/* MODAL DE CARGO */}
+      {isCargoModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-white dark:bg-zinc-900 rounded-2xl w-full max-w-2xl p-6 border border-zinc-200 dark:border-zinc-800 shadow-2xl max-h-[90vh] overflow-y-auto">
+            <h3 className="text-xl font-bold mb-4">{editingCargo ? `Editar: ${editingCargo.nome}` : "Novo Cargo"}</h3>
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">Nome do Cargo</label>
+                  <input type="text" value={cargoForm.nome}
+                    onChange={e => setCargoForm({...cargoForm, nome: e.target.value})}
+                    className="w-full mt-1 px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm"
+                    placeholder="Ex: Supervisor" />
+                </div>
+                <div>
+                  <label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">Slug (identificador)</label>
+                  <input type="text" value={cargoForm.slug} disabled={!!editingCargo}
+                    onChange={e => setCargoForm({...cargoForm, slug: e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '_')})}
+                    className="w-full mt-1 px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm disabled:opacity-50"
+                    placeholder="ex: supervisor" />
+                </div>
+              </div>
+
+              <div className="pt-4 border-t border-zinc-100 dark:border-zinc-800">
+                <div className="flex justify-between items-center mb-3">
+                  <label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">Permissões de Acesso</label>
+                  {!(editingCargo?.isSistema && editingCargo?.slug === "admin") && (
+                    <div className="flex gap-2">
+                      <button onClick={() => toggleAll(true)} className="text-[10px] font-bold text-brand hover:underline">Marcar Todos</button>
+                      <span className="text-zinc-300">|</span>
+                      <button onClick={() => toggleAll(false)} className="text-[10px] font-bold text-zinc-400 hover:underline">Desmarcar Todos</button>
+                    </div>
+                  )}
+                </div>
+
+                {(() => {
+                  const grupos = [...new Set(MODULOS_SISTEMA.map(m => m.grupo))];
+                  const isAdminSistema = editingCargo?.isSistema && editingCargo?.slug === "admin";
+                  return grupos.map(grupo => (
+                    <div key={grupo} className="mb-4">
+                      <p className="text-[10px] uppercase tracking-widest font-bold text-zinc-400 mb-2">{grupo}</p>
+                      <div className="grid grid-cols-2 gap-2">
+                        {MODULOS_SISTEMA.filter(m => m.grupo === grupo).map(mod => (
+                          <label key={mod.slug}
+                            className={`flex items-center gap-2 p-2.5 rounded-lg border text-sm cursor-pointer transition ${
+                              cargoForm.permissoes[mod.slug]
+                                ? 'bg-brand/5 border-brand/30 text-brand font-medium'
+                                : 'bg-zinc-50 dark:bg-zinc-950 border-zinc-100 dark:border-zinc-800 text-zinc-500'
+                            } ${isAdminSistema ? 'opacity-60 cursor-not-allowed' : 'hover:border-brand/50'}`}>
+                            <input type="checkbox" checked={!!cargoForm.permissoes[mod.slug]}
+                              disabled={isAdminSistema}
+                              onChange={() => togglePerm(mod.slug)}
+                              className="w-4 h-4 rounded text-brand border-zinc-300" />
+                            {mod.label}
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  ));
+                })()}
+              </div>
+            </div>
+
+            <div className="mt-6 flex justify-end gap-3">
+              <button onClick={() => setIsCargoModalOpen(false)}
+                className="px-4 py-2 text-sm font-medium text-zinc-500 hover:text-zinc-800 dark:hover:text-white transition">Cancelar</button>
+              <button onClick={handleSaveCargo} disabled={saving || !cargoForm.nome || !cargoForm.slug}
+                className="bg-brand text-white px-5 py-2 rounded-lg text-sm font-bold hover:opacity-90 disabled:opacity-50 flex items-center gap-2 transition shadow-lg shadow-brand/20">
+                <Save className="w-4 h-4" /> {saving ? "Salvando..." : "Salvar Cargo"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* MODAL DE USUÁRIOS */}
       {isAddModalOpen && (

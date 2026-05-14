@@ -3,6 +3,7 @@ import { UserMenu } from "@/components/layout/UserMenu";
 import { SidebarNav } from "@/components/layout/SidebarNav";
 import { getSessionEmpresa } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
+import { temPermissao, PERMISSOES_ADMIN, PERMISSOES_GERENTE, PERMISSOES_VENDEDOR, type Permissoes } from "@/lib/permissions";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   try {
@@ -14,7 +15,23 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       select: { corPrimaria: true, logoUrl: true, nomeFantasia: true }
     });
 
-    const perfilSlug = sessao.perfilSlug ?? "vendedor";
+    // Busca as permissões do cargo do usuário
+    const perfil = await prisma.usuarioPerfil.findFirst({
+      where: { authUserId: sessao.userId },
+      include: { cargo: { select: { permissoes: true } } }
+    });
+
+    // Resolve permissões: cargo > fallback perfilSlug
+    let permissoes: Permissoes;
+    if (perfil?.cargo?.permissoes && typeof perfil.cargo.permissoes === "object") {
+      permissoes = perfil.cargo.permissoes as Permissoes;
+    } else if (sessao.perfilSlug === "admin") {
+      permissoes = PERMISSOES_ADMIN;
+    } else if (sessao.perfilSlug === "gerente") {
+      permissoes = PERMISSOES_GERENTE;
+    } else {
+      permissoes = PERMISSOES_VENDEDOR;
+    }
 
     const corBrand = empresa?.corPrimaria || "#7c3aed";
 
@@ -37,7 +54,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           </Link>
         </div>
 
-        <SidebarNav perfilSlug={perfilSlug} />
+        <SidebarNav permissoes={permissoes} />
 
         <UserMenu 
           nomeUsuario={sessao.nomeUsuario} 
