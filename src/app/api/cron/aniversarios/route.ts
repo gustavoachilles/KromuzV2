@@ -34,7 +34,7 @@ export async function GET(req: NextRequest) {
       if (aniversariantes.length > 0) {
         // Encontra ou cria um canal padrão do WhatsApp
         const canal = await prisma.canalComunicacao.findFirst({
-          where: { empresaId: empresa.id, tipo: "WHATSAPP", status: "CONECTADO" }
+          where: { empresaId: empresa.id, tipo: "WHATSAPP", ativo: true }
         });
 
         if (canal) {
