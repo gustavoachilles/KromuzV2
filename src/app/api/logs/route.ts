@@ -4,8 +4,9 @@ import { prisma } from "@/lib/prisma";
 
 export async function POST(req: NextRequest) {
   try {
-    const { empresaId, usuarioId } = await getSessionEmpresaApi();
-    if (!empresaId || !usuarioId) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+    const sessao = await getSessionEmpresaApi();
+    if (!sessao) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+    const { empresaId, userId: usuarioId } = sessao;
 
     const data = await req.json();
     const { tipo, recurso, recursoId, descricao } = data;

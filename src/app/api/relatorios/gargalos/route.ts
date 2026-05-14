@@ -4,8 +4,9 @@ import { prisma } from "@/lib/prisma";
 
 export async function GET(req: NextRequest) {
   try {
-    const { empresaId } = await getSessionEmpresaApi();
-    if (!empresaId) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+    const sessao = await getSessionEmpresaApi();
+    if (!sessao) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+    const { empresaId } = sessao;
 
     const propostas = await prisma.proposta.findMany({
       where: { empresaId },
