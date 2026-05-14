@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { MessageSquare, Camera, ThumbsUp, Bot, Send, Search, CheckCircle2, Clock, Loader2, Plus, Wand2 } from "lucide-react";
+import { MessageSquare, Camera, ThumbsUp, Bot, Send, Search, CheckCircle2, Clock, Loader2, Plus, Wand2, Phone } from "lucide-react";
 import { toast } from "sonner";
 
 export function InboxClient({ conversas: initConversas, sessao }: { conversas: any[], sessao: any }) {
@@ -14,6 +14,14 @@ export function InboxClient({ conversas: initConversas, sessao }: { conversas: a
   const [melhorandoTexto, setMelhorandoTexto] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   
+  const getIcon = (tipo: string) => {
+    switch (tipo?.toUpperCase()) {
+      case "WHATSAPP": return <MessageSquare className="w-3.5 h-3.5" />;
+      case "INSTAGRAM": return <Camera className="w-3.5 h-3.5" />;
+      default: return <Phone className="w-3.5 h-3.5" />;
+    }
+  };
+
   const conversaAtiva = conversas.find(c => c.id === ativaId);
 
   async function handleMelhorarTexto() {
