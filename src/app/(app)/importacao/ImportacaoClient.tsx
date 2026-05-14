@@ -154,7 +154,7 @@ export function ImportacaoClient() {
                       <td className="px-4 py-2 tabular-nums">{d.cpf || "—"}</td>
                       <td className="px-4 py-2">{d.telefone || "—"}</td>
                       <td className="px-4 py-2">{d.uf || "—"}</td>
-                      <td className="px-4 py-2 text-right tabular-nums">{d.margemLivre ? \`R$ \${d.margemLivre}\` : "—"}</td>
+                      <td className="px-4 py-2 text-right tabular-nums">{d.margemLivre ? `R$ ${d.margemLivre}` : "—"}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -204,9 +204,9 @@ export function ImportacaoClient() {
             <Download className="h-4 w-4 text-zinc-400" /> Modelo de CSV
           </h3>
           <pre className="text-xs text-zinc-500 bg-zinc-50 dark:bg-zinc-800 p-3 rounded-lg overflow-x-auto">
-{\`nome;cpf;telefone;email;uf;cidade;beneficio;margem
+{`nome;cpf;telefone;email;uf;cidade;beneficio;margem
 João da Silva;123.456.789-00;(11) 99999-0000;joao@email.com;SP;São Paulo;1234567890;350.00
-Maria Souza;987.654.321-00;(21) 98888-0000;maria@email.com;RJ;Rio de Janeiro;9876543210;480.50\`}
+Maria Souza;987.654.321-00;(21) 98888-0000;maria@email.com;RJ;Rio de Janeiro;9876543210;480.50`}
           </pre>
         </div>
       </div>
