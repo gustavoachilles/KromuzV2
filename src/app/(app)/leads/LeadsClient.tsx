@@ -795,7 +795,7 @@ export function LeadsClient({
                                   });
                                   if (res.ok) {
                                     alert("Sucesso! Tarefa enviada para a fila do robô RPA. O HISCON aparecerá nos anexos e no Refin Hunter quando concluído.");
-                                    setActiveTab("refin");
+                                    setTabModal("refin");
                                   } else {
                                     throw new Error("Falha na api");
                                   }
