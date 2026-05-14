@@ -39,7 +39,7 @@ export default async function DashFinanceiroPage() {
     })
   );
 
-  const [porBanco, porVendedor, totais, faturas, propostasPendentes] = await Promise.all([
+  const [porBanco, porVendedor, totais, faturas, propostasPendentes, usuarios] = await Promise.all([
     // Por banco (top 10)
     prisma.proposta.groupBy({
       by: ["bancoNome"],
