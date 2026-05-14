@@ -130,7 +130,7 @@ export function LeadsClient({
   const [novaColunaNome, setNovaColunaNome] = useState("");
 
   // AI States
-  const [tabModal, setTabModal] = useState<"dados" | "refin">("dados");
+  const [tabModal, setTabModal] = useState<"dados" | "refin" | "inss">("dados");
   const [textoHiscon, setTextoHiscon] = useState("");
   const [analisandoHiscon, setAnalisandoHiscon] = useState(false);
   const [resultadoRefin, setResultadoRefin] = useState<any>(null);
