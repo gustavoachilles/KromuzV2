@@ -22,7 +22,7 @@ const CriarCargoSchema = z.object({
   nome: z.string().min(2),
   slug: z.string().min(2).regex(/^[a-z0-9_]+$/),
   descricao: z.string().optional(),
-  permissoes: z.record(z.boolean()),
+  permissoes: z.record(z.string(), z.boolean()),
 });
 
 // POST /api/configuracoes/cargos — cria novo cargo
@@ -59,7 +59,7 @@ const EditarCargoSchema = z.object({
   id: z.string().uuid(),
   nome: z.string().min(2).optional(),
   descricao: z.string().optional(),
-  permissoes: z.record(z.boolean()).optional(),
+  permissoes: z.record(z.string(), z.boolean()).optional(),
 });
 
 // PATCH /api/configuracoes/cargos — edita cargo existente
