@@ -108,7 +108,7 @@ export async function POST(req: NextRequest) {
     
     if (!parsed.success) {
       // Retorna mensagem amigável de validação
-      const firstError = parsed.error.errors[0];
+      const firstError = parsed.error.issues[0];
       return Response.json({ error: firstError.message }, { status: 400 });
     }
 
