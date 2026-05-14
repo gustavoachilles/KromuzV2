@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { MessageSquare, Camera, ThumbsUp, Plus, Bot, Power, Save, X, Loader2, Send } from "lucide-react";
+import { MessageSquare, Camera, ThumbsUp, Plus, Bot, Power, Save, X, Loader2, Send, Instagram, Smartphone } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 type Canal = {
