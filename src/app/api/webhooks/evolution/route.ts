@@ -67,6 +67,15 @@ export async function POST(req: NextRequest) {
     const result = await model.generateContent(prompt);
     const respostaBot = result.response.text();
 
+    // Encontrar o canal do WhatsApp da empresa para vincular a conversa
+    const canal = await prisma.canalComunicacao.findFirst({
+      where: { empresaId, tipo: "WHATSAPP", ativo: true }
+    });
+    
+    if (!canal) {
+      return NextResponse.json({ error: "Canal de WhatsApp não configurado" }, { status: 400 });
+    }
+
     // Salvar a conversa e as mensagens no banco
     let conversa = await prisma.conversa.findFirst({
       where: { empresaId, clienteContato: telefone }
@@ -74,18 +83,24 @@ export async function POST(req: NextRequest) {
 
     if (!conversa) {
       conversa = await prisma.conversa.create({
-        data: { empresaId, telefoneLead: telefone, nomeLead: lead.nome }
+        data: { 
+          empresaId, 
+          canalId: canal.id,
+          clienteContato: telefone, 
+          clienteNome: lead.nome,
+          leadId: lead.id
+        }
       });
     }
 
     // Mensagem do Lead
     await prisma.mensagem.create({
-      data: { conversaId: conversa.id, remetente: "LEAD", texto: textoRecebido }
+      data: { conversaId: conversa.id, remetente: "LEAD", conteudo: textoRecebido }
     });
 
     // Mensagem do Bot
     await prisma.mensagem.create({
-      data: { conversaId: conversa.id, remetente: "SISTEMA", texto: respostaBot }
+      data: { conversaId: conversa.id, remetente: "SISTEMA", conteudo: respostaBot }
     });
 
     // TODO: Enviar a resposta de volta pelo endpoint da Evolution API
