@@ -20,10 +20,7 @@ export default async function MarketingPage() {
       leads: {
         select: {
           id: true,
-          propostas: {
-            where: { status: "PAGA" },
-            select: { valorLiberado: true, valorComissao: true }
-          }
+          valorLiberado: true,
         }
       }
     },
@@ -32,19 +29,9 @@ export default async function MarketingPage() {
 
   const campanhasMapeadas = campanhas.map(camp => {
     const totalLeads = camp.leads.length;
-    let clientesConvertidos = 0;
-    let comissaoGerada = 0;
-    let volumeGerado = 0;
-
-    camp.leads.forEach(lead => {
-      if (lead.propostas.length > 0) {
-        clientesConvertidos++;
-        lead.propostas.forEach(p => {
-          comissaoGerada += p.valorComissao || 0;
-          volumeGerado += p.valorLiberado || 0;
-        });
-      }
-    });
+    const clientesConvertidos = camp.leads.filter(l => l.valorLiberado && l.valorLiberado > 0).length;
+    const volumeGerado = camp.leads.reduce((acc, l) => acc + (l.valorLiberado || 0), 0);
+    const comissaoGerada = volumeGerado * 0.02; // estimativa
 
     const cac = clientesConvertidos > 0 ? camp.custoTotal / clientesConvertidos : 0;
     const cpl = totalLeads > 0 ? camp.custoTotal / totalLeads : 0;
