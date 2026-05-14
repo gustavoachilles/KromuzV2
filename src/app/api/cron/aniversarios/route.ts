@@ -44,7 +44,7 @@ export async function GET(req: NextRequest) {
               empresaId: empresa.id,
               canalId: canal.id,
               nome: `🎂 Aniversariantes - ${diaAtual}/${mesAtual}`,
-              mensagemPadrao: "Olá {nome}! A Kromuz deseja um feliz aniversário! 🥳 E como presente, liberamos uma simulação especial de margem para você com taxas reduzidas. Posso consultar?",
+              mensagemTemplate: "Olá {nome}! A Kromuz deseja um feliz aniversário! 🥳 E como presente, liberamos uma simulação especial de margem para você com taxas reduzidas. Posso consultar?",
               status: "AGENDADA",
               dataAgendamento: hoje,
               contatosTotais: aniversariantes.length
