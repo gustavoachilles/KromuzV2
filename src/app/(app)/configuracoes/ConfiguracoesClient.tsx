@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 import { 
   Settings, 
   Building2, 
@@ -17,6 +18,7 @@ import {
 } from "lucide-react";
 
 export function ConfiguracoesClient({ empresa, usuarios, bancos, sessao }: any) {
+  const router = useRouter();
   const [tab, setTab] = useState("empresa");
   const [saving, setSaving] = useState(false);
   
@@ -54,7 +56,7 @@ export function ConfiguracoesClient({ empresa, usuarios, bancos, sessao }: any) 
       });
       if (!res.ok) throw new Error();
       alert("✅ Identidade Visual atualizada com sucesso!");
-      window.location.reload();
+      router.refresh();
     } catch (err) {
       alert("Erro ao salvar as configurações.");
     } finally {
