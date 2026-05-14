@@ -10,14 +10,6 @@ export async function GET() {
 
   const usuarios = await prisma.usuarioPerfil.findMany({
     where: { empresaId: sessao.empresaId },
-    select: {
-      id: true,
-      email: true,
-      nome: true,
-      perfilSlug: true,
-      ativo: true,
-      createdAt: true,
-    },
     orderBy: [{ ativo: "desc" }, { nome: "asc" }],
   });
 
@@ -28,6 +20,34 @@ const AtualizarUsuarioSchema = z.object({
   nome: z.string().min(2).optional(),
   perfilSlug: z.enum(["admin", "gerente", "vendedor"]).optional(),
   ativo: z.boolean().optional(),
+  // Dados Pessoais
+  telefone: z.string().optional().nullable(),
+  cpf: z.string().optional().nullable(),
+  dataNascimento: z.string().optional().nullable(),
+  rg: z.string().optional().nullable(),
+  orgaoEmissor: z.string().optional().nullable(),
+  genero: z.string().optional().nullable(),
+  estadoCivil: z.string().optional().nullable(),
+  timeFavorito: z.string().optional().nullable(),
+  // Endereço
+  cep: z.string().optional().nullable(),
+  logradouro: z.string().optional().nullable(),
+  numero: z.string().optional().nullable(),
+  complemento: z.string().optional().nullable(),
+  bairro: z.string().optional().nullable(),
+  cidade: z.string().optional().nullable(),
+  uf: z.string().optional().nullable(),
+  // Dados Bancários
+  bancoNome: z.string().optional().nullable(),
+  bancoAgencia: z.string().optional().nullable(),
+  bancoConta: z.string().optional().nullable(),
+  bancoTipoConta: z.string().optional().nullable(),
+  chavePix: z.string().optional().nullable(),
+  tipoChavePix: z.string().optional().nullable(),
+  // Contratação
+  dataContratacao: z.string().optional().nullable(),
+  dataDesligamento: z.string().optional().nullable(),
+  observacoesPessoais: z.string().optional().nullable(),
 });
 
 // PATCH /api/configuracoes/usuarios — edita perfil de um usuário
@@ -51,9 +71,15 @@ export async function PATCH(req: NextRequest) {
     });
     if (!usuario) return Response.json({ error: "Usuário não encontrado" }, { status: 404 });
 
+    // Converter datas string para Date quando necessário
+    const data: any = { ...campos };
+    if (data.dataNascimento) data.dataNascimento = new Date(data.dataNascimento);
+    if (data.dataContratacao) data.dataContratacao = new Date(data.dataContratacao);
+    if (data.dataDesligamento) data.dataDesligamento = new Date(data.dataDesligamento);
+
     const atualizado = await prisma.usuarioPerfil.update({
       where: { id },
-      data: campos,
+      data,
     });
 
     return Response.json(atualizado);
@@ -63,8 +89,8 @@ export async function PATCH(req: NextRequest) {
 }
 
 const CriarUsuarioSchema = z.object({
-  nome: z.string().min(2),
-  email: z.string().email(),
+  nome: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
+  email: z.string().email("E-mail inválido. Verifique o formato (ex: nome@email.com)"),
   perfilSlug: z.enum(["admin", "gerente", "vendedor"]),
 });
 
@@ -78,7 +104,15 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const dados = CriarUsuarioSchema.parse(await req.json());
+    const parsed = CriarUsuarioSchema.safeParse(await req.json());
+    
+    if (!parsed.success) {
+      // Retorna mensagem amigável de validação
+      const firstError = parsed.error.errors[0];
+      return Response.json({ error: firstError.message }, { status: 400 });
+    }
+
+    const dados = parsed.data;
 
     // Verifica se já existe localmente
     const existe = await prisma.usuarioPerfil.findFirst({
@@ -106,11 +140,10 @@ export async function POST(req: NextRequest) {
     });
 
     if (authError || !authData.user) {
-      // Retorna erro amigável se o email já estiver no Supabase global
       if (authError?.message.includes("already registered")) {
-        throw new Error("Este e-mail já possui conta no Supabase. Solicite suporte.");
+        return Response.json({ error: "Este e-mail já possui conta. Solicite suporte." }, { status: 400 });
       }
-      throw new Error(authError?.message || "Falha ao criar autenticação.");
+      return Response.json({ error: authError?.message || "Falha ao criar autenticação." }, { status: 400 });
     }
 
     // Registra o perfil na tabela local (Postgres via Prisma)
@@ -130,4 +163,3 @@ export async function POST(req: NextRequest) {
     return Response.json({ error: e.message }, { status: 400 });
   }
 }
-

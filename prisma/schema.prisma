@@ -83,6 +83,40 @@ model UsuarioPerfil {
   perfilSlug          String   @default("vendedor") @map("perfil_slug")
   isSuperAdmin        Boolean  @default(false) @map("is_super_admin")
   cargoId             String?  @map("cargo_id") @db.Uuid
+
+  // Dados Pessoais
+  telefone            String?
+  cpf                 String?
+  dataNascimento      DateTime? @map("data_nascimento") @db.Date
+  rg                  String?
+  orgaoEmissor        String?  @map("orgao_emissor")
+  genero              String?  // M, F, Outro
+  estadoCivil         String?  @map("estado_civil")
+  timeFavorito        String?  @map("time_favorito")
+  fotoUrl             String?  @map("foto_url")
+
+  // Endereço
+  cep                 String?
+  logradouro          String?
+  numero              String?
+  complemento         String?
+  bairro              String?
+  cidade              String?
+  uf                  String?
+
+  // Dados Bancários
+  bancoNome           String?  @map("banco_nome")
+  bancoAgencia        String?  @map("banco_agencia")
+  bancoConta          String?  @map("banco_conta")
+  bancoTipoConta      String?  @map("banco_tipo_conta") // corrente, poupanca
+  chavePix            String?  @map("chave_pix")
+  tipoChavePix        String?  @map("tipo_chave_pix") // cpf, email, telefone, aleatoria
+
+  // Contratação
+  dataContratacao     DateTime? @map("data_contratacao") @db.Date
+  dataDesligamento    DateTime? @map("data_desligamento") @db.Date
+  observacoesPessoais String?   @map("observacoes_pessoais") @db.Text
+  documentosUrls      Json?     @map("documentos_urls") @db.JsonB // [{nome, url, tipo}]
   
   // Regras de Remuneração
   tipoRemuneracao     String   @default("SEM_COMISSAO") @map("tipo_remuneracao") // SEM_COMISSAO, PERCENTUAL_FIXO, FAIXAS_META

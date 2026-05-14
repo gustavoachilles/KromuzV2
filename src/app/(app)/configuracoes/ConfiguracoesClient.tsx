@@ -27,12 +27,23 @@ export function ConfiguracoesClient({ empresa, usuarios, bancos, sessao }: any) 
   const [saving, setSaving] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<any>(null);
+  const [emailError, setEmailError] = useState("");
+  const [userModalTab, setUserModalTab] = useState("geral");
   
   const [userForm, setUserForm] = useState({
     nome: "",
     email: "",
     perfilSlug: "vendedor",
-    ativo: true
+    ativo: true,
+    // Pessoais
+    telefone: "", cpf: "", dataNascimento: "", rg: "", orgaoEmissor: "",
+    genero: "", estadoCivil: "", timeFavorito: "",
+    // Endereço
+    cep: "", logradouro: "", numero: "", complemento: "", bairro: "", cidade: "", uf: "",
+    // Bancário
+    bancoNome: "", bancoAgencia: "", bancoConta: "", bancoTipoConta: "", chavePix: "", tipoChavePix: "",
+    // Contratação
+    dataContratacao: "", dataDesligamento: "", observacoesPessoais: ""
   });
   
   const [formEmpresa, setFormEmpresa] = useState({
@@ -81,23 +92,22 @@ export function ConfiguracoesClient({ empresa, usuarios, bancos, sessao }: any) 
     setSaving(true);
     try {
       if (editingUser) {
-        // PATCH
+        // PATCH — envia todos os campos
+        const { email: _email, ...editableFields } = userForm;
         const res = await fetch("/api/configuracoes/usuarios", {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            id: editingUser.id,
-            nome: userForm.nome,
-            perfilSlug: userForm.perfilSlug,
-            ativo: userForm.ativo
-          })
+          body: JSON.stringify({ id: editingUser.id, ...editableFields })
         });
         if (!res.ok) {
            const err = await res.json();
            throw new Error(err.error || "Erro ao atualizar");
         }
-        alert("✅ Membro atualizado com sucesso!");
+        alert("Membro atualizado com sucesso!");
       } else {
+        // Validar email antes de enviar
+        if (!validateEmail(userForm.email)) { setSaving(false); return; }
+
         // POST
         const res = await fetch("/api/configuracoes/usuarios", {
           method: "POST",
@@ -112,18 +122,38 @@ export function ConfiguracoesClient({ empresa, usuarios, bancos, sessao }: any) 
            const err = await res.json();
            throw new Error(err.error || "Erro ao convidar");
         }
-        alert("✅ Membro adicionado com sucesso!\nA senha provisória dele é: Mudar@123");
+        alert("Membro adicionado com sucesso!\nA senha provisória dele é: Mudar@123");
       }
       
       router.refresh();
       setIsAddModalOpen(false);
       setEditingUser(null);
-      setUserForm({ nome: "", email: "", perfilSlug: "vendedor", ativo: true });
+      setEmailError("");
+      resetUserForm();
     } catch (e: any) {
       alert(e.message);
     } finally {
       setSaving(false);
     }
+  }
+
+  function resetUserForm() {
+    setUserForm({
+      nome: "", email: "", perfilSlug: "vendedor", ativo: true,
+      telefone: "", cpf: "", dataNascimento: "", rg: "", orgaoEmissor: "",
+      genero: "", estadoCivil: "", timeFavorito: "",
+      cep: "", logradouro: "", numero: "", complemento: "", bairro: "", cidade: "", uf: "",
+      bancoNome: "", bancoAgencia: "", bancoConta: "", bancoTipoConta: "", chavePix: "", tipoChavePix: "",
+      dataContratacao: "", dataDesligamento: "", observacoesPessoais: ""
+    });
+  }
+
+  function validateEmail(email: string): boolean {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email) { setEmailError("E-mail é obrigatório"); return false; }
+    if (!re.test(email)) { setEmailError("E-mail inválido. Use o formato nome@email.com"); return false; }
+    setEmailError("");
+    return true;
   }
 
   function openEditModal(user: any) {
@@ -132,14 +162,31 @@ export function ConfiguracoesClient({ empresa, usuarios, bancos, sessao }: any) 
       nome: user.nome || "",
       email: user.email || "",
       perfilSlug: user.perfilSlug || "vendedor",
-      ativo: user.ativo
+      ativo: user.ativo,
+      telefone: user.telefone || "", cpf: user.cpf || "",
+      dataNascimento: user.dataNascimento ? user.dataNascimento.substring(0, 10) : "",
+      rg: user.rg || "", orgaoEmissor: user.orgaoEmissor || "",
+      genero: user.genero || "", estadoCivil: user.estadoCivil || "",
+      timeFavorito: user.timeFavorito || "",
+      cep: user.cep || "", logradouro: user.logradouro || "",
+      numero: user.numero || "", complemento: user.complemento || "",
+      bairro: user.bairro || "", cidade: user.cidade || "", uf: user.uf || "",
+      bancoNome: user.bancoNome || "", bancoAgencia: user.bancoAgencia || "",
+      bancoConta: user.bancoConta || "", bancoTipoConta: user.bancoTipoConta || "",
+      chavePix: user.chavePix || "", tipoChavePix: user.tipoChavePix || "",
+      dataContratacao: user.dataContratacao ? user.dataContratacao.substring(0, 10) : "",
+      dataDesligamento: user.dataDesligamento ? user.dataDesligamento.substring(0, 10) : "",
+      observacoesPessoais: user.observacoesPessoais || ""
     });
+    setUserModalTab("geral");
     setIsAddModalOpen(true);
   }
 
   function openAddModal() {
     setEditingUser(null);
-    setUserForm({ nome: "", email: "", perfilSlug: "vendedor", ativo: true });
+    resetUserForm();
+    setEmailError("");
+    setUserModalTab("geral");
     setIsAddModalOpen(true);
   }
 
@@ -158,6 +205,27 @@ export function ConfiguracoesClient({ empresa, usuarios, bancos, sessao }: any) 
   useEffect(() => {
     if (tab === "cargos") {
       fetchCargos();
+    }
+  }, [tab]);
+
+  // Auto-seed cargos padr\u00e3o quando a empresa n\u00e3o tem nenhum
+  useEffect(() => {
+    if (tab === "cargos" && cargos.length === 0 && !loadingCargos) {
+      // Tenta buscar primeiro, se vazio faz seed autom\u00e1tico
+      (async () => {
+        const res = await fetch("/api/configuracoes/cargos");
+        if (res.ok) {
+          const data = await res.json();
+          if (data.length === 0) {
+            setLoadingCargos(true);
+            await fetch("/api/configuracoes/cargos/seed", { method: "POST" });
+            await fetchCargos();
+            setLoadingCargos(false);
+          } else {
+            setCargos(data);
+          }
+        }
+      })();
     }
   }, [tab]);
 
@@ -564,78 +632,87 @@ export function ConfiguracoesClient({ empresa, usuarios, bancos, sessao }: any) 
         </div>
       )}
 
-      {/* MODAL DE USUÁRIOS */}
+      {/* MODAL DE USUÁRIOS — EXPANDIDO */}
       {isAddModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-white dark:bg-zinc-900 rounded-2xl w-full max-w-md p-6 border border-zinc-200 dark:border-zinc-800 shadow-2xl">
-            <h3 className="text-xl font-bold mb-4">{editingUser ? "Editar Membro" : "Novo Membro"}</h3>
-            <div className="space-y-4">
-              <div>
-                <label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">Nome</label>
-                <input 
-                  type="text" 
-                  value={userForm.nome}
-                  onChange={e => setUserForm({...userForm, nome: e.target.value})}
-                  className="w-full mt-1 px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm"
-                  placeholder="Nome do colaborador"
-                />
-              </div>
-              <div>
-                <label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">E-mail</label>
-                <input 
-                  type="email" 
-                  value={userForm.email}
-                  disabled={!!editingUser}
-                  onChange={e => setUserForm({...userForm, email: e.target.value})}
-                  className="w-full mt-1 px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm disabled:opacity-50"
-                  placeholder="email@empresa.com"
-                />
-                {!editingUser && (
-                  <p className="text-[10px] text-zinc-500 mt-1">
-                    A senha provisória será <strong>Mudar@123</strong>
-                  </p>
-                )}
-              </div>
-              <div>
-                <label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">Perfil de Acesso</label>
-                <select 
-                  value={userForm.perfilSlug}
-                  onChange={e => setUserForm({...userForm, perfilSlug: e.target.value})}
-                  className="w-full mt-1 px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm"
-                >
-                  <option value="vendedor">Vendedor</option>
-                  <option value="gerente">Gerente</option>
-                  <option value="admin">Administrador</option>
-                </select>
-              </div>
-              {editingUser && (
-                <div className="flex items-center gap-2 mt-4 p-3 bg-zinc-50 dark:bg-zinc-800/50 rounded-lg border border-zinc-100 dark:border-zinc-800">
-                  <input 
-                    type="checkbox" 
-                    checked={userForm.ativo}
-                    onChange={e => setUserForm({...userForm, ativo: e.target.checked})}
-                    id="ativo"
-                    className="w-4 h-4 text-brand rounded border-zinc-300"
-                  />
-                  <label htmlFor="ativo" className="text-sm font-medium text-zinc-700 dark:text-zinc-300 cursor-pointer">
-                    Usuário Ativo no Sistema
-                  </label>
-                </div>
-              )}
+          <div className="bg-white dark:bg-zinc-900 rounded-2xl w-full max-w-2xl p-6 border border-zinc-200 dark:border-zinc-800 shadow-2xl max-h-[90vh] overflow-y-auto">
+            <h3 className="text-xl font-bold mb-2">{editingUser ? `Editar: ${editingUser.nome}` : "Novo Membro"}</h3>
+            <div className="flex gap-1 mb-5 border-b border-zinc-100 dark:border-zinc-800 pb-2 overflow-x-auto">
+              {([
+                { key: "geral", label: "Geral" },
+                ...(editingUser ? [
+                  { key: "pessoal", label: "Pessoal" },
+                  { key: "endereco", label: "Endereço" },
+                  { key: "bancario", label: "Bancário" },
+                  { key: "contratacao", label: "Contratação" },
+                ] : [])
+              ] as {key: string; label: string}[]).map(t => (
+                <button key={t.key} onClick={() => setUserModalTab(t.key)}
+                  className={`px-3 py-1.5 text-xs font-bold rounded-lg transition whitespace-nowrap ${userModalTab === t.key ? 'bg-brand/10 text-brand' : 'text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200'}`}>{t.label}</button>
+              ))}
             </div>
-            <div className="mt-8 flex justify-end gap-3">
-              <button 
-                onClick={() => { setIsAddModalOpen(false); setEditingUser(null); }}
-                className="px-4 py-2 text-sm font-medium text-zinc-500 hover:text-zinc-800 dark:hover:text-white transition"
-              >
-                Cancelar
-              </button>
-              <button 
-                onClick={handleSaveUsuario}
-                disabled={saving || !userForm.nome || !userForm.email}
-                className="bg-brand text-white px-5 py-2 rounded-lg text-sm font-bold hover:opacity-90 disabled:opacity-50 flex items-center gap-2 transition shadow-lg shadow-brand/20"
-              >
-                 <Save className="w-4 h-4" /> {saving ? "Salvando..." : "Salvar Membro"}
+            <div className="space-y-4">
+              {userModalTab === "geral" && (<>
+                <div className="grid grid-cols-2 gap-4">
+                  <div><label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">Nome *</label>
+                    <input type="text" value={userForm.nome} onChange={e => setUserForm({...userForm, nome: e.target.value})} className="w-full mt-1 px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm" placeholder="Nome completo" /></div>
+                  <div><label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">E-mail *</label>
+                    <input type="email" value={userForm.email} disabled={!!editingUser} onChange={e => { setUserForm({...userForm, email: e.target.value}); setEmailError(""); }} onBlur={() => !editingUser && userForm.email && validateEmail(userForm.email)} className={`w-full mt-1 px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border rounded-lg text-sm disabled:opacity-50 ${emailError ? 'border-red-400' : 'border-zinc-200 dark:border-zinc-800'}`} placeholder="email@empresa.com" />
+                    {emailError && <p className="text-xs text-red-500 mt-1">{emailError}</p>}
+                    {!editingUser && !emailError && <p className="text-[10px] text-zinc-500 mt-1">Senha provisória: <strong>Mudar@123</strong></p>}
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div><label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">Perfil de Acesso</label>
+                    <select value={userForm.perfilSlug} onChange={e => setUserForm({...userForm, perfilSlug: e.target.value})} className="w-full mt-1 px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm">
+                      <option value="vendedor">Vendedor</option><option value="gerente">Gerente</option><option value="admin">Administrador</option>
+                    </select></div>
+                  <div><label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">Telefone</label>
+                    <input type="text" value={userForm.telefone} onChange={e => setUserForm({...userForm, telefone: e.target.value})} className="w-full mt-1 px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm" placeholder="(99) 99999-9999" /></div>
+                </div>
+                {editingUser && (<div className="flex items-center gap-2 p-3 bg-zinc-50 dark:bg-zinc-800/50 rounded-lg border border-zinc-100 dark:border-zinc-800">
+                  <input type="checkbox" checked={userForm.ativo} onChange={e => setUserForm({...userForm, ativo: e.target.checked})} id="ativo2" className="w-4 h-4 rounded border-zinc-300" />
+                  <label htmlFor="ativo2" className="text-sm font-medium cursor-pointer">Usuário Ativo no Sistema</label>
+                </div>)}
+              </>)}
+              {userModalTab === "pessoal" && (<div className="grid grid-cols-2 gap-4">
+                <div><label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">CPF</label><input type="text" value={userForm.cpf} onChange={e => setUserForm({...userForm, cpf: e.target.value})} className="w-full mt-1 px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm" placeholder="000.000.000-00" /></div>
+                <div><label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">RG</label><input type="text" value={userForm.rg} onChange={e => setUserForm({...userForm, rg: e.target.value})} className="w-full mt-1 px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm" /></div>
+                <div><label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">Órgão Emissor</label><input type="text" value={userForm.orgaoEmissor} onChange={e => setUserForm({...userForm, orgaoEmissor: e.target.value})} className="w-full mt-1 px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm" placeholder="SSP/SC" /></div>
+                <div><label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">Nascimento</label><input type="date" value={userForm.dataNascimento} onChange={e => setUserForm({...userForm, dataNascimento: e.target.value})} className="w-full mt-1 px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm" /></div>
+                <div><label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">Gênero</label><select value={userForm.genero} onChange={e => setUserForm({...userForm, genero: e.target.value})} className="w-full mt-1 px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm"><option value="">Selecionar</option><option value="M">Masculino</option><option value="F">Feminino</option><option value="Outro">Outro</option></select></div>
+                <div><label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">Estado Civil</label><select value={userForm.estadoCivil} onChange={e => setUserForm({...userForm, estadoCivil: e.target.value})} className="w-full mt-1 px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm"><option value="">Selecionar</option><option value="Solteiro(a)">Solteiro(a)</option><option value="Casado(a)">Casado(a)</option><option value="Divorciado(a)">Divorciado(a)</option><option value="Viúvo(a)">Viúvo(a)</option></select></div>
+                <div className="col-span-2"><label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">Time que Torce ⚽</label><input type="text" value={userForm.timeFavorito} onChange={e => setUserForm({...userForm, timeFavorito: e.target.value})} className="w-full mt-1 px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm" placeholder="Ex: Flamengo, Corinthians..." /></div>
+              </div>)}
+              {userModalTab === "endereco" && (<div className="grid grid-cols-2 gap-4">
+                <div><label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">CEP</label><input type="text" value={userForm.cep} onChange={e => setUserForm({...userForm, cep: e.target.value})} className="w-full mt-1 px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm" placeholder="00000-000" /></div>
+                <div><label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">UF</label><input type="text" value={userForm.uf} maxLength={2} onChange={e => setUserForm({...userForm, uf: e.target.value.toUpperCase()})} className="w-full mt-1 px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm" placeholder="SC" /></div>
+                <div className="col-span-2"><label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">Logradouro</label><input type="text" value={userForm.logradouro} onChange={e => setUserForm({...userForm, logradouro: e.target.value})} className="w-full mt-1 px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm" placeholder="Rua, Avenida..." /></div>
+                <div><label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">Número</label><input type="text" value={userForm.numero} onChange={e => setUserForm({...userForm, numero: e.target.value})} className="w-full mt-1 px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm" /></div>
+                <div><label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">Complemento</label><input type="text" value={userForm.complemento} onChange={e => setUserForm({...userForm, complemento: e.target.value})} className="w-full mt-1 px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm" /></div>
+                <div><label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">Bairro</label><input type="text" value={userForm.bairro} onChange={e => setUserForm({...userForm, bairro: e.target.value})} className="w-full mt-1 px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm" /></div>
+                <div><label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">Cidade</label><input type="text" value={userForm.cidade} onChange={e => setUserForm({...userForm, cidade: e.target.value})} className="w-full mt-1 px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm" /></div>
+              </div>)}
+              {userModalTab === "bancario" && (<div className="grid grid-cols-2 gap-4">
+                <div><label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">Banco</label><input type="text" value={userForm.bancoNome} onChange={e => setUserForm({...userForm, bancoNome: e.target.value})} className="w-full mt-1 px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm" placeholder="Ex: Banco do Brasil" /></div>
+                <div><label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">Tipo Conta</label><select value={userForm.bancoTipoConta} onChange={e => setUserForm({...userForm, bancoTipoConta: e.target.value})} className="w-full mt-1 px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm"><option value="">Selecionar</option><option value="corrente">Corrente</option><option value="poupanca">Poupança</option></select></div>
+                <div><label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">Agência</label><input type="text" value={userForm.bancoAgencia} onChange={e => setUserForm({...userForm, bancoAgencia: e.target.value})} className="w-full mt-1 px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm" /></div>
+                <div><label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">Conta</label><input type="text" value={userForm.bancoConta} onChange={e => setUserForm({...userForm, bancoConta: e.target.value})} className="w-full mt-1 px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm" /></div>
+                <div><label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">Tipo PIX</label><select value={userForm.tipoChavePix} onChange={e => setUserForm({...userForm, tipoChavePix: e.target.value})} className="w-full mt-1 px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm"><option value="">Selecionar</option><option value="cpf">CPF</option><option value="email">E-mail</option><option value="telefone">Telefone</option><option value="aleatoria">Aleatória</option></select></div>
+                <div><label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">Chave PIX</label><input type="text" value={userForm.chavePix} onChange={e => setUserForm({...userForm, chavePix: e.target.value})} className="w-full mt-1 px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm" /></div>
+              </div>)}
+              {userModalTab === "contratacao" && (<div className="grid grid-cols-2 gap-4">
+                <div><label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">Data Contratação</label><input type="date" value={userForm.dataContratacao} onChange={e => setUserForm({...userForm, dataContratacao: e.target.value})} className="w-full mt-1 px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm" /></div>
+                <div><label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">Data Desligamento</label><input type="date" value={userForm.dataDesligamento} onChange={e => setUserForm({...userForm, dataDesligamento: e.target.value})} className="w-full mt-1 px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm" /></div>
+                <div className="col-span-2"><label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">Observações</label><textarea value={userForm.observacoesPessoais} rows={4} onChange={e => setUserForm({...userForm, observacoesPessoais: e.target.value})} className="w-full mt-1 px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm resize-none" placeholder="Anotações sobre o colaborador..." /></div>
+              </div>)}
+            </div>
+            <div className="mt-6 flex justify-end gap-3">
+              <button onClick={() => { setIsAddModalOpen(false); setEditingUser(null); setEmailError(""); }}
+                className="px-4 py-2 text-sm font-medium text-zinc-500 hover:text-zinc-800 dark:hover:text-white transition">Cancelar</button>
+              <button onClick={handleSaveUsuario} disabled={saving || !userForm.nome || !userForm.email}
+                className="bg-brand text-white px-5 py-2 rounded-lg text-sm font-bold hover:opacity-90 disabled:opacity-50 flex items-center gap-2 transition shadow-lg shadow-brand/20">
+                <Save className="w-4 h-4" /> {saving ? "Salvando..." : "Salvar Membro"}
               </button>
             </div>
           </div>
@@ -644,6 +721,8 @@ export function ConfiguracoesClient({ empresa, usuarios, bancos, sessao }: any) 
     </div>
   );
 }
+
+
 
 function TabButton({ active, onClick, icon, label }: any) {
   return (
