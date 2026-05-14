@@ -28,7 +28,13 @@ export function CanaisClient({ canais: initCanais, sessao }: { canais: Canal[], 
   
   const isAdmin = sessao.perfilSlug === "admin";
 
-  const getIcon = (tipo: string) => { ... }; // Unchanged
+  const getIcon = (tipo: string) => {
+    switch (tipo?.toUpperCase()) {
+      case "WHATSAPP": return <MessageSquare className="w-5 h-5" />;
+      case "INSTAGRAM": return <Instagram className="w-5 h-5" />;
+      default: return <Smartphone className="w-5 h-5" />;
+    }
+  };
 
   async function handleGerarQR() {
     if (!form.apiUrl || !form.apiKey) {

@@ -96,8 +96,9 @@ export function PortabilidadeClient({
             <p className="text-sm text-zinc-400 mt-1">Configure regras com tipo PORTABILIDADE em Regras.</p>
           </div>
         ) : (
-        {/* Economic Radar Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          <>
+            {/* Economic Radar Section */}
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           <div className="lg:col-span-1 rounded-2xl border border-sky-200 dark:border-sky-900 bg-sky-50 dark:bg-sky-950/30 p-6">
              <div className="flex items-center gap-2 text-sky-700 dark:text-sky-400 mb-4">
                 <TrendingDown className="w-5 h-5" />
@@ -182,6 +183,7 @@ export function PortabilidadeClient({
             })}
           </div>
         </div>
+          </>
         )}
       </div>
     </div>
