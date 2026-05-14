@@ -20,7 +20,7 @@ export default async function LandingPage() {
       orderBy: { precoMensal: 'asc' }
     });
 
-    const empresa = await prisma.empresaSaaS.findFirst({
+    const empresa = await prisma.empresa.findFirst({
       where: { ativo: true }, // Simple logic for now, could be domain based
       select: { corPrimaria: true }
     });
