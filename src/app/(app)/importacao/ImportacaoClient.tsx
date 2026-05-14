@@ -169,7 +169,7 @@ export function ImportacaoClient() {
               <button onClick={importar} disabled={importando}
                 className="flex items-center gap-2 rounded-xl bg-brand px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-brand/25 hover:opacity-95 disabled:opacity-50 transition">
                 {importando ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-                {importando ? "Importando..." : \`Importar \${dados.length} Leads\`}
+                {importando ? "Importando..." : `Importar ${dados.length} Leads`}
               </button>
             </div>
           </div>
