@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { MessageSquare, Camera, ThumbsUp, Plus, Bot, Power, Save, X, Loader2, Send, Instagram, Smartphone } from "lucide-react";
+import { MessageSquare, Camera, ThumbsUp, Plus, Bot, Power, Save, X, Loader2, Send, Phone } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 type Canal = {
@@ -31,8 +31,8 @@ export function CanaisClient({ canais: initCanais, sessao }: { canais: Canal[], 
   const getIcon = (tipo: string) => {
     switch (tipo?.toUpperCase()) {
       case "WHATSAPP": return <MessageSquare className="w-5 h-5" />;
-      case "INSTAGRAM": return <Instagram className="w-5 h-5" />;
-      default: return <Smartphone className="w-5 h-5" />;
+      case "INSTAGRAM": return <Camera className="w-5 h-5" />;
+      default: return <Phone className="w-5 h-5" />;
     }
   };
 
