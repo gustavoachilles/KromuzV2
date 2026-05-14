@@ -21,6 +21,15 @@ export function ConfiguracoesClient({ empresa, usuarios, bancos, sessao }: any) 
   const router = useRouter();
   const [tab, setTab] = useState("empresa");
   const [saving, setSaving] = useState(false);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState<any>(null);
+  
+  const [userForm, setUserForm] = useState({
+    nome: "",
+    email: "",
+    perfilSlug: "vendedor",
+    ativo: true
+  });
   
   const [formEmpresa, setFormEmpresa] = useState({
     nomeEmpresa: empresa.nomeEmpresa,
@@ -62,6 +71,72 @@ export function ConfiguracoesClient({ empresa, usuarios, bancos, sessao }: any) 
     } finally {
       setSaving(false);
     }
+  }
+
+  async function handleSaveUsuario() {
+    setSaving(true);
+    try {
+      if (editingUser) {
+        // PATCH
+        const res = await fetch("/api/configuracoes/usuarios", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            id: editingUser.id,
+            nome: userForm.nome,
+            perfilSlug: userForm.perfilSlug,
+            ativo: userForm.ativo
+          })
+        });
+        if (!res.ok) {
+           const err = await res.json();
+           throw new Error(err.error || "Erro ao atualizar");
+        }
+        alert("✅ Membro atualizado com sucesso!");
+      } else {
+        // POST
+        const res = await fetch("/api/configuracoes/usuarios", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            nome: userForm.nome,
+            email: userForm.email,
+            perfilSlug: userForm.perfilSlug
+          })
+        });
+        if (!res.ok) {
+           const err = await res.json();
+           throw new Error(err.error || "Erro ao convidar");
+        }
+        alert("✅ Membro adicionado com sucesso!\nA senha provisória dele é: Mudar@123");
+      }
+      
+      router.refresh();
+      setIsAddModalOpen(false);
+      setEditingUser(null);
+      setUserForm({ nome: "", email: "", perfilSlug: "vendedor", ativo: true });
+    } catch (e: any) {
+      alert(e.message);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  function openEditModal(user: any) {
+    setEditingUser(user);
+    setUserForm({
+      nome: user.nome || "",
+      email: user.email || "",
+      perfilSlug: user.perfilSlug || "vendedor",
+      ativo: user.ativo
+    });
+    setIsAddModalOpen(true);
+  }
+
+  function openAddModal() {
+    setEditingUser(null);
+    setUserForm({ nome: "", email: "", perfilSlug: "vendedor", ativo: true });
+    setIsAddModalOpen(true);
   }
 
   return (
@@ -220,7 +295,10 @@ export function ConfiguracoesClient({ empresa, usuarios, bancos, sessao }: any) 
                   <h2 className="text-lg font-bold">Gestão de Equipe</h2>
                   <p className="text-sm text-zinc-500">Convide e gerencie as permissões dos seus colaboradores.</p>
                 </div>
-                <button className="flex items-center gap-2 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 px-4 py-2 rounded-lg text-xs font-bold transition">
+                <button 
+                  onClick={openAddModal}
+                  className="flex items-center gap-2 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 px-4 py-2 rounded-lg text-xs font-bold transition hover:opacity-80"
+                >
                    <Users className="w-4 h-4" /> Novo Membro
                 </button>
               </div>
@@ -238,10 +316,13 @@ export function ConfiguracoesClient({ empresa, usuarios, bancos, sessao }: any) 
                        </div>
                     </div>
                     <div className="flex items-center gap-4">
-                       <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 rounded">
-                          {u.perfilSlug}
+                        <span className={`text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded ${!u.ativo ? 'bg-red-100 text-red-600 dark:bg-red-900/30' : 'bg-zinc-100 text-zinc-400 dark:bg-zinc-800'}`}>
+                          {!u.ativo ? "INATIVO" : u.perfilSlug}
                        </span>
-                       <button className="p-2 hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded-lg transition text-zinc-400">
+                       <button 
+                         onClick={() => openEditModal(u)}
+                         className="p-2 hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded-lg transition text-zinc-400"
+                       >
                           <Pencil className="w-4 h-4" />
                        </button>
                     </div>
@@ -252,6 +333,84 @@ export function ConfiguracoesClient({ empresa, usuarios, bancos, sessao }: any) 
           )}
         </main>
       </div>
+
+      {/* MODAL DE USUÁRIOS */}
+      {isAddModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-white dark:bg-zinc-900 rounded-2xl w-full max-w-md p-6 border border-zinc-200 dark:border-zinc-800 shadow-2xl">
+            <h3 className="text-xl font-bold mb-4">{editingUser ? "Editar Membro" : "Novo Membro"}</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">Nome</label>
+                <input 
+                  type="text" 
+                  value={userForm.nome}
+                  onChange={e => setUserForm({...userForm, nome: e.target.value})}
+                  className="w-full mt-1 px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm"
+                  placeholder="Nome do colaborador"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">E-mail</label>
+                <input 
+                  type="email" 
+                  value={userForm.email}
+                  disabled={!!editingUser}
+                  onChange={e => setUserForm({...userForm, email: e.target.value})}
+                  className="w-full mt-1 px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm disabled:opacity-50"
+                  placeholder="email@empresa.com"
+                />
+                {!editingUser && (
+                  <p className="text-[10px] text-zinc-500 mt-1">
+                    A senha provisória será <strong>Mudar@123</strong>
+                  </p>
+                )}
+              </div>
+              <div>
+                <label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">Perfil de Acesso</label>
+                <select 
+                  value={userForm.perfilSlug}
+                  onChange={e => setUserForm({...userForm, perfilSlug: e.target.value})}
+                  className="w-full mt-1 px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm"
+                >
+                  <option value="vendedor">Vendedor</option>
+                  <option value="gerente">Gerente</option>
+                  <option value="admin">Administrador</option>
+                </select>
+              </div>
+              {editingUser && (
+                <div className="flex items-center gap-2 mt-4 p-3 bg-zinc-50 dark:bg-zinc-800/50 rounded-lg border border-zinc-100 dark:border-zinc-800">
+                  <input 
+                    type="checkbox" 
+                    checked={userForm.ativo}
+                    onChange={e => setUserForm({...userForm, ativo: e.target.checked})}
+                    id="ativo"
+                    className="w-4 h-4 text-brand rounded border-zinc-300"
+                  />
+                  <label htmlFor="ativo" className="text-sm font-medium text-zinc-700 dark:text-zinc-300 cursor-pointer">
+                    Usuário Ativo no Sistema
+                  </label>
+                </div>
+              )}
+            </div>
+            <div className="mt-8 flex justify-end gap-3">
+              <button 
+                onClick={() => { setIsAddModalOpen(false); setEditingUser(null); }}
+                className="px-4 py-2 text-sm font-medium text-zinc-500 hover:text-zinc-800 dark:hover:text-white transition"
+              >
+                Cancelar
+              </button>
+              <button 
+                onClick={handleSaveUsuario}
+                disabled={saving || !userForm.nome || !userForm.email}
+                className="bg-brand text-white px-5 py-2 rounded-lg text-sm font-bold hover:opacity-90 disabled:opacity-50 flex items-center gap-2 transition shadow-lg shadow-brand/20"
+              >
+                 <Save className="w-4 h-4" /> {saving ? "Salvando..." : "Salvar Membro"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

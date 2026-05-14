@@ -61,3 +61,73 @@ export async function PATCH(req: NextRequest) {
     return Response.json({ error: e.message }, { status: 400 });
   }
 }
+
+const CriarUsuarioSchema = z.object({
+  nome: z.string().min(2),
+  email: z.string().email(),
+  perfilSlug: z.enum(["admin", "gerente", "vendedor"]),
+});
+
+// POST /api/configuracoes/usuarios — cria um novo usuário na empresa
+export async function POST(req: NextRequest) {
+  const sessao = await getSessionEmpresaApi();
+  if (!sessao) return Response.json({ error: "Não autorizado" }, { status: 401 });
+
+  if (sessao.perfilSlug !== "admin") {
+    return Response.json({ error: "Sem permissão." }, { status: 403 });
+  }
+
+  try {
+    const dados = CriarUsuarioSchema.parse(await req.json());
+
+    // Verifica se já existe localmente
+    const existe = await prisma.usuarioPerfil.findFirst({
+      where: { email: dados.email }
+    });
+    
+    if (existe) {
+      return Response.json({ error: "Este e-mail já está cadastrado no sistema." }, { status: 400 });
+    }
+
+    // Usar a Service Role Key para criar usuários sem deslogar o admin atual
+    const { createClient } = await import("@supabase/supabase-js");
+    const supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      { auth: { autoRefreshToken: false, persistSession: false } }
+    );
+
+    // Cria a identidade na Auth do Supabase (A senha padrão é forte para passar nas políticas)
+    const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
+      email: dados.email,
+      password: "Mudar@123",
+      email_confirm: true,
+      user_metadata: { nome: dados.nome, empresaId: sessao.empresaId }
+    });
+
+    if (authError || !authData.user) {
+      // Retorna erro amigável se o email já estiver no Supabase global
+      if (authError?.message.includes("already registered")) {
+        throw new Error("Este e-mail já possui conta no Supabase. Solicite suporte.");
+      }
+      throw new Error(authError?.message || "Falha ao criar autenticação.");
+    }
+
+    // Registra o perfil na tabela local (Postgres via Prisma)
+    const novoUsuario = await prisma.usuarioPerfil.create({
+      data: {
+        empresaId: sessao.empresaId,
+        authUserId: authData.user.id,
+        email: dados.email,
+        nome: dados.nome,
+        perfilSlug: dados.perfilSlug,
+        ativo: true
+      }
+    });
+
+    return Response.json(novoUsuario, { status: 201 });
+  } catch (e: any) {
+    return Response.json({ error: e.message }, { status: 400 });
+  }
+}
+

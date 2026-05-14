@@ -14,6 +14,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       select: { corPrimaria: true, logoUrl: true, nomeFantasia: true }
     });
 
+    const perfilSlug = sessao.perfilSlug ?? "vendedor";
+
     const corBrand = empresa?.corPrimaria || "#7c3aed";
 
   return (
@@ -35,7 +37,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           </Link>
         </div>
 
-        <SidebarNav />
+        <SidebarNav perfilSlug={perfilSlug} />
 
         <UserMenu 
           nomeUsuario={sessao.nomeUsuario} 
