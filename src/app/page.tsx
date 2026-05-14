@@ -21,7 +21,6 @@ export default async function LandingPage() {
     });
 
     const empresa = await prisma.empresa.findFirst({
-      where: { ativo: true }, // Simple logic for now, could be domain based
       select: { corPrimaria: true }
     });
     const corBrand = empresa?.corPrimaria || "#7c3aed";
