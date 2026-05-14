@@ -24,8 +24,25 @@ export function ConfiguracoesClient({ empresa, usuarios, bancos, sessao }: any) 
     nomeEmpresa: empresa.nomeEmpresa,
     nomeFantasia: empresa.nomeFantasia || "",
     logoUrl: empresa.logoUrl || "",
-    corPrimaria: empresa.corPrimaria || "#7c3aed", // Default violet
+    corPrimaria: empresa.corPrimaria || "#7c3aed",
   });
+
+  async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validar tamanho (max 2MB para Base64 não explodir o banco)
+    if (file.size > 2 * 1024 * 1024) {
+      alert("Arquivo muito grande! Máximo 2MB.");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setFormEmpresa({ ...formEmpresa, logoUrl: reader.result as string });
+    };
+    reader.readAsDataURL(file);
+  }
 
   async function handleSaveEmpresa() {
     setSaving(true);
@@ -36,10 +53,10 @@ export function ConfiguracoesClient({ empresa, usuarios, bancos, sessao }: any) 
         body: JSON.stringify(formEmpresa)
       });
       if (!res.ok) throw new Error();
-      alert("✅ Configurações salvas com sucesso!");
+      alert("✅ Identidade Visual atualizada com sucesso!");
       window.location.reload();
     } catch (err) {
-      alert("Erro ao salvar.");
+      alert("Erro ao salvar as configurações.");
     } finally {
       setSaving(false);
     }
@@ -94,7 +111,7 @@ export function ConfiguracoesClient({ empresa, usuarios, bancos, sessao }: any) 
                 <button 
                   onClick={handleSaveEmpresa}
                   disabled={saving}
-                  className="flex items-center gap-2 bg-violet-600 hover:bg-violet-700 text-white px-6 py-2 rounded-lg text-sm font-bold shadow-lg shadow-violet-500/20 transition disabled:opacity-50"
+                  className="flex items-center gap-2 bg-brand hover:opacity-90 text-white px-6 py-2 rounded-lg text-sm font-bold shadow-lg shadow-brand/20 transition disabled:opacity-50"
                 >
                   <Save className="w-4 h-4" /> {saving ? "Salvando..." : "Salvar Alterações"}
                 </button>
@@ -114,13 +131,19 @@ export function ConfiguracoesClient({ empresa, usuarios, bancos, sessao }: any) 
                   <div className="space-y-4">
                     <label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">Logotipo Principal</label>
                     <div className="flex items-center gap-6">
-                      <div className="w-24 h-24 rounded-2xl bg-zinc-100 dark:bg-zinc-800 border-2 border-dashed border-zinc-300 dark:border-zinc-700 flex items-center justify-center overflow-hidden relative group">
+                      <label className="w-24 h-24 rounded-2xl bg-zinc-100 dark:bg-zinc-800 border-2 border-dashed border-zinc-300 dark:border-zinc-700 flex items-center justify-center overflow-hidden relative group cursor-pointer hover:border-brand transition-colors">
+                        <input 
+                          type="file" 
+                          className="hidden" 
+                          accept="image/*"
+                          onChange={handleFileUpload}
+                        />
                         {formEmpresa.logoUrl ? (
                           <img src={formEmpresa.logoUrl} className="w-full h-full object-contain p-2" alt="Logo" />
                         ) : (
-                          <Upload className="w-6 h-6 text-zinc-400" />
+                          <Upload className="w-6 h-6 text-zinc-400 group-hover:text-brand" />
                         )}
-                      </div>
+                      </label>
                       <div className="flex-1 space-y-2">
                         <div className="flex gap-2">
                            <input 
@@ -180,7 +203,7 @@ export function ConfiguracoesClient({ empresa, usuarios, bancos, sessao }: any) 
                 <button 
                   onClick={handleSaveEmpresa}
                   disabled={saving}
-                  className="flex items-center gap-2 bg-violet-600 hover:bg-violet-700 text-white px-6 py-2 rounded-lg text-sm font-bold shadow-lg shadow-violet-500/20 transition disabled:opacity-50"
+                  className="flex items-center gap-2 bg-brand hover:opacity-90 text-white px-6 py-2 rounded-lg text-sm font-bold shadow-lg shadow-brand/20 transition disabled:opacity-50"
                 >
                   <Save className="w-4 h-4" /> {saving ? "Salvando..." : "Aplicar Branding"}
                 </button>
@@ -237,11 +260,11 @@ function TabButton({ active, onClick, icon, label }: any) {
       onClick={onClick}
       className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition ${
         active 
-        ? "bg-violet-50 text-violet-600 dark:bg-violet-950/40 dark:text-violet-400" 
+        ? "bg-brand/10 text-brand dark:bg-brand/20 dark:text-brand" 
         : "text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800"
       }`}
     >
-      <span className={active ? "text-violet-600" : "text-zinc-400"}>{icon}</span>
+      <span className={active ? "text-brand" : "text-zinc-400"}>{icon}</span>
       {label}
     </button>
   );

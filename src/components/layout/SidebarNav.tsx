@@ -111,7 +111,7 @@ function NavLink({
       href={href}
       className={`flex items-center gap-2 px-3 py-2 rounded-lg transition ${
         active
-          ? "bg-violet-50 text-violet-700 dark:bg-violet-950/40 dark:text-violet-300 font-medium"
+          ? "bg-brand/10 text-brand dark:bg-brand/20 dark:text-brand font-medium"
           : "text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-900"
       }`}
     >

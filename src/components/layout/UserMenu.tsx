@@ -25,7 +25,7 @@ export function UserMenu({
   return (
     <div className="p-4 border-t border-zinc-200/80 dark:border-zinc-800/80">
       <div className="flex items-center gap-3 mb-4">
-        <div className="h-9 w-9 rounded-full bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300 flex items-center justify-center font-bold text-sm shrink-0">
+        <div className="h-9 w-9 rounded-full bg-brand/10 text-brand flex items-center justify-center font-bold text-sm shrink-0">
           {inicial}
         </div>
         <div className="flex-1 min-w-0">
