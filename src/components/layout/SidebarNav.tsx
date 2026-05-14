@@ -109,11 +109,12 @@ function NavLink({
   return (
     <Link
       href={href}
-      className={`flex items-center gap-2 px-3 py-2 rounded-lg transition ${
+      className={`flex items-center gap-2 px-3 py-2 rounded-lg transition font-medium ${
         active
-          ? "bg-brand/10 text-brand dark:bg-brand/20 dark:text-brand font-medium"
+          ? "bg-brand/10 text-brand dark:bg-brand/20 dark:text-brand"
           : "text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-900"
       }`}
+      style={active ? { color: 'var(--brand-primary)', backgroundColor: 'color-mix(in srgb, var(--brand-primary) 15%, transparent)' } : {}}
     >
       {icon}
       {children}
