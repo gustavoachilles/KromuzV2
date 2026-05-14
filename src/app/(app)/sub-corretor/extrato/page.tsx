@@ -4,21 +4,20 @@ import { redirect } from "next/navigation";
 
 export default async function ExtratoSubCorretorPage() {
   const sessao = await getSessionEmpresa();
-  if (!sessao.usuarioEmail) redirect("/login");
+  if (!sessao.email) redirect("/login");
 
   // Busca propostas onde o vendedor é o usuário logado
   const propostas = await prisma.proposta.findMany({
     where: { 
       empresaId: sessao.empresaId,
-      vendedorEmail: sessao.usuarioEmail
+      vendedorEmail: sessao.email
     },
     orderBy: { createdAt: "desc" }
   });
 
-  // Cálculo de comissões baseadas no split master (Sugestão 10)
-  // Se o usuário tem um masterId e um percentualSplitMaster definido no perfil
+  // Cálculo de comissões baseadas no split master
   const perfil = await prisma.usuarioPerfil.findFirst({
-    where: { usuario: { email: sessao.usuarioEmail } }
+    where: { empresaId: sessao.empresaId, email: sessao.email }
   });
 
   const totalVolume = propostas.reduce((acc, p) => acc + (p.valorLiberado || 0), 0);
@@ -31,7 +30,7 @@ export default async function ExtratoSubCorretorPage() {
     <div className="p-8 max-w-5xl mx-auto space-y-8">
       <header>
         <h1 className="text-2xl font-bold">Meu Extrato de Comissões</h1>
-        <p className="text-zinc-500 text-sm">Acompanhe suas propostas e repasses da {sessao.empresaNome}</p>
+        <p className="text-zinc-500 text-sm">Acompanhe suas propostas e repasses da {sessao.nomeEmpresa}</p>
       </header>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
