@@ -69,7 +69,7 @@ export async function POST(req: NextRequest) {
 
     // Salvar a conversa e as mensagens no banco
     let conversa = await prisma.conversa.findFirst({
-      where: { empresaId, telefoneLead: telefone }
+      where: { empresaId, clienteContato: telefone }
     });
 
     if (!conversa) {
