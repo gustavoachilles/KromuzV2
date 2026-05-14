@@ -12,7 +12,8 @@ import {
   Link2,
   Lock,
   Globe,
-  Bell
+  Bell,
+  Pencil
 } from "lucide-react";
 
 export function ConfiguracoesClient({ empresa, usuarios, bancos, sessao }: any) {
@@ -216,7 +217,7 @@ export function ConfiguracoesClient({ empresa, usuarios, bancos, sessao }: any) 
                           {u.perfilSlug}
                        </span>
                        <button className="p-2 hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded-lg transition text-zinc-400">
-                          <Edit className="w-4 h-4" />
+                          <Pencil className="w-4 h-4" />
                        </button>
                     </div>
                   </div>
