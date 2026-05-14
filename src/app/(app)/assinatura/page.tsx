@@ -42,7 +42,7 @@ export default async function AssinaturaPage() {
     <div className="max-w-5xl mx-auto space-y-6">
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-white flex items-center gap-2">
-          <CreditCard className="w-6 h-6 text-violet-600" /> Minha Assinatura
+          <CreditCard className="w-6 h-6 text-brand" /> Minha Assinatura
         </h1>
         <p className="text-zinc-500 dark:text-zinc-400 mt-1">Gerencie seu plano, faturas e limites de uso da plataforma.</p>
       </div>
@@ -84,7 +84,7 @@ export default async function AssinaturaPage() {
                 </div>
                 <div className="h-2 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
                   <div 
-                    className="h-full bg-violet-600 rounded-full" 
+                    className="h-full bg-brand rounded-full" 
                     style={{ width: `${Math.min(100, (empresa._count.usuarios / planoAtivo.limiteUsuarios) * 100)}%` }}
                   />
                 </div>
@@ -97,7 +97,7 @@ export default async function AssinaturaPage() {
                 </div>
                 <div className="h-2 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
                   <div 
-                    className="h-full bg-emerald-500 rounded-full" 
+                    className="h-full bg-brand/50 rounded-full" 
                     style={{ width: `${Math.min(100, (empresa._count.leads / planoAtivo.limiteLeads) * 100)}%` }}
                   />
                 </div>
@@ -135,7 +135,7 @@ export default async function AssinaturaPage() {
                     </td>
                     <td className="px-6 py-4 text-right">
                       {fatura.linkPagamento && fatura.status !== "PAID" && (
-                        <a href={fatura.linkPagamento} target="_blank" rel="noreferrer" className="text-violet-600 dark:text-violet-400 font-medium hover:underline text-xs">Pagar</a>
+                        <a href={fatura.linkPagamento} target="_blank" rel="noreferrer" className="text-brand font-medium hover:underline text-xs">Pagar</a>
                       )}
                       {fatura.status === "PAID" && (
                         <button className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 transition" title="Baixar Recibo">
@@ -158,8 +158,8 @@ export default async function AssinaturaPage() {
         </div>
 
         {/* Plano Resumo */}
-        <div className="bg-gradient-to-br from-violet-600 to-indigo-700 rounded-2xl p-6 text-white h-fit shadow-xl shadow-violet-900/20">
-          <div className="flex items-center gap-2 text-violet-200 mb-2 font-medium">
+        <div className="bg-brand rounded-2xl p-6 text-white h-fit shadow-xl shadow-brand/20">
+          <div className="flex items-center gap-2 text-white/80 mb-2 font-medium">
             <CheckCircle2 className="w-4 h-4" /> Plano Atual
           </div>
           <h2 className="text-3xl font-black tracking-tight mb-6">{planoAtivo.nome}</h2>
@@ -170,7 +170,7 @@ export default async function AssinaturaPage() {
                 <Users className="w-4 h-4 text-white" />
               </div>
               <div className="text-sm">
-                <p className="text-violet-200">Usuários inclusos</p>
+                <p className="text-white/80">Usuários inclusos</p>
                 <p className="font-bold">{planoAtivo.limiteUsuarios}</p>
               </div>
             </div>
@@ -179,7 +179,7 @@ export default async function AssinaturaPage() {
                 <FileText className="w-4 h-4 text-white" />
               </div>
               <div className="text-sm">
-                <p className="text-violet-200">Integração Asaas/Bancos</p>
+                <p className="text-white/80">Integração Asaas/Bancos</p>
                 <p className="font-bold">Ilimitada</p>
               </div>
             </div>
@@ -188,13 +188,13 @@ export default async function AssinaturaPage() {
           <div className="border-t border-white/20 pt-6">
             <div className="flex items-end justify-between mb-4">
               <div>
-                <p className="text-violet-200 text-sm">Valor mensal</p>
+                <p className="text-white/80 text-sm">Valor mensal</p>
                 <div className="text-2xl font-bold">
                   {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(planoAtivo.precoMensal)}
                 </div>
               </div>
             </div>
-            <button className="w-full bg-white text-violet-700 hover:bg-zinc-100 px-4 py-3 rounded-xl font-bold transition shadow-sm">
+            <button className="w-full bg-white text-brand hover:bg-zinc-100 px-4 py-3 rounded-xl font-bold transition shadow-sm">
               Fazer Upgrade
             </button>
           </div>

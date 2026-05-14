@@ -163,11 +163,11 @@ export function RankingClient({
         {/* Header */}
         <header className="flex items-center justify-between">
           <div>
-            <div className="flex items-center gap-2 text-orange-500 mb-1">
+            <div className="flex items-center gap-2 text-brand mb-1">
               <Trophy className="h-5 w-5" />
               <span className="text-xs uppercase tracking-widest font-bold">Ranking XP</span>
             </div>
-            <h1 className="text-3xl md:text-4xl font-black tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-orange-500 to-amber-500">
+            <h1 className="text-3xl md:text-4xl font-black tracking-tight text-brand">
               Corridão de Vendas - {meses[mesAtual]}
             </h1>
             <p className="text-zinc-600 dark:text-zinc-400 mt-1 font-medium">
@@ -176,17 +176,17 @@ export function RankingClient({
           </div>
           <div className="hidden md:flex flex-col items-end">
             <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">Total de Pontos (Equipe)</span>
-            <span className="text-4xl font-black text-orange-500 tabular-nums flex items-center gap-2">
+            <span className="text-4xl font-black text-brand tabular-nums flex items-center gap-2">
                {totalPontos.toLocaleString()} <Flame className="h-8 w-8" />
             </span>
           </div>
         </header>
 
         {/* Info Box */}
-        <div className="bg-orange-50 dark:bg-orange-950/20 border border-orange-200 dark:border-orange-900 rounded-xl p-4 flex items-start gap-3">
-           <Flame className="w-5 h-5 text-orange-500 shrink-0 mt-0.5" />
+        <div className="bg-brand/10 border border-brand/20 rounded-xl p-4 flex items-start gap-3">
+           <Flame className="w-5 h-5 text-brand shrink-0 mt-0.5" />
            <div>
-              <h4 className="font-bold text-orange-800 dark:text-orange-400 text-sm">Como funciona a pontuação?</h4>
+              <h4 className="font-bold text-brand text-sm">Como funciona a pontuação?</h4>
               <p className="text-xs text-orange-700/80 dark:text-orange-300/80 mt-1">
                  💸 <strong>Pagos:</strong> 1 Ponto a cada R$ 100 de volume pago.<br/>
                  ✍️ <strong>Digitados:</strong> 50 Pontos por cada proposta digitada aguardando no banco.<br/>

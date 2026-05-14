@@ -65,7 +65,7 @@ export function ComissoesClient({
       <div className="max-w-7xl mx-auto px-6 py-10 space-y-8">
         {/* Header */}
         <header>
-          <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 mb-1">
+          <div className="flex items-center gap-2 text-brand mb-1">
             <DollarSign className="h-5 w-5" />
             <span className="text-xs uppercase tracking-widest font-semibold">Comissões</span>
           </div>
@@ -125,7 +125,7 @@ export function ComissoesClient({
               <div className="divide-y divide-zinc-100 dark:divide-zinc-800">
                 {propostas.map((p) => (
                   <div key={p.id} className="px-6 py-3 flex items-center gap-4 hover:bg-zinc-50 dark:hover:bg-zinc-800/30 transition">
-                    <div className={`h-2.5 w-2.5 rounded-full shrink-0 ${p.status === "PAGA" ? "bg-brand" : "bg-emerald-500"}`} />
+                    <div className={`h-2.5 w-2.5 rounded-full shrink-0 ${p.status === "PAGA" ? "bg-brand" : "bg-brand"}`} />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium truncate">{p.clienteNome}</p>
                       <p className="text-[11px] text-zinc-500">
@@ -136,7 +136,7 @@ export function ComissoesClient({
                     <div className="text-right shrink-0">
                       <p className="text-sm font-bold tabular-nums">{fmt(p.valorLiberado)}</p>
                       {p.valorComissao ? (
-                        <p className="text-[11px] text-emerald-600 font-semibold tabular-nums">
+                        <p className="text-[11px] text-brand font-semibold tabular-nums">
                           +{fmt(p.valorComissao)}
                         </p>
                       ) : (
