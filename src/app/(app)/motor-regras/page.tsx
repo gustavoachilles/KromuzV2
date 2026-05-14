@@ -25,7 +25,7 @@ export default async function MotorRegrasPage() {
     <div className="min-h-screen bg-gradient-to-b from-zinc-50 to-white dark:from-zinc-950 dark:to-black">
       <div className="max-w-7xl mx-auto px-6 py-10 space-y-8">
         <header className="space-y-2">
-          <div className="flex items-center gap-2 text-violet-600 dark:text-violet-400">
+          <div className="flex items-center gap-2 text-brand">
             <Brain className="h-5 w-5" />
             <span className="text-xs uppercase tracking-widest font-semibold">
               Sprint 1 · Motor de Regras V2

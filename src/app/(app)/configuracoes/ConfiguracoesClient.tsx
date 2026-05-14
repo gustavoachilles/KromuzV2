@@ -227,7 +227,7 @@ export function ConfiguracoesClient({ empresa, usuarios, bancos, sessao }: any) 
                 {usuarios.map((u: any) => (
                   <div key={u.id} className="flex items-center justify-between p-4 bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800 rounded-xl">
                     <div className="flex items-center gap-3">
-                       <div className="w-10 h-10 rounded-full bg-violet-100 dark:bg-violet-900/30 flex items-center justify-center text-violet-600 font-bold">
+                       <div className="w-10 h-10 rounded-full bg-brand/10 flex items-center justify-center text-brand font-bold">
                           {u.nome?.substring(0,2).toUpperCase()}
                        </div>
                        <div>

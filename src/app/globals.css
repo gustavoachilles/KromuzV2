@@ -3,6 +3,7 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --brand-primary: #7c3aed; /* Default Fallback */
 }
 
 @theme inline {

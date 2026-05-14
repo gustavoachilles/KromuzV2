@@ -86,7 +86,7 @@ export function MetasClient({
         {/* Header */}
         <header className="flex items-start justify-between gap-4 flex-wrap">
           <div>
-            <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 mb-1">
+            <div className="flex items-center gap-2 text-brand mb-1">
               <Target className="h-5 w-5" />
               <span className="text-xs uppercase tracking-widest font-semibold">Metas</span>
             </div>
@@ -96,7 +96,7 @@ export function MetasClient({
             </p>
           </div>
           <button onClick={() => setModal(true)}
-            className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/25 hover:opacity-95 transition">
+            className="flex items-center gap-2 rounded-xl bg-brand px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-brand/25 hover:opacity-95 transition">
             <Plus className="h-4 w-4" /> Definir Meta
           </button>
         </header>
@@ -107,7 +107,7 @@ export function MetasClient({
             <button key={m} onClick={() => setMesFiltro(m)}
               className={`px-3 py-1.5 rounded-lg text-xs font-medium transition shrink-0 ${
                 mesFiltro === m
-                  ? "bg-emerald-600 text-white"
+                  ? "bg-brand text-white"
                   : "bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700"
               }`}>
               {meses[m]}
@@ -158,13 +158,13 @@ export function MetasClient({
                   <div className="space-y-2 mb-5">
                     <div className="flex justify-between text-sm">
                       <span className="text-zinc-500">Volume Liberado</span>
-                      <span className="font-bold text-emerald-600 dark:text-emerald-400">
+                      <span className="font-bold text-brand">
                         R$ {prod.volume.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                       </span>
                     </div>
                     <div className="h-3 w-full bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
                       <div 
-                        className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 transition-all duration-1000 ease-out"
+                        className="h-full bg-brand transition-all duration-1000 ease-out"
                         style={{ width: `${Math.min(pctVolume, 100)}%` }}
                       />
                     </div>
@@ -179,7 +179,7 @@ export function MetasClient({
                     <div className="flex justify-between text-xs p-3 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl">
                       <span className="text-zinc-500">Propostas Pagas</span>
                       <div className="font-bold">
-                        <span className={prod.propostas >= m.metaPropostas ? "text-emerald-500" : "text-zinc-700 dark:text-zinc-300"}>
+                        <span className={prod.propostas >= m.metaPropostas ? "text-brand" : "text-zinc-700 dark:text-zinc-300"}>
                           {prod.propostas}
                         </span>
                         <span className="text-zinc-400 mx-1">/</span>
@@ -208,7 +208,7 @@ export function MetasClient({
               <div className="space-y-2">
                 <label className="text-sm font-medium">Vendedor *</label>
                 <select required value={form.vendedorEmail} onChange={(e) => setForm({ ...form, vendedorEmail: e.target.value })}
-                  className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50">
+                  className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/50">
                   <option value="">Selecione...</option>
                   {equipe.map((m) => (
                     <option key={m.email} value={m.email}>{m.nome || m.email}</option>
@@ -219,7 +219,7 @@ export function MetasClient({
               <div className="space-y-2">
                 <label className="text-sm font-medium">Mês</label>
                 <select value={form.mes} onChange={(e) => setForm({ ...form, mes: Number(e.target.value) })}
-                  className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50">
+                  className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/50">
                   {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
                     <option key={m} value={m}>{meses[m]}</option>
                   ))}
@@ -230,29 +230,29 @@ export function MetasClient({
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-zinc-500">Meta Propostas</label>
                   <input type="number" value={form.metaPropostas} onChange={(e) => setForm({ ...form, metaPropostas: e.target.value })} placeholder="10"
-                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50" />
+                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/50" />
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-zinc-500">Meta Volume (R$)</label>
                   <input type="number" value={form.metaVolume} onChange={(e) => setForm({ ...form, metaVolume: e.target.value })} placeholder="50000"
-                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50" />
+                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/50" />
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-zinc-500">Meta Leads</label>
                   <input type="number" value={form.metaLeads} onChange={(e) => setForm({ ...form, metaLeads: e.target.value })} placeholder="30"
-                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50" />
+                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/50" />
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-zinc-500">Meta Comissão (R$)</label>
                   <input type="number" value={form.metaComissao} onChange={(e) => setForm({ ...form, metaComissao: e.target.value })} placeholder="5000"
-                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50" />
+                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/50" />
                 </div>
               </div>
 
               <div className="flex justify-end gap-3 pt-2">
                 <button type="button" onClick={() => setModal(false)} className="px-4 py-2 text-sm text-zinc-600 hover:text-zinc-900 transition">Cancelar</button>
                 <button type="submit" disabled={salvando}
-                  className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/25 hover:opacity-95 disabled:opacity-50 transition">
+                  className="flex items-center gap-2 rounded-xl bg-brand px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-brand/25 hover:opacity-95 disabled:opacity-50 transition">
                   {salvando ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                   {salvando ? "Salvando..." : "Salvar Meta"}
                 </button>

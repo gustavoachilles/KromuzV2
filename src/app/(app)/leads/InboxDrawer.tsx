@@ -110,7 +110,7 @@ export function InboxDrawer({ isOpen, onClose, lead, sessao }: { isOpen: boolean
         
         <div className="px-6 py-4 bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 flex justify-between items-center z-10 shadow-sm shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-violet-100 dark:bg-violet-900/30 flex items-center justify-center text-violet-600 font-bold">
+            <div className="w-10 h-10 rounded-full bg-brand/10 dark:bg-brand/20 flex items-center justify-center text-brand font-bold">
               {lead.nome.substring(0,2).toUpperCase()}
             </div>
             <div>
@@ -126,9 +126,9 @@ export function InboxDrawer({ isOpen, onClose, lead, sessao }: { isOpen: boolean
         </div>
 
         {canalInfo?.botAtivo && (
-          <div className="px-6 py-2 bg-violet-50 dark:bg-violet-900/20 border-b border-violet-100 dark:border-violet-900/50 flex justify-between items-center shrink-0">
-            <span className="text-xs font-medium text-violet-700 dark:text-violet-400 flex items-center gap-1"><Bot className="w-3.5 h-3.5"/> IA Ativa conversando</span>
-            <button className="bg-violet-600 hover:bg-violet-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow transition flex items-center gap-1">
+          <div className="px-6 py-2 bg-brand/10 dark:bg-brand/20 border-b border-brand/20 dark:border-brand/80 flex justify-between items-center shrink-0">
+            <span className="text-xs font-medium text-brand flex items-center gap-1"><Bot className="w-3.5 h-3.5"/> IA Ativa conversando</span>
+            <button className="bg-brand hover:opacity-90 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow transition flex items-center gap-1">
               <CheckCircle2 className="w-3.5 h-3.5" /> Assumir Atendimento
             </button>
           </div>
@@ -148,7 +148,7 @@ export function InboxDrawer({ isOpen, onClose, lead, sessao }: { isOpen: boolean
               return (
                 <div key={msg.id} className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}>
                   <div className={`max-w-[85%] rounded-2xl px-4 py-2 shadow-sm ${isMine ? 'bg-[#d9fdd3] dark:bg-violet-900 text-zinc-900 dark:text-zinc-100 rounded-tr-none' : 'bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-tl-none'}`}>
-                    {msg.remetente === "IA" && <div className="text-[10px] font-bold text-violet-600 dark:text-violet-400 mb-1 flex items-center gap-1"><Bot className="w-3 h-3"/> Resposta por IA</div>}
+                    {msg.remetente === "IA" && <div className="text-[10px] font-bold text-brand mb-1 flex items-center gap-1"><Bot className="w-3 h-3"/> Resposta por IA</div>}
                     <p className="text-sm whitespace-pre-wrap">{msg.conteudo}</p>
                     <div className={`text-[10px] text-right mt-1 ${isMine ? 'text-emerald-700/60 dark:text-violet-300/60' : 'text-zinc-400'}`}>
                       {new Date(msg.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
@@ -168,12 +168,12 @@ export function InboxDrawer({ isOpen, onClose, lead, sessao }: { isOpen: boolean
             value={novoTexto}
             onChange={e => setNovoTexto(e.target.value)}
             placeholder={conversaId ? "Digite uma mensagem..." : "Aguardando cliente iniciar conversa..."} 
-            className="flex-1 bg-white dark:bg-zinc-800 rounded-full px-5 py-3 text-sm focus:outline-none shadow-sm border border-transparent focus:border-violet-500 disabled:opacity-50"
+            className="flex-1 bg-white dark:bg-zinc-800 rounded-full px-5 py-3 text-sm focus:outline-none shadow-sm border border-transparent focus:border-brand disabled:opacity-50"
           />
           <button 
             type="submit" 
             disabled={!conversaId || !novoTexto.trim() || enviando}
-            className="w-12 h-12 rounded-full bg-violet-600 hover:bg-violet-700 disabled:bg-zinc-400 text-white flex items-center justify-center shadow-sm transition shrink-0"
+            className="w-12 h-12 rounded-full bg-brand hover:opacity-90 disabled:bg-zinc-400 text-white flex items-center justify-center shadow-sm transition shrink-0"
           >
             {enviando ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5 ml-1" />}
           </button>

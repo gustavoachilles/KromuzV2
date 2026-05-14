@@ -112,7 +112,7 @@ export function SimuladorTableRow({ contrato, oportunidades, onOpenInsight }: Si
               type="checkbox" 
               checked={checked}
               onChange={(e) => setChecked(e.target.checked)}
-              className="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 border-slate-300"
+              className="w-4 h-4 rounded text-brand focus:ring-brand/50 border-slate-300"
             />
           )}
         </td>
@@ -126,7 +126,7 @@ export function SimuladorTableRow({ contrato, oportunidades, onOpenInsight }: Si
         <td className="p-3 text-sm text-slate-600 text-center">-</td>
         <td className="p-3 text-sm text-slate-600 text-center">-</td>
         <td className="p-3 text-sm text-slate-600 text-center">-</td>
-        <td className="p-3 text-sm font-medium text-indigo-600 text-center">
+        <td className="p-3 text-sm font-medium text-brand text-center">
           {contrato.taxaJuros}%
         </td>
         <td className="p-3 text-sm font-bold text-amber-600 text-center">
@@ -139,7 +139,7 @@ export function SimuladorTableRow({ contrato, oportunidades, onOpenInsight }: Si
           {contrato.saldoDevedorEstimado.toFixed(2)}
         </td>
         <td className="p-3 text-center">
-          <button className="text-slate-400 hover:text-indigo-600">
+          <button className="text-slate-400 hover:text-brand">
             <RefreshCw className="w-4 h-4" />
           </button>
         </td>
@@ -147,7 +147,7 @@ export function SimuladorTableRow({ contrato, oportunidades, onOpenInsight }: Si
 
       {/* Linha de Simulação (Aparece se checado) */}
       {checked && opsValidas.length > 0 && (
-        <tr className="bg-slate-50/80 border-b-2 border-indigo-100">
+        <tr className="bg-slate-50/80 border-b-2 border-brand/20">
           <td colSpan={12} className="p-4">
             <div className="flex flex-wrap items-end gap-4 justify-between">
               
@@ -194,17 +194,17 @@ export function SimuladorTableRow({ contrato, oportunidades, onOpenInsight }: Si
               {simulacaoSelecionada && (
                 <>
                   <div className="w-[80px] text-center">
-                    <label className="block text-xs font-semibold text-fuchsia-600 mb-1">Taxa</label>
+                    <label className="block text-xs font-semibold text-brand mb-1">Taxa</label>
                     <div className="text-sm font-bold text-slate-800">{simulacaoSelecionada.taxaJuros.toFixed(2)}%</div>
                   </div>
 
                   <div className="w-[120px] text-center">
-                    <label className="block text-xs font-semibold text-indigo-600 mb-1">Novo Valor Parcela</label>
+                    <label className="block text-xs font-semibold text-brand mb-1">Novo Valor Parcela</label>
                     <div className="text-sm font-bold text-emerald-600">{simulacaoSelecionada.valorParcela.toFixed(2)}</div>
                   </div>
 
                   <div className="w-[140px] text-center">
-                    <label className="block text-xs font-semibold text-fuchsia-600 mb-1">Valor Bruto Contrato</label>
+                    <label className="block text-xs font-semibold text-brand mb-1">Valor Bruto Contrato</label>
                     <div className="text-sm font-bold text-slate-800">R$ {simulacaoSelecionada.valorLiberado.toFixed(2)}</div>
                   </div>
 
@@ -224,7 +224,7 @@ export function SimuladorTableRow({ contrato, oportunidades, onOpenInsight }: Si
                       valorParcela: simulacaoSelecionada.valorParcela,
                       prazo: simulacaoSelecionada.prazo
                     })}
-                    className="p-3 bg-violet-600 text-white rounded-xl hover:bg-violet-500 transition-all shadow-lg shadow-violet-600/20 group/ai"
+                    className="p-3 bg-brand text-white rounded-xl hover:opacity-90 transition-all shadow-lg shadow-brand/20 group/ai"
                     title="Analisar com IA"
                   >
                     <Sparkles className="w-5 h-5 group-hover/ai:rotate-12 transition-transform" />

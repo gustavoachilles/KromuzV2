@@ -494,7 +494,7 @@ export function LeadsClient({
       <div className="max-w-[1600px] mx-auto px-6 py-6 space-y-6">
         <header className="flex items-start justify-between gap-4 flex-wrap">
           <div>
-            <div className="flex items-center gap-2 text-violet-600 dark:text-violet-400 mb-1">
+            <div className="flex items-center gap-2 text-brand mb-1">
               <Users className="h-5 w-5" />
               <span className="text-xs uppercase tracking-widest font-semibold">CRM Kanban</span>
             </div>
@@ -504,7 +504,7 @@ export function LeadsClient({
             </p>
           </div>
           <button onClick={abrirModalNovo}
-            className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-violet-500/25 hover:opacity-95 transition">
+            className="flex items-center gap-2 rounded-xl bg-brand px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-brand/100/25 hover:opacity-95 transition">
             <Plus className="h-4 w-4" /> Novo Lead
           </button>
         </header>
@@ -527,12 +527,12 @@ export function LeadsClient({
 
                   <Droppable droppableId={coluna.nome}>
                     {(provided, snapshot) => (
-                      <div ref={provided.innerRef} {...provided.droppableProps} className={`flex-1 overflow-y-auto space-y-3 p-1 transition-colors rounded-xl ${snapshot.isDraggingOver ? 'bg-violet-50 dark:bg-violet-900/20' : ''}`}>
+                      <div ref={provided.innerRef} {...provided.droppableProps} className={`flex-1 overflow-y-auto space-y-3 p-1 transition-colors rounded-xl ${snapshot.isDraggingOver ? 'bg-brand/10 dark:bg-brand/20' : ''}`}>
                         {items.map((lead, index) => (
                           <Draggable key={lead.id} draggableId={lead.id} index={index}>
                             {(provided, snapshot) => (
                               <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps} onClick={() => abrirModalEditar(lead)}
-                                className={`bg-white dark:bg-zinc-950 rounded-xl p-4 border border-zinc-200 dark:border-zinc-800 shadow-sm flex flex-col gap-3 transition-shadow cursor-pointer ${snapshot.isDragging ? 'shadow-xl ring-2 ring-violet-500/50 opacity-90' : 'hover:shadow-md'}`}>
+                                className={`bg-white dark:bg-zinc-950 rounded-xl p-4 border border-zinc-200 dark:border-zinc-800 shadow-sm flex flex-col gap-3 transition-shadow cursor-pointer ${snapshot.isDragging ? 'shadow-xl ring-2 ring-brand/50 opacity-90' : 'hover:shadow-md'}`}>
                                 <div className="flex items-start justify-between gap-2">
                                   <div className="flex-1">
                                     <p className="font-bold text-sm leading-tight text-zinc-900 dark:text-zinc-100 line-clamp-2">{lead.nome}</p>
@@ -584,7 +584,7 @@ export function LeadsClient({
                 </div>
               );
             })}
-            <div className="flex-shrink-0 w-80 bg-transparent border-2 border-dashed border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 flex flex-col items-center justify-center opacity-70 hover:opacity-100 hover:border-violet-300 transition-all cursor-pointer h-32" onClick={() => setModalColuna(true)}>
+            <div className="flex-shrink-0 w-80 bg-transparent border-2 border-dashed border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 flex flex-col items-center justify-center opacity-70 hover:opacity-100 hover:border-brand/40 transition-all cursor-pointer h-32" onClick={() => setModalColuna(true)}>
               <Plus className="h-6 w-6 text-zinc-400 mb-2" />
               <p className="text-sm font-medium text-zinc-500">Adicionar Coluna</p>
             </div>
@@ -621,7 +621,7 @@ export function LeadsClient({
                       <a
                         target="_blank" rel="noreferrer"
                         href={getWhatsAppLink(form.telefone, "")}
-                        className="block px-4 py-2 text-xs font-semibold text-violet-600 dark:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-900/20 transition bg-zinc-50 dark:bg-zinc-900/50"
+                        className="block px-4 py-2 text-xs font-semibold text-brand hover:bg-brand/10 transition bg-zinc-50 dark:bg-zinc-900/50"
                       >
                         Abrir conversa vazia ↗
                       </a>
@@ -648,7 +648,7 @@ export function LeadsClient({
               <button
                 type="button"
                 onClick={() => setTabModal("dados")}
-                className={`py-3 text-sm font-bold border-b-2 transition ${tabModal === "dados" ? "border-violet-600 text-violet-600" : "border-transparent text-zinc-500 hover:text-zinc-700"}`}
+                className={`py-3 text-sm font-bold border-b-2 transition ${tabModal === "dados" ? "border-brand text-brand" : "border-transparent text-zinc-500 hover:text-zinc-700"}`}
               >
                 Dados do Cliente
               </button>
@@ -832,7 +832,7 @@ export function LeadsClient({
                       <div className="space-y-2">
                         <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Nome Completo *</label>
                         <input required value={form.nome} onChange={e => setForm({ ...form, nome: e.target.value })}
-                          className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500" />
+                          className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100" />
                       </div>
 
                       <div className="grid grid-cols-2 gap-4">
@@ -846,7 +846,7 @@ export function LeadsClient({
                               onChange={e => setForm({ ...form, cpf: mascaraCpf(e.target.value) })}
                               placeholder="***.***.***-**"
                               maxLength={14}
-                              className={`w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 transition-all ${!revelarCpf ? 'blur-[3px] select-none' : ''}`}
+                              className={`w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100 transition-all ${!revelarCpf ? 'blur-[3px] select-none' : ''}`}
                             />
                             <button
                               type="button"
@@ -856,7 +856,7 @@ export function LeadsClient({
                                 }
                                 setRevelarCpf(!revelarCpf);
                               }}
-                              className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-zinc-400 hover:text-violet-600 transition"
+                              className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-zinc-400 hover:text-brand transition"
                             >
                               {revelarCpf ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                             </button>
@@ -872,7 +872,7 @@ export function LeadsClient({
                               onChange={e => setForm({ ...form, telefone: mascaraTelefone(e.target.value) })}
                               placeholder="(**) *****-****"
                               maxLength={15}
-                              className={`w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 transition-all ${!revelarTel ? 'blur-[3px] select-none' : ''}`}
+                              className={`w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100 transition-all ${!revelarTel ? 'blur-[3px] select-none' : ''}`}
                             />
                             <button
                               type="button"
@@ -882,7 +882,7 @@ export function LeadsClient({
                                 }
                                 setRevelarTel(!revelarTel);
                               }}
-                              className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-zinc-400 hover:text-violet-600 transition"
+                              className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-zinc-400 hover:text-brand transition"
                             >
                               {revelarTel ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                             </button>
@@ -893,14 +893,14 @@ export function LeadsClient({
                       <div className="space-y-2">
                         <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">E-mail</label>
                         <input type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} placeholder="email@exemplo.com"
-                          className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500" />
+                          className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100" />
                       </div>
 
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
                           <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">UF (Estado)</label>
                           <select value={form.uf} onChange={e => setForm({ ...form, uf: e.target.value, cidade: "" })}
-                            className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500">
+                            className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100">
                             <option value="">Selecione UF</option>
                             {estadosIBGE.map(est => <option key={est.id} value={est.sigla}>{est.nome}</option>)}
                           </select>
@@ -908,7 +908,7 @@ export function LeadsClient({
                         <div className="space-y-2">
                           <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Cidade</label>
                           <input list="cidades-list" value={form.cidade} onChange={e => setForm({ ...form, cidade: e.target.value })} disabled={!form.uf} placeholder="Pesquise a cidade"
-                            className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 disabled:opacity-50" />
+                            className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100 disabled:opacity-50" />
                           <datalist id="cidades-list">
                             {cidadesIBGE.map(cid => <option key={cid.id} value={cid.nome} />)}
                           </datalist>
@@ -924,12 +924,12 @@ export function LeadsClient({
                         <div className="space-y-2">
                           <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">NB (Benefício)</label>
                           <input value={form.numeroBeneficio} onChange={e => setForm({ ...form, numeroBeneficio: e.target.value })}
-                            className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500" />
+                            className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100" />
                         </div>
                         <div className="space-y-2">
                           <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Espécie INSS</label>
                           <input list="especies-list" value={form.especieBeneficio} onChange={e => setForm({ ...form, especieBeneficio: e.target.value })} placeholder="Pesquise a espécie"
-                            className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500" />
+                            className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100" />
                           <datalist id="especies-list">
                             {INSS_ESPECIES.map(esp => <option key={esp.id} value={`${esp.id} - ${esp.nome}`} />)}
                           </datalist>
@@ -940,17 +940,17 @@ export function LeadsClient({
                         <div className="space-y-2">
                           <label className="text-[11px] font-medium text-zinc-700 dark:text-zinc-300">Livre (R$)</label>
                           <input type="number" step="0.01" value={form.margemLivre} onChange={e => setForm({ ...form, margemLivre: e.target.value })}
-                            className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500" />
+                            className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100" />
                         </div>
                         <div className="space-y-2">
                           <label className="text-[11px] font-medium text-zinc-700 dark:text-zinc-300">RMC (R$)</label>
                           <input type="number" step="0.01" value={form.margemRmc} onChange={e => setForm({ ...form, margemRmc: e.target.value })}
-                            className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500" />
+                            className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100" />
                         </div>
                         <div className="space-y-2">
                           <label className="text-[11px] font-medium text-zinc-700 dark:text-zinc-300">RCC (R$)</label>
                           <input type="number" step="0.01" value={form.margemRcc} onChange={e => setForm({ ...form, margemRcc: e.target.value })}
-                            className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500" />
+                            className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100" />
                         </div>
                       </div>
 
@@ -958,7 +958,7 @@ export function LeadsClient({
                         <div className="space-y-2">
                           <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Banco Preferido</label>
                           <select value={form.bancoPreferido} onChange={e => setForm({ ...form, bancoPreferido: e.target.value })}
-                            className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500">
+                            className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100">
                             <option value="">Selecione Banco...</option>
                             {bancos.map(b => <option key={b.id} value={b.nome}>{b.nome}</option>)}
                           </select>
@@ -966,7 +966,7 @@ export function LeadsClient({
                         <div className="space-y-2">
                           <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Convênio</label>
                           <select value={form.convenioNome} onChange={e => setForm({ ...form, convenioNome: e.target.value })}
-                            className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500">
+                            className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100">
                             <option value="">Selecione Convênio...</option>
                             {convenios.map(c => <option key={c.id} value={c.nome}>{c.nome}</option>)}
                           </select>
@@ -977,7 +977,7 @@ export function LeadsClient({
                         <div className="space-y-2">
                           <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Tipo de Operação</label>
                           <select value={form.tipoOperacao} onChange={e => setForm({ ...form, tipoOperacao: e.target.value })}
-                            className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500">
+                            className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100">
                             <option value="">—</option>
                             <option value="EMPRESTIMO_CONSIGNADO">Margem Nova</option>
                             <option value="REFINANCIAMENTO">Refinanciamento</option>
@@ -990,14 +990,14 @@ export function LeadsClient({
                         <div className="space-y-2">
                           <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Valor Liberado (R$)</label>
                           <input type="text" value={form.valorLiberado} onChange={e => setForm({ ...form, valorLiberado: formatMoedaInput(e.target.value) })} placeholder="0.00"
-                            className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 font-bold text-emerald-700" />
+                            className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100 font-bold text-emerald-700" />
                         </div>
                       </div>
 
                       <div className="space-y-2 pt-2">
                         <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Observações</label>
                         <textarea value={form.observacoes} onChange={e => setForm({ ...form, observacoes: e.target.value })} rows={2}
-                          className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 resize-none" />
+                          className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100 resize-none" />
                       </div>
                     </div>
                   </div>
@@ -1005,7 +1005,7 @@ export function LeadsClient({
                   {/* Seção de Documentos / Anexos */}
                   <div className="mt-8 pt-6 border-t border-zinc-200 dark:border-zinc-800">
                     <div className="flex items-center gap-2 mb-4">
-                      <Paperclip className="h-5 w-5 text-violet-500" />
+                      <Paperclip className="h-5 w-5 text-brand/100" />
                       <h3 className="text-sm font-bold text-zinc-700 dark:text-zinc-300">Documentos Anexos</h3>
                     </div>
 
@@ -1055,7 +1055,7 @@ export function LeadsClient({
                                   >
                                     {validandoDoc === file.url ? <Loader2 className="w-3 h-3 animate-spin" /> : "✨ Validar"}
                                   </button>
-                                  <a href={file.url} download={file.nome} className="text-xs font-medium text-violet-600 hover:text-violet-700 bg-violet-50 hover:bg-violet-100 px-2 py-1 rounded">
+                                  <a href={file.url} download={file.nome} className="text-xs font-medium text-brand hover:text-violet-700 bg-brand/10 hover:bg-violet-100 px-2 py-1 rounded">
                                     Baixar
                                   </a>
                                 </div>
@@ -1093,7 +1093,7 @@ export function LeadsClient({
                     <div className="flex gap-3">
                       <button type="button" onClick={() => setModal(false)} className="px-5 py-2.5 text-sm font-medium text-zinc-600 hover:bg-zinc-100 rounded-xl transition">Cancelar</button>
                       <button type="submit" disabled={salvando}
-                        className="flex items-center gap-2 rounded-xl bg-violet-600 px-6 py-2.5 text-sm font-semibold text-white shadow-lg shadow-violet-500/30 hover:bg-violet-700 transition">
+                        className="flex items-center gap-2 rounded-xl bg-brand px-6 py-2.5 text-sm font-semibold text-white shadow-lg shadow-brand/100/30 hover:bg-violet-700 transition">
                         {salvando ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
                         {salvando ? "Salvando..." : (form.id ? "Salvar Alterações" : "Criar Lead")}
                       </button>
@@ -1115,12 +1115,12 @@ export function LeadsClient({
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Nome da Coluna *</label>
                     <input required value={novaColunaNome} onChange={e => setNovaColunaNome(e.target.value)} placeholder="Ex: CONTRATO ASSINADO"
-                      className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 uppercase" />
+                      className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100 uppercase" />
                   </div>
                   <div className="flex justify-end gap-3 pt-2">
                     <button type="button" onClick={() => setModalColuna(false)} className="px-4 py-2 text-sm text-zinc-600">Cancelar</button>
                     <button type="submit" disabled={salvando}
-                      className="flex items-center gap-2 rounded-xl bg-violet-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg">
+                      className="flex items-center gap-2 rounded-xl bg-brand px-5 py-2.5 text-sm font-semibold text-white shadow-lg">
                       {salvando ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
                       {salvando ? "Criando..." : "Criar Coluna"}
                     </button>

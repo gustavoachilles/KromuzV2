@@ -99,12 +99,12 @@ export function VendedoresClient() {
 
   const fmt = (v: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v);
 
-  if (loading) return <div className="flex p-10 items-center justify-center"><Loader2 className="animate-spin text-violet-500 h-8 w-8" /></div>;
+  if (loading) return <div className="flex p-10 items-center justify-center"><Loader2 className="animate-spin text-brand h-8 w-8" /></div>;
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-10 space-y-8">
       <header>
-        <div className="flex items-center gap-2 text-violet-600 dark:text-violet-400 mb-1">
+        <div className="flex items-center gap-2 text-brand mb-1">
           <Users className="h-5 w-5" />
           <span className="text-xs uppercase tracking-widest font-semibold">Equipe</span>
         </div>
@@ -140,7 +140,7 @@ export function VendedoresClient() {
               {/* Tipo Remuneração Badge */}
               <div className="flex items-center justify-between text-sm">
                 <span className="text-zinc-500">Formato Meta</span>
-                <span className="text-[10px] font-bold uppercase px-2 py-1 bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-300 rounded-lg">
+                <span className="text-[10px] font-bold uppercase px-2 py-1 bg-brand/10 text-brand rounded-lg">
                   {v.tipoRemuneracao.replace("_", " ")}
                 </span>
               </div>
@@ -152,7 +152,7 @@ export function VendedoresClient() {
                 <p className="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-3">Performance no Mês</p>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="bg-zinc-50 dark:bg-zinc-950 p-3 rounded-xl border border-zinc-100 dark:border-zinc-800">
-                    <div className="flex items-center gap-1.5 text-blue-600 dark:text-blue-400 mb-1">
+                    <div className="flex items-center gap-1.5 text-brand mb-1">
                       <TrendingUp className="h-3.5 w-3.5" />
                       <span className="text-[10px] font-bold uppercase">Volume</span>
                     </div>
@@ -173,7 +173,7 @@ export function VendedoresClient() {
               {/* Repasse Pagar */}
               <div className="mt-4 pt-4 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between">
                 <span className="text-sm font-semibold text-zinc-600 dark:text-zinc-400">Repasse a Pagar</span>
-                <span className="text-xl font-black text-violet-600 dark:text-violet-400">
+                <span className="text-xl font-black text-brand">
                   {fmt(v.performanceMes.comissaoRepasse)}
                 </span>
               </div>
@@ -200,14 +200,14 @@ export function VendedoresClient() {
               <div className="space-y-2">
                 <label className="text-sm font-semibold">Salário Fixo Mensal (R$)</label>
                 <input type="number" step="0.01" value={salarioFixo} onChange={e => setSalarioFixo(e.target.value)} placeholder="Ex: 1500.00"
-                  className="w-full rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 transition-all" />
+                  className="w-full rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand transition-all" />
               </div>
 
               {/* Tipo de Comissionamento */}
               <div className="space-y-2 pt-2 border-t border-zinc-100 dark:border-zinc-800">
                 <label className="text-sm font-semibold">Modelo de Comissionamento</label>
                 <select value={tipoRemuneracao} onChange={e => setTipoRemuneracao(e.target.value)}
-                  className="w-full rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 transition-all">
+                  className="w-full rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand transition-all">
                   <option value="SEM_COMISSAO">Sem Comissão (Apenas Fixo)</option>
                   <option value="PERCENTUAL_FIXO">Percentual Único Fixo</option>
                   <option value="FAIXAS_META">Por Faixas de Metas (Degraus)</option>
@@ -216,13 +216,13 @@ export function VendedoresClient() {
 
               {/* Base de Cálculo */}
               {tipoRemuneracao !== "SEM_COMISSAO" && (
-                <div className="space-y-2 p-4 bg-blue-50 dark:bg-blue-950/20 border border-blue-100 dark:border-blue-900 rounded-xl">
+                <div className="space-y-2 p-4 bg-brand/5 dark:bg-brand/10 border border-brand/20 dark:border-brand/30 rounded-xl">
                   <div className="flex items-center gap-2 mb-2">
-                    <Info className="h-4 w-4 text-blue-600" />
-                    <label className="text-sm font-semibold text-blue-900 dark:text-blue-300">Base de Cálculo do Percentual</label>
+                    <Info className="h-4 w-4 text-brand" />
+                    <label className="text-sm font-semibold text-brand">Base de Cálculo do Percentual</label>
                   </div>
                   <select value={baseCalculo} onChange={e => setBaseCalculo(e.target.value)}
-                    className="w-full rounded-lg border border-blue-200 dark:border-blue-800 bg-white dark:bg-zinc-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    className="w-full rounded-lg border border-brand/30 dark:border-brand/50 bg-white dark:bg-zinc-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand">
                     <option value="VOLUME">Volume Liberado da Operação (Ex: % sobre o Valor Vendido)</option>
                     <option value="LUCRO_LOJA">Comissão Flat da Loja (Ex: % sobre o Lucro da Corretora)</option>
                   </select>
@@ -234,7 +234,7 @@ export function VendedoresClient() {
                 <div className="space-y-2">
                   <label className="text-sm font-semibold">Qual o Percentual? (%)</label>
                   <input type="number" step="0.01" value={percentualFixo} onChange={e => setPercentualFixo(e.target.value)} placeholder="Ex: 1.5"
-                    className="w-full rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 transition-all" />
+                    className="w-full rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand transition-all" />
                 </div>
               )}
 
@@ -242,7 +242,7 @@ export function VendedoresClient() {
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <label className="text-sm font-semibold">Faixas de Atingimento</label>
-                    <button type="button" onClick={addFaixa} className="text-xs font-bold text-violet-600 hover:text-violet-700 flex items-center gap-1">
+                    <button type="button" onClick={addFaixa} className="text-xs font-bold text-brand hover:opacity-80 flex items-center gap-1">
                       <Plus className="h-3 w-3" /> Adicionar Faixa
                     </button>
                   </div>
@@ -274,7 +274,7 @@ export function VendedoresClient() {
               <div className="flex justify-end gap-3 pt-6 border-t border-zinc-100 dark:border-zinc-800">
                 <button type="button" onClick={() => setModalOpen(false)} className="px-5 py-2.5 text-sm font-medium text-zinc-600 hover:bg-zinc-100 rounded-xl transition">Cancelar</button>
                 <button type="submit" disabled={salvando}
-                  className="flex items-center gap-2 rounded-xl bg-violet-600 px-6 py-2.5 text-sm font-semibold text-white shadow-lg shadow-violet-500/30 hover:bg-violet-700 transition">
+                  className="flex items-center gap-2 rounded-xl bg-brand px-6 py-2.5 text-sm font-semibold text-white shadow-lg shadow-brand/30 hover:opacity-90 transition">
                   {salvando ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
                   {salvando ? "Salvando..." : "Salvar Regras"}
                 </button>

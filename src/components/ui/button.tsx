@@ -12,7 +12,7 @@ const buttonVariants = cva(
         default:
           "bg-foreground text-background hover:bg-foreground/90 focus-visible:ring-foreground/30",
         primary:
-          "bg-gradient-to-tr from-violet-600 to-fuchsia-500 text-white hover:opacity-95 shadow-md shadow-violet-500/20",
+          "bg-brand text-white hover:opacity-95 shadow-md shadow-brand/20 focus-visible:ring-brand/30",
         outline:
           "border border-zinc-200 bg-white hover:bg-zinc-50 text-zinc-900 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:bg-zinc-800 dark:text-zinc-100",
         ghost:

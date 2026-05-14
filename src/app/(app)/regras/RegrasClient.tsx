@@ -59,8 +59,8 @@ const tipoColor: Record<string, string> = {
   EMPRESTIMO_CONSIGNADO: "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400",
   REFINANCIAMENTO: "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400",
   PORTABILIDADE: "bg-indigo-50 text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-400",
-  PORTABILIDADE_REFIN: "bg-violet-50 text-violet-700 dark:bg-violet-950/40 dark:text-violet-400",
-  CARTAO_CONSIGNADO: "bg-fuchsia-50 text-fuchsia-700 dark:bg-fuchsia-950/40 dark:text-fuchsia-400",
+  PORTABILIDADE_REFIN: "bg-brand/10 text-brand dark:bg-brand/20 dark:text-brand",
+  CARTAO_CONSIGNADO: "bg-brand/10 text-brand dark:bg-brand/20 dark:text-brand",
   CARTAO_BENEFICIO: "bg-pink-50 text-pink-700 dark:bg-pink-950/40 dark:text-pink-400",
 };
 
@@ -119,7 +119,7 @@ export function RegrasClient({
       <div className="max-w-7xl mx-auto px-6 py-10 space-y-8">
         {/* Header */}
         <header>
-          <div className="flex items-center gap-2 text-violet-600 dark:text-violet-400 mb-1">
+          <div className="flex items-center gap-2 text-brand mb-1">
             <BookOpen className="h-5 w-5" />
             <span className="text-xs uppercase tracking-widest font-semibold">
               Regras de Crédito
@@ -143,7 +143,7 @@ export function RegrasClient({
               placeholder="Buscar por banco, produto ou tipo..."
               value={busca}
               onChange={(e) => setBusca(e.target.value)}
-              className="w-full rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/50 transition"
+              className="w-full rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/50 transition"
             />
           </div>
           <div className="relative">
@@ -151,7 +151,7 @@ export function RegrasClient({
             <select
               value={filtroBanco}
               onChange={(e) => setFiltroBanco(e.target.value)}
-              className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 pl-10 pr-8 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/50 appearance-none"
+              className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 pl-10 pr-8 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/50 appearance-none"
             >
               <option value="">Todos os Bancos</option>
               {bancos.map((b) => (
@@ -238,7 +238,7 @@ export function RegrasClient({
                         </div>
                       )}
                       {salvando === regra.id ? (
-                        <Loader2 className="h-4 w-4 animate-spin text-violet-500" />
+                        <Loader2 className="h-4 w-4 animate-spin text-brand" />
                       ) : salvoOk === regra.id ? (
                         <CheckCircle2 className="h-4 w-4 text-emerald-500" />
                       ) : null}
@@ -399,7 +399,7 @@ function EditField({
           onChange={(e) => setTemp(e.target.value)}
           onBlur={handleBlur}
           onKeyDown={(e) => e.key === "Enter" && handleBlur()}
-          className={`rounded-lg border border-violet-300 dark:border-violet-700 bg-white dark:bg-zinc-800 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/50 ${
+          className={`rounded-lg border border-brand/50 dark:border-brand/70 bg-white dark:bg-zinc-800 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/50 ${
             full ? "w-full" : "w-full"
           }`}
         />

@@ -76,7 +76,7 @@ export function RoteirosClient({
       <div className="max-w-7xl mx-auto px-6 py-10 space-y-8">
         {/* Header */}
         <header>
-          <div className="flex items-center gap-2 text-violet-600 dark:text-violet-400 mb-1">
+          <div className="flex items-center gap-2 text-brand mb-1">
             <FileText className="h-5 w-5" />
             <span className="text-xs uppercase tracking-widest font-semibold">
               Roteiros Operacionais
@@ -93,7 +93,7 @@ export function RoteirosClient({
         {/* KPIs */}
         <div className="grid grid-cols-3 gap-4">
           <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 flex items-center gap-4">
-            <div className="h-10 w-10 rounded-lg bg-violet-50 dark:bg-violet-950/40 text-violet-600 dark:text-violet-400 flex items-center justify-center">
+            <div className="h-10 w-10 rounded-lg bg-brand/10 text-brand flex items-center justify-center">
               <FileText className="h-5 w-5" />
             </div>
             <div>
@@ -111,7 +111,7 @@ export function RoteirosClient({
             </div>
           </div>
           <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 flex items-center gap-4">
-            <div className="h-10 w-10 rounded-lg bg-fuchsia-50 dark:bg-fuchsia-950/40 text-fuchsia-600 dark:text-fuchsia-400 flex items-center justify-center">
+            <div className="h-10 w-10 rounded-lg bg-brand/20 text-brand flex items-center justify-center">
               <Brain className="h-5 w-5" />
             </div>
             <div>
@@ -124,13 +124,13 @@ export function RoteirosClient({
         </div>
 
         {/* Tip */}
-        <div className="rounded-xl border border-violet-200 dark:border-violet-900 bg-violet-50 dark:bg-violet-950/20 p-4 text-sm text-violet-700 dark:text-violet-300 flex items-start gap-3">
+        <div className="rounded-xl border border-brand/20 dark:border-brand/40 bg-brand/5 dark:bg-brand/10 p-4 text-sm text-brand flex items-start gap-3">
           <Sparkles className="h-5 w-5 shrink-0 mt-0.5" />
           <p>
             Para importar novos roteiros, acesse o{" "}
             <button
               onClick={() => router.push("/motor-regras")}
-              className="font-semibold underline underline-offset-2 hover:text-violet-900 dark:hover:text-violet-100 transition"
+              className="font-semibold underline underline-offset-2 hover:opacity-80 transition"
             >
               Motor de Regras
             </button>{" "}

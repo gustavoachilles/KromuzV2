@@ -25,7 +25,7 @@ export function AuditoriaClient({ logs: initLogs }: { logs: any[] }) {
     if (a.includes("editou") || a.includes("alterou")) return <Edit className="w-4 h-4 text-amber-500" />;
     if (a.includes("deletou") || a.includes("removeu")) return <Trash2 className="w-4 h-4 text-red-500" />;
     if (a.includes("vinculou") || a.includes("transferiu")) return <ArrowRightLeft className="w-4 h-4 text-blue-500" />;
-    if (a.includes("importou")) return <FileDown className="w-4 h-4 text-violet-500" />;
+    if (a.includes("importou")) return <FileDown className="w-4 h-4 text-brand" />;
     return <Activity className="w-4 h-4 text-zinc-400" />;
   };
 
@@ -41,7 +41,7 @@ export function AuditoriaClient({ logs: initLogs }: { logs: any[] }) {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-white flex items-center gap-2">
-            <Shield className="w-6 h-6 text-violet-600" />
+            <Shield className="w-6 h-6 text-brand" />
             Logs de Auditoria
           </h1>
           <p className="text-zinc-500 dark:text-zinc-400 mt-1">
@@ -59,7 +59,7 @@ export function AuditoriaClient({ logs: initLogs }: { logs: any[] }) {
               placeholder="Filtrar por usuário, ação ou entidade..." 
               value={busca}
               onChange={e => setBusca(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg text-sm focus:ring-2 focus:ring-violet-500 focus:outline-none"
+              className="w-full pl-9 pr-4 py-2 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg text-sm focus:ring-2 focus:ring-brand focus:outline-none"
             />
           </div>
           <div className="flex gap-2">

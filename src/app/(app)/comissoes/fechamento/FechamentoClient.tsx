@@ -58,7 +58,7 @@ export function FechamentoClient({
         
         <header className="flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div>
-            <div className="flex items-center gap-2 text-violet-600 dark:text-violet-400 mb-1">
+            <div className="flex items-center gap-2 text-brand mb-1">
               <Calculator className="h-5 w-5" />
               <span className="text-xs uppercase tracking-widest font-semibold">Fechamento de Folha</span>
             </div>
@@ -76,9 +76,9 @@ export function FechamentoClient({
         {/* Resumo da Corretora */}
         {isAdmin && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-gradient-to-br from-violet-600 to-indigo-600 rounded-3xl p-6 text-white shadow-lg">
-              <Wallet className="w-8 h-8 text-violet-200 mb-4" />
-              <p className="text-sm font-semibold text-violet-200 uppercase tracking-wider mb-1">Receita da Corretora</p>
+            <div className="bg-brand rounded-3xl p-6 text-white shadow-lg">
+              <Wallet className="w-8 h-8 text-white/50 mb-4" />
+              <p className="text-sm font-semibold text-white/80 uppercase tracking-wider mb-1">Receita da Corretora</p>
               <h3 className="text-3xl font-black">R$ {totalReceitaCorretora.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</h3>
             </div>
             <div className="bg-white dark:bg-zinc-900 rounded-3xl p-6 border border-zinc-200 dark:border-zinc-800 shadow-sm">
@@ -125,7 +125,7 @@ export function FechamentoClient({
                   </td>
                   <td className="px-6 py-4 text-right">
                     {h.vendedor.tipoRemuneracao === "PERCENTUAL_FIXO" ? (
-                      <span className="inline-flex items-center gap-1 bg-violet-100 text-violet-700 px-2 py-1 rounded text-xs font-bold">
+                      <span className="inline-flex items-center gap-1 bg-brand/10 text-brand px-2 py-1 rounded text-xs font-bold">
                         {h.vendedor.percentualFixo}% FLAT
                       </span>
                     ) : h.vendedor.tipoRemuneracao === "SEM_COMISSAO" ? (
@@ -137,7 +137,7 @@ export function FechamentoClient({
                   <td className="px-6 py-4 text-right text-zinc-600">
                     R$ {h.holerite.salarioFixo.toLocaleString('pt-BR', {minimumFractionDigits: 2})}
                   </td>
-                  <td className="px-6 py-4 text-right font-medium text-violet-600">
+                  <td className="px-6 py-4 text-right font-medium text-brand">
                     R$ {h.holerite.comissaoVendedor.toLocaleString('pt-BR', {minimumFractionDigits: 2})}
                   </td>
                   <td className="px-6 py-4 text-right font-black text-emerald-600 bg-emerald-50 dark:bg-emerald-900/10">

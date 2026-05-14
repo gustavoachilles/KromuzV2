@@ -85,7 +85,7 @@ export default async function DashboardPage() {
   const volumeTotal = propostasStats.find(p => p.status === "PAGA")?._sum.valorLiberado || 0;
   const comissaoTotal = propostasStats.find(p => p.status === "PAGA")?._sum.valorComissao || 0;
   const funilData = [
-    { name: "Leads Recebidos", value: totalLeads, fill: "#8b5cf6" },
+    { name: "Leads Recebidos", value: totalLeads, fill: "var(--brand-primary)" },
     { name: "Propostas Digitadas", value: propostasStats.find(p => p.status === "DIGITADA")?._count || 0, fill: "#f59e0b" },
     { name: "Propostas Aprovadas", value: propostasStats.find(p => p.status === "APROVADA")?._count || 0, fill: "#3b82f6" },
     { name: "Propostas Pagas", value: propostasStats.find(p => p.status === "PAGA")?._count || 0, fill: "#10b981" },

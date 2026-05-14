@@ -52,23 +52,23 @@ export default function CadastroPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-zinc-950 via-zinc-900 to-violet-950/40 px-4 py-8">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-zinc-950 via-zinc-900 to-brand/20 px-4 py-8">
       {/* Background decorativo */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -left-40 w-96 h-96 bg-violet-600/10 rounded-full blur-3xl" />
-        <div className="absolute top-1/2 -right-20 w-80 h-80 bg-fuchsia-600/10 rounded-full blur-3xl" />
+        <div className="absolute -top-40 -left-40 w-96 h-96 bg-brand/10 rounded-full blur-3xl" />
+        <div className="absolute top-1/2 -right-20 w-80 h-80 bg-brand/10 rounded-full blur-3xl" />
       </div>
 
       <div className="relative w-full max-w-md space-y-8">
         {/* Logo */}
         <div className="text-center">
           <div className="inline-flex items-center gap-3 mb-6">
-            <div className="h-12 w-12 rounded-xl bg-gradient-to-tr from-violet-600 to-fuchsia-500 flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-violet-500/25">
+            <div className="h-12 w-12 rounded-xl bg-brand flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-brand/25">
               K
             </div>
             <div className="text-left">
               <p className="text-2xl font-bold text-white">Kromuz</p>
-              <p className="text-[10px] uppercase tracking-[0.25em] text-violet-400">
+              <p className="text-[10px] uppercase tracking-[0.25em] text-brand">
                 Plataforma de Crédito
               </p>
             </div>
@@ -113,7 +113,7 @@ export default function CadastroPage() {
                       value={nome}
                       onChange={(e) => setNome(e.target.value)}
                       placeholder="João Silva"
-                      className="w-full rounded-lg border border-zinc-700/80 bg-zinc-800/50 pl-10 pr-4 py-3 text-sm text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-violet-500/50 focus:border-violet-500 transition"
+                      className="w-full rounded-lg border border-zinc-700/80 bg-zinc-800/50 pl-10 pr-4 py-3 text-sm text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-brand/50 focus:border-brand transition"
                     />
                   </div>
                 </div>
@@ -131,7 +131,7 @@ export default function CadastroPage() {
                       value={empresa}
                       onChange={(e) => setEmpresa(e.target.value)}
                       placeholder="Promotora XYZ"
-                      className="w-full rounded-lg border border-zinc-700/80 bg-zinc-800/50 pl-10 pr-4 py-3 text-sm text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-violet-500/50 focus:border-violet-500 transition"
+                      className="w-full rounded-lg border border-zinc-700/80 bg-zinc-800/50 pl-10 pr-4 py-3 text-sm text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-brand/50 focus:border-brand transition"
                     />
                   </div>
                 </div>
@@ -149,7 +149,7 @@ export default function CadastroPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="joao@promotoraxyz.com.br"
-                  className="w-full rounded-lg border border-zinc-700/80 bg-zinc-800/50 px-4 py-3 text-sm text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-violet-500/50 focus:border-violet-500 transition"
+                  className="w-full rounded-lg border border-zinc-700/80 bg-zinc-800/50 px-4 py-3 text-sm text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-brand/50 focus:border-brand transition"
                 />
               </div>
 
@@ -167,7 +167,7 @@ export default function CadastroPage() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••"
-                    className="w-full rounded-lg border border-zinc-700/80 bg-zinc-800/50 px-4 py-3 pr-12 text-sm text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-violet-500/50 focus:border-violet-500 transition"
+                    className="w-full rounded-lg border border-zinc-700/80 bg-zinc-800/50 px-4 py-3 pr-12 text-sm text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-brand/50 focus:border-brand transition"
                   />
                   <button
                     type="button"
@@ -183,7 +183,7 @@ export default function CadastroPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-500 px-6 py-3.5 text-sm font-semibold text-white shadow-lg shadow-violet-500/25 hover:opacity-95 disabled:opacity-50 transition"
+              className="w-full flex items-center justify-center gap-2 rounded-xl bg-brand px-6 py-3.5 text-sm font-semibold text-white shadow-lg shadow-brand/25 hover:opacity-95 disabled:opacity-50 transition"
             >
               {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserPlus className="h-4 w-4" />}
               {loading ? "Criando conta..." : "Criar minha conta"}
@@ -193,7 +193,7 @@ export default function CadastroPage() {
 
         <p className="text-center text-sm text-zinc-500">
           Já tem uma conta?{" "}
-          <Link href="/login" className="text-violet-400 hover:text-violet-300 font-medium transition">
+          <Link href="/login" className="text-brand hover:opacity-80 font-medium transition">
             Fazer login
           </Link>
         </p>

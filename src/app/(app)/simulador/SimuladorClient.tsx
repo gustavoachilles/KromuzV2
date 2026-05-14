@@ -97,7 +97,7 @@ export function SimuladorClient({ empresaId, convenios }: { empresaId: string, c
           <div className="p-8 max-w-3xl">
             <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6">
               <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
-                <Calculator className="w-5 h-5 text-violet-500" />
+                <Calculator className="w-5 h-5 text-brand" />
                 Calculadora Rápida
               </h2>
               
@@ -108,7 +108,7 @@ export function SimuladorClient({ empresaId, convenios }: { empresaId: string, c
                     <select 
                       value={formManual.convenioId}
                       onChange={e => setFormManual({...formManual, convenioId: e.target.value})}
-                      className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 focus:ring-2 focus:ring-violet-500"
+                      className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 focus:ring-2 focus:ring-brand/50"
                     >
                       <option value="">Selecione...</option>
                       {convenios?.map(c => <option key={c.id} value={c.id}>{c.nome}</option>)}
@@ -119,7 +119,7 @@ export function SimuladorClient({ empresaId, convenios }: { empresaId: string, c
                     <select 
                       value={formManual.tipoOperacao}
                       onChange={e => setFormManual({...formManual, tipoOperacao: e.target.value})}
-                      className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 focus:ring-2 focus:ring-violet-500"
+                      className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 focus:ring-2 focus:ring-brand/50"
                     >
                       <option value="EMPRESTIMO_CONSIGNADO">Margem Nova / Empréstimo</option>
                       <option value="REFINANCIAMENTO">Refinanciamento</option>
@@ -137,7 +137,7 @@ export function SimuladorClient({ empresaId, convenios }: { empresaId: string, c
                       placeholder="Ex: 65"
                       value={formManual.idade}
                       onChange={e => setFormManual({...formManual, idade: e.target.value})}
-                      className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 focus:ring-2 focus:ring-violet-500"
+                      className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 focus:ring-2 focus:ring-brand/50"
                     />
                   </div>
                   <div className="space-y-2">
@@ -147,7 +147,7 @@ export function SimuladorClient({ empresaId, convenios }: { empresaId: string, c
                       placeholder="0.00"
                       value={formManual.margem}
                       onChange={e => setFormManual({...formManual, margem: e.target.value})}
-                      className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 focus:ring-2 focus:ring-violet-500 font-bold text-emerald-600"
+                      className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 focus:ring-2 focus:ring-brand/50 font-bold text-emerald-600"
                     />
                   </div>
                 </div>
@@ -155,7 +155,7 @@ export function SimuladorClient({ empresaId, convenios }: { empresaId: string, c
                 <button 
                   type="submit" 
                   disabled={isCalculando}
-                  className="w-full bg-violet-600 text-white font-medium py-3 rounded-lg hover:bg-violet-700 transition flex justify-center items-center gap-2"
+                  className="w-full bg-brand text-white font-medium py-3 rounded-lg hover:opacity-90 transition flex justify-center items-center gap-2"
                 >
                   {isCalculando ? <RefreshCw className="w-5 h-5 animate-spin" /> : <Search className="w-5 h-5" />}
                   Procurar Oportunidades
@@ -261,7 +261,7 @@ export function SimuladorClient({ empresaId, convenios }: { empresaId: string, c
                             prazo: op.prazo
                           }
                         })}
-                        className="p-2 bg-violet-100 dark:bg-violet-900/30 text-violet-600 dark:text-violet-400 rounded-lg hover:bg-violet-200 dark:hover:bg-violet-900/50 transition-colors shadow-sm"
+                        className="p-2 bg-brand/10 text-brand rounded-lg hover:bg-brand/20 transition-colors shadow-sm"
                         title="Ver Insight da IA"
                       >
                         <Sparkles className="w-4 h-4" />

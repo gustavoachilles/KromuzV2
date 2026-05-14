@@ -156,7 +156,7 @@ export function DashFinanceiroClient({
       <div className="max-w-7xl mx-auto px-6 py-10 space-y-8">
         <header className="flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div>
-            <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 mb-1">
+            <div className="flex items-center gap-2 text-brand mb-1">
               <DollarSign className="h-5 w-5" />
               <span className="text-xs uppercase tracking-widest font-semibold">Financeiro</span>
             </div>
@@ -203,9 +203,9 @@ export function DashFinanceiroClient({
         {tab === "visao_geral" && (
           <div className="space-y-6">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <KpiBox icon={<TrendingUp className="h-4 w-4" />} label="Volume Total Pago" value={fmtFull(totais.volume)} color="text-violet-600" />
+              <KpiBox icon={<TrendingUp className="h-4 w-4" />} label="Volume Total Pago" value={fmtFull(totais.volume)} color="text-brand" />
               <KpiBox icon={<DollarSign className="h-4 w-4" />} label="Comissões Totais" value={fmtFull(totais.comissao)} color="text-emerald-600" />
-              <KpiBox icon={<CheckCircle2 className="h-4 w-4" />} label="Propostas Pagas" value={String(totais.count)} color="text-indigo-600" />
+              <KpiBox icon={<CheckCircle2 className="h-4 w-4" />} label="Propostas Pagas" value={String(totais.count)} color="text-brand" />
               <KpiBox icon={<BarChart3 className="h-4 w-4" />} label="Margem Média" value={`${taxaComissao}%`} color="text-amber-600" />
             </div>
 
@@ -219,7 +219,7 @@ export function DashFinanceiroClient({
                       return (
                         <div key={m.label} className="flex-1 flex flex-col items-center gap-1">
                           <div className="w-full bg-zinc-100 dark:bg-zinc-800 rounded-t-lg relative" style={{ height: "100%" }}>
-                            <div className="absolute bottom-0 w-full bg-violet-600 rounded-t-lg transition-all duration-700" style={{ height: `${h}%` }} />
+                            <div className="absolute bottom-0 w-full bg-brand rounded-t-lg transition-all duration-700" style={{ height: `${h}%` }} />
                           </div>
                           <span className="text-[10px] text-zinc-400 font-medium">{m.label}</span>
                         </div>
@@ -253,7 +253,7 @@ export function DashFinanceiroClient({
           <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 overflow-hidden shadow-sm">
             <div className="p-6 border-b border-zinc-100 dark:border-zinc-800">
                <h2 className="text-lg font-bold flex items-center gap-2">
-                 <Users className="w-5 h-5 text-violet-500" />
+                 <Users className="w-5 h-5 text-brand" />
                  Repasse de Comissões por Vendedor
                </h2>
                <p className="text-sm text-zinc-500">Cálculo baseado em propostas com status PAGA.</p>
@@ -266,7 +266,7 @@ export function DashFinanceiroClient({
                         <th className="px-6 py-3 text-right">Qtd</th>
                         <th className="px-6 py-3 text-right">Volume Produzido</th>
                         <th className="px-6 py-3 text-right">Comissão Total</th>
-                        <th className="px-6 py-3 text-right text-violet-600">Previsão Repasse (20%)</th>
+                        <th className="px-6 py-3 text-right text-brand">Previsão Repasse (20%)</th>
                      </tr>
                   </thead>
                   <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
@@ -282,7 +282,7 @@ export function DashFinanceiroClient({
                               <td className="px-6 py-4 text-right tabular-nums text-sm">{v._count}</td>
                               <td className="px-6 py-4 text-right tabular-nums text-sm font-medium">{fmtFull(v._sum.valorLiberado || 0)}</td>
                               <td className="px-6 py-4 text-right tabular-nums text-sm text-emerald-600">{fmtFull(totalCom)}</td>
-                              <td className="px-6 py-4 text-right tabular-nums text-sm font-black text-violet-600 bg-violet-50/30">
+                              <td className="px-6 py-4 text-right tabular-nums text-sm font-black text-brand bg-brand/10">
                                  {fmtFull(repasse)}
                               </td>
                            </tr>
@@ -296,11 +296,11 @@ export function DashFinanceiroClient({
 
         {tab === "rede" && (
           <div className="space-y-6">
-            <div className="p-6 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900 rounded-2xl flex items-start gap-4">
-               <Building2 className="w-6 h-6 text-blue-600 shrink-0 mt-0.5" />
+            <div className="p-6 bg-brand/5 dark:bg-brand/10 border border-brand/20 dark:border-brand/30 rounded-2xl flex items-start gap-4">
+               <Building2 className="w-6 h-6 text-brand shrink-0 mt-0.5" />
                <div>
-                  <h2 className="text-lg font-bold text-blue-900 dark:text-blue-400">Master / Sub-Corretores (Split)</h2>
-                  <p className="text-sm text-blue-700 dark:text-blue-300/80 mt-1">
+                  <h2 className="text-lg font-bold text-brand">Master / Sub-Corretores (Split)</h2>
+                  <p className="text-sm text-brand/80 mt-1">
                      Acompanhe a produção da sua rede de parceiros. O sistema deduz a porcentagem da comissão do Sub e atribui automaticamente ao lucro do Master.
                   </p>
                </div>
@@ -327,7 +327,7 @@ export function DashFinanceiroClient({
                               <th className="px-6 py-3 text-right">Comissão Gerada</th>
                               <th className="px-6 py-3 text-right">Taxa Split</th>
                               <th className="px-6 py-3 text-right text-emerald-600">Sua Parte (Master)</th>
-                              <th className="px-6 py-3 text-right text-violet-600">Líquido do Sub</th>
+                              <th className="px-6 py-3 text-right text-brand">Líquido do Sub</th>
                            </tr>
                         </thead>
                         <tbody className="divide-y divide-zinc-50 dark:divide-zinc-800/50">
@@ -338,7 +338,7 @@ export function DashFinanceiroClient({
                                  <td className="px-6 py-3 text-sm text-right tabular-nums">{fmtFull(sub.comissaoTotal)}</td>
                                  <td className="px-6 py-3 text-xs font-bold text-right text-orange-500">{sub.splitPct}%</td>
                                  <td className="px-6 py-3 text-sm text-right tabular-nums font-bold text-emerald-600 bg-emerald-50/30">+{fmtFull(sub.repasseParaMaster)}</td>
-                                 <td className="px-6 py-3 text-sm text-right tabular-nums font-bold text-violet-600">{fmtFull(sub.subFicaCom)}</td>
+                                 <td className="px-6 py-3 text-sm text-right tabular-nums font-bold text-brand">{fmtFull(sub.subFicaCom)}</td>
                               </tr>
                            ))}
                         </tbody>

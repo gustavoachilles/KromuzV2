@@ -36,7 +36,7 @@ export function MarketingClient({ campanhas }: { campanhas: CampanhaMetrics[] })
         {/* Header */}
         <header className="flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div>
-            <div className="flex items-center gap-2 text-rose-500 mb-1">
+            <div className="flex items-center gap-2 text-brand mb-1">
               <Megaphone className="h-5 w-5" />
               <span className="text-xs uppercase tracking-widest font-semibold">Tráfego e Growth</span>
             </div>
@@ -71,7 +71,7 @@ export function MarketingClient({ campanhas }: { campanhas: CampanhaMetrics[] })
              icon={<Target className="w-4 h-4"/>} 
              label="Custo Médio por Lead (CPL)" 
              value={fmt(cplGlobal)} 
-             color="text-violet-600" 
+             color="text-brand" 
           />
         </div>
 
@@ -118,7 +118,7 @@ export function MarketingClient({ campanhas }: { campanhas: CampanhaMetrics[] })
                                 <p className="text-[10px] text-zinc-400">CPL: {fmt(c.metricas.cpl)}</p>
                              </td>
                              <td className="px-6 py-4 text-center">
-                                <p className="text-sm font-bold text-violet-600">{c.metricas.clientesConvertidos}</p>
+                                <p className="text-sm font-bold text-brand">{c.metricas.clientesConvertidos}</p>
                                 <p className="text-[10px] text-zinc-400">CAC: {fmt(c.metricas.cac)}</p>
                              </td>
                              <td className="px-6 py-4 text-right">

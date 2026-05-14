@@ -41,7 +41,7 @@ const tipoConvenio: Record<string, { label: string; color: string }> = {
   inss: { label: "INSS", color: "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400" },
   siape: { label: "SIAPE", color: "bg-indigo-50 text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-400" },
   forcas_armadas: { label: "Forças Armadas", color: "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400" },
-  estado: { label: "Estado/Município", color: "bg-violet-50 text-violet-700 dark:bg-violet-950/40 dark:text-violet-400" },
+  estado: { label: "Estado/Município", color: "bg-brand/10 text-brand dark:bg-brand/20 dark:text-brand" },
   outro: { label: "Outro", color: "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400" },
 };
 
@@ -132,7 +132,7 @@ export function ConveniosClient({
         {/* Header */}
         <header className="flex items-start justify-between gap-4 flex-wrap">
           <div>
-            <div className="flex items-center gap-2 text-violet-600 dark:text-violet-400 mb-1">
+            <div className="flex items-center gap-2 text-brand mb-1">
               <Shield className="h-5 w-5" />
               <span className="text-xs uppercase tracking-widest font-semibold">
                 Convênios
@@ -147,7 +147,7 @@ export function ConveniosClient({
           </div>
           <button
             onClick={() => setModal(true)}
-            className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-violet-500/25 hover:opacity-95 transition"
+            className="flex items-center gap-2 rounded-xl bg-brand px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-brand/25 hover:opacity-95 transition"
           >
             <Plus className="h-4 w-4" />
             Novo Convênio
@@ -181,7 +181,7 @@ export function ConveniosClient({
                     className="flex items-center gap-4 px-5 py-4 cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-800/30 transition"
                     onClick={() => setExpandido(aberto ? null : conv.id)}
                   >
-                    <div className="h-10 w-10 rounded-lg bg-violet-50 dark:bg-violet-950/40 text-violet-600 dark:text-violet-400 flex items-center justify-center font-bold text-xs shrink-0">
+                    <div className="h-10 w-10 rounded-lg bg-brand/10 text-brand flex items-center justify-center font-bold text-xs shrink-0">
                       {conv.nome.slice(0, 3).toUpperCase()}
                     </div>
                     <div className="flex-1 min-w-0">
@@ -235,7 +235,7 @@ export function ConveniosClient({
                                 key={bc.id}
                                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 text-sm"
                               >
-                                <Building2 className="h-3 w-3 text-violet-500" />
+                                <Building2 className="h-3 w-3 text-brand" />
                                 {bc.banco.nome}
                                 <button
                                   onClick={() => desvincularBanco(conv.id, bc.banco.id)}
@@ -261,7 +261,7 @@ export function ConveniosClient({
                                 key={b.id}
                                 disabled={vinculando === b.id}
                                 onClick={() => vincularBanco(conv.id, b.id)}
-                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-dashed border-zinc-300 dark:border-zinc-700 text-sm text-zinc-600 dark:text-zinc-400 hover:border-violet-400 hover:text-violet-600 dark:hover:text-violet-400 transition disabled:opacity-50"
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-dashed border-zinc-300 dark:border-zinc-700 text-sm text-zinc-600 dark:text-zinc-400 hover:border-brand/50 hover:text-brand transition disabled:opacity-50"
                               >
                                 {vinculando === b.id ? (
                                   <Loader2 className="h-3 w-3 animate-spin" />
@@ -317,7 +317,7 @@ export function ConveniosClient({
                     setForm({ ...form, nome: e.target.value, slug: autoSlug(e.target.value) })
                   }
                   placeholder="Ex: INSS Aposentadoria"
-                  className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/50"
+                  className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/50"
                 />
               </div>
 
@@ -329,7 +329,7 @@ export function ConveniosClient({
                     value={form.slug}
                     onChange={(e) => setForm({ ...form, slug: e.target.value })}
                     placeholder="inss_aposentadoria"
-                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-violet-500/50"
+                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-brand/50"
                   />
                 </div>
                 <div className="space-y-2">
@@ -337,7 +337,7 @@ export function ConveniosClient({
                   <select
                     value={form.tipo}
                     onChange={(e) => setForm({ ...form, tipo: e.target.value })}
-                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/50"
+                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/50"
                   >
                     <option value="inss">INSS</option>
                     <option value="siape">SIAPE</option>
@@ -355,7 +355,7 @@ export function ConveniosClient({
                   onChange={(e) => setForm({ ...form, descricao: e.target.value })}
                   rows={2}
                   placeholder="Observações sobre este convênio..."
-                  className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/50 resize-none"
+                  className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/50 resize-none"
                 />
               </div>
 
@@ -370,7 +370,7 @@ export function ConveniosClient({
                 <button
                   type="submit"
                   disabled={salvando}
-                  className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-violet-500/25 hover:opacity-95 disabled:opacity-50 transition"
+                  className="flex items-center gap-2 rounded-xl bg-brand px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-brand/25 hover:opacity-95 disabled:opacity-50 transition"
                 >
                   {salvando ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
                   {salvando ? "Criando..." : "Criar Convênio"}

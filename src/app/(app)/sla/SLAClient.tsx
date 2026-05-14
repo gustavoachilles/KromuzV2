@@ -25,7 +25,7 @@ export function SLAClient({ ranking }: { ranking: SLARanking[] }) {
         
         {/* Header */}
         <header className="flex items-center gap-4">
-          <div className="p-4 bg-violet-100 dark:bg-violet-900/30 rounded-2xl text-violet-600 dark:text-violet-400">
+          <div className="p-4 bg-brand/10 dark:bg-brand/20 rounded-2xl text-brand">
              <Timer className="w-8 h-8" />
           </div>
           <div>
@@ -90,7 +90,7 @@ export function SLAClient({ ranking }: { ranking: SLARanking[] }) {
                                   <div className="flex flex-col items-end gap-1">
                                      <p className="text-sm font-bold">{s.taxaResposta}%</p>
                                      <div className="w-16 h-1.5 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
-                                        <div className="h-full bg-violet-500" style={{ width: `${s.taxaResposta}%` }} />
+                                        <div className="h-full bg-brand" style={{ width: `${s.taxaResposta}%` }} />
                                      </div>
                                   </div>
                                </td>

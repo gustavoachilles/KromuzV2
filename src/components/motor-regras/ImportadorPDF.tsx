@@ -300,7 +300,7 @@ export function ImportadorPDF({ empresaId }: { empresaId: string }) {
       <Card>
         <CardHeader>
           <div className="flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-violet-500" />
+            <Sparkles className="h-5 w-5 text-brand" />
             <CardTitle>Fila de importação de roteiros</CardTitle>
           </div>
           <CardDescription>
@@ -313,7 +313,7 @@ export function ImportadorPDF({ empresaId }: { empresaId: string }) {
               <Label htmlFor="arquivo">Arquivos (PDF ou imagem)</Label>
               <div
                 onClick={() => inputRef.current?.click()}
-                className="flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-zinc-200 dark:border-zinc-800 px-6 py-10 cursor-pointer hover:border-violet-400 hover:bg-violet-50/30 dark:hover:bg-violet-950/10 transition bg-zinc-50/50 dark:bg-zinc-900/50"
+                className="flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-zinc-200 dark:border-zinc-800 px-6 py-10 cursor-pointer hover:border-brand/50 hover:bg-brand/5 transition bg-zinc-50/50 dark:bg-zinc-900/50"
               >
                 <Upload className="h-8 w-8 text-zinc-400" />
                 <div className="text-center">
@@ -455,7 +455,7 @@ export function ImportadorPDF({ empresaId }: { empresaId: string }) {
               )}
 
               {item.status === "concluido" && item.resultado?.ok === true && (
-                <div className="pl-4 md:pl-8 border-l-2 border-violet-100 dark:border-violet-900 space-y-4">
+                <div className="pl-4 md:pl-8 border-l-2 border-brand/20 dark:border-brand/40 space-y-4">
                   <div className="flex justify-between items-center flex-wrap gap-2">
                     <div className="flex flex-wrap gap-4 text-sm text-zinc-500">
                       <span>
@@ -523,7 +523,7 @@ function CardRegraExtraida({ regra }: { regra: RegraExtraida }) {
       <CardHeader className="bg-zinc-50/60 dark:bg-zinc-900/60">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <FileText className="h-5 w-5 text-violet-500" />
+            <FileText className="h-5 w-5 text-brand" />
             <CardTitle className="text-base">{TIPO_LABEL[tipo] || tipo}</CardTitle>
           </div>
           <Badge variant={corBadge}>{regra.convenio_nome || "—"}</Badge>

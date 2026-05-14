@@ -85,7 +85,7 @@ export function ComissoesClient({
             <p className="text-2xl font-bold tabular-nums">{totais.count}</p>
           </div>
           <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5">
-            <div className="flex items-center gap-2 text-violet-600 mb-2">
+            <div className="flex items-center gap-2 text-brand mb-2">
               <TrendingUp className="h-4 w-4" />
               <span className="text-xs text-zinc-500">Volume Liberado</span>
             </div>
@@ -125,7 +125,7 @@ export function ComissoesClient({
               <div className="divide-y divide-zinc-100 dark:divide-zinc-800">
                 {propostas.map((p) => (
                   <div key={p.id} className="px-6 py-3 flex items-center gap-4 hover:bg-zinc-50 dark:hover:bg-zinc-800/30 transition">
-                    <div className={`h-2.5 w-2.5 rounded-full shrink-0 ${p.status === "PAGA" ? "bg-violet-500" : "bg-emerald-500"}`} />
+                    <div className={`h-2.5 w-2.5 rounded-full shrink-0 ${p.status === "PAGA" ? "bg-brand" : "bg-emerald-500"}`} />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium truncate">{p.clienteNome}</p>
                       <p className="text-[11px] text-zinc-500">

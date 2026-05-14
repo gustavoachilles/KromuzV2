@@ -96,17 +96,17 @@ export default function SimuladorPublico({ convenioFixo, origemFixa, titulo, des
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans selection:bg-indigo-100">
+    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans selection:bg-brand/10">
       {/* Header Light */}
       <header className="py-5 px-6 border-b bg-white shadow-sm sticky top-0 z-10">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center shadow-md">
+            <div className="w-10 h-10 rounded-xl bg-brand flex items-center justify-center shadow-md">
               <Building2 className="w-5 h-5 text-white" />
             </div>
             <span className="font-extrabold text-xl tracking-tight text-slate-800">KROMUZ</span>
           </div>
-          <Badge className="bg-indigo-50 text-indigo-700 border-indigo-200 shadow-sm py-1 px-3">
+          <Badge className="bg-brand/10 text-brand border-brand/20 shadow-sm py-1 px-3">
             Simulação Gratuita
           </Badge>
         </div>
@@ -116,8 +116,8 @@ export default function SimuladorPublico({ convenioFixo, origemFixa, titulo, des
         {etapa === "perguntas" && (
           <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
             <div className="text-center space-y-4">
-              <div className="w-20 h-20 rounded-full bg-indigo-100 flex items-center justify-center mx-auto mb-6">
-                <Calculator className="w-10 h-10 text-indigo-600" />
+              <div className="w-20 h-20 rounded-full bg-brand/10 flex items-center justify-center mx-auto mb-6">
+                <Calculator className="w-10 h-10 text-brand" />
               </div>
               <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-slate-900">
                 {titulo}
@@ -127,7 +127,7 @@ export default function SimuladorPublico({ convenioFixo, origemFixa, titulo, des
               </p>
             </div>
 
-            <Card className="border-0 shadow-2xl shadow-indigo-900/5 bg-white/80 backdrop-blur-xl">
+            <Card className="border-0 shadow-2xl shadow-brand/5 bg-white/80 backdrop-blur-xl">
               <CardContent className="p-8 space-y-6">
                 {convenioFixo === "INSS" && (
                   <div>
@@ -139,8 +139,8 @@ export default function SimuladorPublico({ convenioFixo, origemFixa, titulo, des
                           onClick={() => setForm(f => ({ ...f, especie: esp }))}
                           className={`px-4 py-3 rounded-xl text-sm font-semibold transition-all border-2 ${
                             form.especie === esp
-                              ? "bg-indigo-600 border-indigo-600 text-white shadow-md shadow-indigo-600/20"
-                              : "bg-white border-slate-200 text-slate-600 hover:border-indigo-300 hover:bg-indigo-50"
+                              ? "bg-brand border-brand text-white shadow-md shadow-brand/20"
+                              : "bg-white border-slate-200 text-slate-600 hover:border-brand/50 hover:bg-brand/5"
                           }`}
                         >
                           {esp}
@@ -176,7 +176,7 @@ export default function SimuladorPublico({ convenioFixo, origemFixa, titulo, des
                 <Button
                   onClick={simular}
                   disabled={loading || !form.idade || !form.valor_beneficio}
-                  className="w-full bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white h-14 text-lg font-bold shadow-xl shadow-indigo-600/20 mt-4 rounded-xl transition-all hover:scale-[1.02]"
+                  className="w-full bg-brand text-white h-14 text-lg font-bold shadow-xl shadow-brand/25 mt-4 rounded-xl transition-all hover:scale-[1.02]"
                 >
                   {loading ? (
                     <><Loader2 className="w-5 h-5 animate-spin mr-2" /> Calculando limites...</>
@@ -193,7 +193,7 @@ export default function SimuladorPublico({ convenioFixo, origemFixa, titulo, des
           <div className="space-y-8 animate-in fade-in zoom-in-95 duration-500">
             <button
               onClick={() => setEtapa("perguntas")}
-              className="text-sm font-semibold text-indigo-600 hover:text-indigo-800 transition-colors flex items-center gap-1"
+              className="text-sm font-semibold text-brand hover:opacity-80 transition-colors flex items-center gap-1"
             >
               ← Refazer simulação
             </button>
@@ -228,10 +228,10 @@ export default function SimuladorPublico({ convenioFixo, origemFixa, titulo, des
             </Card>
 
             {/* CTA Lead Form */}
-            <Card className="border border-indigo-100 shadow-xl shadow-indigo-100 overflow-hidden">
-              <div className="bg-indigo-50 border-b border-indigo-100 p-6 text-center">
-                <h3 className="text-xl font-bold text-indigo-900">Garanta essa oferta agora</h3>
-                <p className="text-indigo-700 text-sm mt-1">Preencha abaixo para um especialista liberar o valor na sua conta.</p>
+            <Card className="border border-brand/10 shadow-xl shadow-brand/5 overflow-hidden">
+              <div className="bg-brand/5 border-b border-brand/10 p-6 text-center">
+                <h3 className="text-xl font-bold text-brand">Garanta essa oferta agora</h3>
+                <p className="text-brand/80 text-sm mt-1">Preencha abaixo para um especialista liberar o valor na sua conta.</p>
               </div>
               <CardContent className="p-6 space-y-4 bg-white">
                 <div className="grid md:grid-cols-2 gap-4">

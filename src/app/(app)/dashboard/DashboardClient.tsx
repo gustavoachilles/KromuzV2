@@ -69,10 +69,10 @@ const tipoLabel: Record<string, string> = {
 const tipoColor: Record<string, string> = {
   EMPRESTIMO_CONSIGNADO: "bg-emerald-500",
   REFINANCIAMENTO: "bg-amber-500",
-  PORTABILIDADE: "bg-indigo-500",
-  PORTABILIDADE_REFIN: "bg-violet-500",
-  CARTAO_CONSIGNADO: "bg-fuchsia-500",
-  CARTAO_BENEFICIO: "bg-pink-500",
+  PORTABILIDADE: "bg-brand/80",
+  PORTABILIDADE_REFIN: "bg-brand/60",
+  CARTAO_CONSIGNADO: "bg-brand/40",
+  CARTAO_BENEFICIO: "bg-brand/20",
 };
 
 export function DashboardClient({
@@ -106,7 +106,7 @@ export function DashboardClient({
       <div className="max-w-7xl mx-auto px-6 py-10 space-y-8">
         {/* Header */}
         <header>
-          <div className="flex items-center gap-2 text-violet-600 dark:text-violet-400 mb-1">
+          <div className="flex items-center gap-2 text-brand mb-1">
             <BarChart3 className="h-5 w-5" />
             <span className="text-xs uppercase tracking-widest font-semibold">Dashboard</span>
           </div>
@@ -125,14 +125,14 @@ export function DashboardClient({
             label="Bancos Ativos"
             value={kpis.totalBancos}
             sub={`${kpis.totalBancosSimulacao} na simulação`}
-            color="violet"
+            color="brand"
             onClick={() => router.push("/bancos")}
           />
           <KpiCard
             icon={<Layers className="h-5 w-5" />}
             label="Produtos"
             value={kpis.totalProdutos}
-            color="indigo"
+            color="brand"
             onClick={() => router.push("/produtos")}
           />
           <KpiCard
@@ -146,7 +146,7 @@ export function DashboardClient({
             label="Regras Ativas"
             value={kpis.totalRegras}
             sub={`${kpis.totalImportacoes} PDFs importados`}
-            color="fuchsia"
+            color="brand"
             onClick={() => router.push("/regras")}
           />
           <KpiCard
@@ -166,7 +166,7 @@ export function DashboardClient({
             label="Cérebro (RAG)"
             value={kpis.totalChunks}
             sub="Trechos de manuais"
-            color="violet"
+            color="brand"
             onClick={() => router.push("/chat")}
           />
           <KpiCard
@@ -226,7 +226,7 @@ export function DashboardClient({
               ) : (
                 rankingVendedores?.map((v, i) => (
                   <div key={v.vendedorNome} className="flex items-center gap-4">
-                    <div className="w-8 h-8 rounded-full bg-violet-100 dark:bg-violet-900/30 flex items-center justify-center font-bold text-violet-600 dark:text-violet-400 text-sm">
+                    <div className="w-8 h-8 rounded-full bg-brand/10 flex items-center justify-center font-bold text-brand text-sm">
                       {i + 1}
                     </div>
                     <div className="flex-1">
@@ -250,18 +250,18 @@ export function DashboardClient({
         {/* Intelligence & Automation Section */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="md:col-span-1 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6 flex flex-col justify-center items-center text-center">
-            <div className="w-16 h-16 rounded-full bg-violet-100 dark:bg-violet-900/30 flex items-center justify-center mb-4">
-              <Bot className="h-8 w-8 text-violet-600" />
+            <div className="w-16 h-16 rounded-full bg-brand/10 flex items-center justify-center mb-4">
+              <Bot className="h-8 w-8 text-brand" />
             </div>
             <h3 className="text-lg font-bold">Nível de Automação</h3>
             <p className="text-sm text-zinc-500 mb-6">Porcentagem de mensagens respondidas pelo Bot</p>
             <div className="w-full bg-zinc-100 dark:bg-zinc-800 h-3 rounded-full overflow-hidden mb-2">
               <div 
-                className="h-full bg-violet-600 rounded-full" 
+                className="h-full bg-brand rounded-full" 
                 style={{ width: `${Math.min((kpis.totalMensagensIA / Math.max(kpis.totalConversasAtivas * 10, 1)) * 100, 100)}%` }} 
               />
             </div>
-            <span className="text-2xl font-black text-violet-600">
+            <span className="text-2xl font-black text-brand">
                {Math.min((kpis.totalMensagensIA / Math.max(kpis.totalConversasAtivas * 10, 1)) * 100, 100).toFixed(1)}%
             </span>
           </div>
@@ -284,12 +284,12 @@ export function DashboardClient({
                 <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl">
                    <p className="text-[10px] uppercase tracking-wider text-zinc-500 mb-1">Políticas Bancos</p>
                    <p className="text-xl font-bold">{Math.min(kpis.totalChunks / 500, 100).toFixed(0)}%</p>
-                   <div className="h-1 w-full bg-violet-500 rounded-full mt-2" style={{ width: `${Math.min(kpis.totalChunks / 500, 100)}%` }} />
+                   <div className="h-1 w-full bg-brand rounded-full mt-2" style={{ width: `${Math.min(kpis.totalChunks / 500, 100)}%` }} />
                 </div>
                 <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl">
                    <p className="text-[10px] uppercase tracking-wider text-zinc-500 mb-1">Roteiros PDF</p>
                    <p className="text-xl font-bold">{kpis.totalImportacoes}</p>
-                   <div className="h-1 w-full bg-blue-500 rounded-full mt-2" />
+                   <div className="h-1 w-full bg-brand/50 rounded-full mt-2" />
                 </div>
                 <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl">
                    <p className="text-[10px] uppercase tracking-wider text-zinc-500 mb-1">Tempo de Resposta</p>
@@ -348,7 +348,7 @@ export function DashboardClient({
               <h2 className="text-lg font-semibold">Importações Recentes</h2>
               <button
                 onClick={() => router.push("/roteiros")}
-                className="text-xs text-violet-600 dark:text-violet-400 hover:text-violet-800 font-medium flex items-center gap-1"
+                className="text-xs text-brand hover:opacity-80 font-medium flex items-center gap-1"
               >
                 Ver todas <ArrowRight className="h-3 w-3" />
               </button>
@@ -437,10 +437,10 @@ function KpiCard({
   onClick?: () => void;
 }) {
   const colorMap: Record<string, string> = {
-    violet: "bg-violet-50 text-violet-600 dark:bg-violet-950/40 dark:text-violet-400",
-    indigo: "bg-indigo-50 text-indigo-600 dark:bg-indigo-950/40 dark:text-indigo-400",
+    brand: "bg-brand/10 text-brand dark:bg-brand/20 dark:text-brand",
+    indigo: "bg-brand/20 text-brand",
     emerald: "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400",
-    fuchsia: "bg-fuchsia-50 text-fuchsia-600 dark:bg-fuchsia-950/40 dark:text-fuchsia-400",
+    fuchsia: "bg-brand/20 text-brand",
     amber: "bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400",
   };
 
@@ -479,13 +479,13 @@ function QuickAction({
   return (
     <button
       onClick={onClick}
-      className="group rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 text-left hover:shadow-md hover:border-violet-200 dark:hover:border-violet-800 transition"
+      className="group rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 text-left hover:shadow-md hover:border-brand/30 transition"
     >
       <div className="flex items-center gap-3 mb-2">
-        <div className="h-9 w-9 rounded-lg bg-violet-50 dark:bg-violet-950/40 text-violet-600 dark:text-violet-400 flex items-center justify-center group-hover:scale-110 transition">
+        <div className="h-9 w-9 rounded-lg bg-brand/10 text-brand flex items-center justify-center group-hover:scale-110 transition">
           {icon}
         </div>
-        <ArrowRight className="h-4 w-4 text-zinc-300 ml-auto group-hover:text-violet-500 group-hover:translate-x-1 transition" />
+        <ArrowRight className="h-4 w-4 text-zinc-300 ml-auto group-hover:text-brand group-hover:translate-x-1 transition" />
       </div>
       <p className="font-semibold text-zinc-900 dark:text-zinc-100 text-sm">{title}</p>
       <p className="text-xs text-zinc-500 mt-0.5">{desc}</p>

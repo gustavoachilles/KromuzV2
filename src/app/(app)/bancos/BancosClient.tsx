@@ -95,7 +95,7 @@ export function BancosClient({
         {/* Header */}
         <header className="flex items-center justify-between">
           <div>
-            <div className="flex items-center gap-2 text-violet-600 dark:text-violet-400 mb-1">
+            <div className="flex items-center gap-2 text-brand mb-1">
               <Building2 className="h-5 w-5" />
               <span className="text-xs uppercase tracking-widest font-semibold">
                 Gestão de Bancos
@@ -110,7 +110,7 @@ export function BancosClient({
           </div>
           <button
             onClick={() => setModalAberto(true)}
-            className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-500 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-violet-500/25 hover:opacity-95 transition"
+            className="flex items-center gap-2 rounded-xl bg-brand px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-brand/25 hover:opacity-95 transition"
           >
             <Plus className="h-4 w-4" />
             Adicionar Banco
@@ -125,7 +125,7 @@ export function BancosClient({
             placeholder="Buscar por nome, COMPE ou CNPJ..."
             value={busca}
             onChange={(e) => setBusca(e.target.value)}
-            className="w-full rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/50 transition"
+            className="w-full rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/50 transition"
           />
         </div>
 
@@ -165,7 +165,7 @@ export function BancosClient({
                 <div className="p-5">
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-lg bg-violet-50 dark:bg-violet-950/40 text-violet-600 dark:text-violet-400 flex items-center justify-center font-bold text-sm shrink-0">
+                      <div className="h-10 w-10 rounded-lg bg-brand/10 text-brand flex items-center justify-center font-bold text-sm shrink-0">
                         {banco.nome.slice(0, 2).toUpperCase()}
                       </div>
                       <div>
@@ -273,7 +273,7 @@ export function BancosClient({
                   value={form.nome}
                   onChange={(e) => setForm({ ...form, nome: e.target.value })}
                   placeholder="Ex: Banco Inbursa"
-                  className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/50 transition"
+                  className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/50 transition"
                 />
               </div>
 
@@ -286,7 +286,7 @@ export function BancosClient({
                     value={form.codigoCompe}
                     onChange={(e) => setForm({ ...form, codigoCompe: e.target.value })}
                     placeholder="Ex: 012"
-                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/50 transition"
+                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/50 transition"
                   />
                 </div>
                 <div className="space-y-2">
@@ -297,7 +297,7 @@ export function BancosClient({
                     value={form.cnpj}
                     onChange={(e) => setForm({ ...form, cnpj: e.target.value })}
                     placeholder="00.000.000/0001-00"
-                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/50 transition"
+                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/50 transition"
                   />
                 </div>
               </div>
@@ -313,7 +313,7 @@ export function BancosClient({
                 <button
                   type="submit"
                   disabled={salvando}
-                  className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-violet-500/25 hover:opacity-95 disabled:opacity-50 transition"
+                  className="flex items-center gap-2 rounded-xl bg-brand px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-brand/25 hover:opacity-95 disabled:opacity-50 transition"
                 >
                   {salvando ? (
                     <Loader2 className="h-4 w-4 animate-spin" />

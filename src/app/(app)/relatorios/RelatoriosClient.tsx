@@ -39,7 +39,7 @@ const statusLabel: Record<string, string> = {
 const statusColor: Record<string, string> = {
   RASCUNHO: "bg-zinc-400", SIMULADA: "bg-sky-500", DIGITADA: "bg-amber-500",
   PENDENTE: "bg-orange-500", APROVADA: "bg-emerald-500", REPROVADA: "bg-red-500",
-  PAGA: "bg-violet-500", CANCELADA: "bg-zinc-500",
+  PAGA: "bg-brand", CANCELADA: "bg-zinc-500",
 };
 
 const tipoLabel: Record<string, string> = {
@@ -50,8 +50,8 @@ const tipoLabel: Record<string, string> = {
 
 const tipoColor: Record<string, string> = {
   EMPRESTIMO_CONSIGNADO: "bg-emerald-500", REFINANCIAMENTO: "bg-amber-500",
-  PORTABILIDADE: "bg-indigo-500", PORTABILIDADE_REFIN: "bg-violet-500",
-  CARTAO_CONSIGNADO: "bg-fuchsia-500", CARTAO_BENEFICIO: "bg-pink-500",
+  PORTABILIDADE: "bg-brand/80", PORTABILIDADE_REFIN: "bg-brand",
+  CARTAO_CONSIGNADO: "bg-brand/60", CARTAO_BENEFICIO: "bg-pink-500",
 };
 
 function formatMoney(v: number | null) {
@@ -86,7 +86,7 @@ export function RelatoriosClient({
       <div className="max-w-7xl mx-auto px-6 py-10 space-y-8">
         {/* Header */}
         <header>
-          <div className="flex items-center gap-2 text-violet-600 dark:text-violet-400 mb-1">
+          <div className="flex items-center gap-2 text-brand mb-1">
             <BarChart3 className="h-5 w-5" />
             <span className="text-xs uppercase tracking-widest font-semibold">Relatórios</span>
           </div>
@@ -96,10 +96,10 @@ export function RelatoriosClient({
 
         {/* KPI Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-          <KpiMini icon={<FileText className="h-4 w-4" />} label="Propostas" value={kpis.totalPropostas} color="violet" />
-          <KpiMini icon={<Users className="h-4 w-4" />} label="Leads" value={kpis.totalLeads} color="indigo" />
+          <KpiMini icon={<FileText className="h-4 w-4" />} label="Propostas" value={kpis.totalPropostas} color="brand" />
+          <KpiMini icon={<Users className="h-4 w-4" />} label="Leads" value={kpis.totalLeads} color="brand" />
           <KpiMini icon={<DollarSign className="h-4 w-4" />} label="Vol. Liberado" value={formatMoney(totalLiberado)} color="emerald" />
-          <KpiMini icon={<TrendingUp className="h-4 w-4" />} label="Produção" value={formatMoney(produzido)} color="fuchsia" />
+          <KpiMini icon={<TrendingUp className="h-4 w-4" />} label="Produção" value={formatMoney(produzido)} color="brand" />
           <KpiMini icon={<CheckCircle2 className="h-4 w-4" />} label="Conversão" value={`${taxaConversao}%`} color="amber" />
           <KpiMini icon={<DollarSign className="h-4 w-4" />} label="Comissões" value={formatMoney(totalComissao)} color="emerald" />
         </div>
@@ -188,10 +188,8 @@ export function RelatoriosClient({
 
 function KpiMini({ icon, label, value, color }: { icon: React.ReactNode; label: string; value: string | number; color: string }) {
   const colorMap: Record<string, string> = {
-    violet: "bg-violet-50 text-violet-600 dark:bg-violet-950/40 dark:text-violet-400",
-    indigo: "bg-indigo-50 text-indigo-600 dark:bg-indigo-950/40 dark:text-indigo-400",
+    brand: "bg-brand/10 text-brand",
     emerald: "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400",
-    fuchsia: "bg-fuchsia-50 text-fuchsia-600 dark:bg-fuchsia-950/40 dark:text-fuchsia-400",
     amber: "bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400",
   };
 

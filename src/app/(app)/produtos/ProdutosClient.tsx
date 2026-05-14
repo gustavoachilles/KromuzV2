@@ -32,10 +32,10 @@ type ConvenioOpt = { id: string; nome: string };
 const tipoLabel: Record<string, { label: string; color: string }> = {
   EMPRESTIMO_CONSIGNADO: { label: "Margem Nova", color: "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400" },
   REFINANCIAMENTO: { label: "Refinanciamento", color: "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400" },
-  PORTABILIDADE: { label: "Portabilidade", color: "bg-indigo-50 text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-400" },
-  PORTABILIDADE_REFIN: { label: "Port + Refin", color: "bg-violet-50 text-violet-700 dark:bg-violet-950/40 dark:text-violet-400" },
-  CARTAO_CONSIGNADO: { label: "Cartão Consig.", color: "bg-fuchsia-50 text-fuchsia-700 dark:bg-fuchsia-950/40 dark:text-fuchsia-400" },
-  CARTAO_BENEFICIO: { label: "Cartão Benefício", color: "bg-pink-50 text-pink-700 dark:bg-pink-950/40 dark:text-pink-400" },
+  PORTABILIDADE: { label: "Portabilidade", color: "bg-brand/10 text-brand dark:bg-brand/20 dark:text-brand" },
+  PORTABILIDADE_REFIN: { label: "Port + Refin", color: "bg-brand/10 text-brand dark:bg-brand/20 dark:text-brand" },
+  CARTAO_CONSIGNADO: { label: "Cartão Consig.", color: "bg-brand/10 text-brand dark:bg-brand/20 dark:text-brand" },
+  CARTAO_BENEFICIO: { label: "Cartão Benefício", color: "bg-brand/10 text-brand dark:bg-brand/20 dark:text-brand" },
 };
 
 export function ProdutosClient({
@@ -110,7 +110,7 @@ export function ProdutosClient({
         {/* Header */}
         <header className="flex items-start justify-between gap-4 flex-wrap">
           <div>
-            <div className="flex items-center gap-2 text-violet-600 dark:text-violet-400 mb-1">
+            <div className="flex items-center gap-2 text-brand mb-1">
               <Package className="h-5 w-5" />
               <span className="text-xs uppercase tracking-widest font-semibold">Produtos de Crédito</span>
             </div>
@@ -121,7 +121,7 @@ export function ProdutosClient({
           </div>
           <button
             onClick={() => setModal(true)}
-            className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-violet-500/25 hover:opacity-95 transition"
+            className="flex items-center gap-2 rounded-xl bg-brand px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-brand/25 hover:opacity-95 transition"
           >
             <Plus className="h-4 w-4" /> Novo Produto
           </button>
@@ -135,13 +135,13 @@ export function ProdutosClient({
               value={busca}
               onChange={(e) => setBusca(e.target.value)}
               placeholder="Buscar produto ou banco..."
-              className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/50"
+              className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-sm focus:outline-none focus:ring-2 focus:ring-brand/50"
             />
           </div>
           <select
             value={filtroBanco}
             onChange={(e) => setFiltroBanco(e.target.value)}
-            className="rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/50"
+            className="rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/50"
           >
             <option value="">Todos os bancos</option>
             {bancos.map((b) => (
@@ -151,7 +151,7 @@ export function ProdutosClient({
           <select
             value={filtroTipo}
             onChange={(e) => setFiltroTipo(e.target.value)}
-            className="rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/50"
+            className="rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/50"
           >
             <option value="">Todos os tipos</option>
             {Object.entries(tipoLabel).map(([k, v]) => (
@@ -193,7 +193,7 @@ export function ProdutosClient({
                       </td>
                       <td className="px-5 py-4">
                         <span className="flex items-center gap-1.5 text-sm">
-                          <Building2 className="h-3.5 w-3.5 text-violet-500" />
+                          <Building2 className="h-3.5 w-3.5 text-brand" />
                           {p.banco.nome}
                         </span>
                       </td>
@@ -264,7 +264,7 @@ export function ProdutosClient({
                   value={form.nomeProduto}
                   onChange={(e) => setForm({ ...form, nomeProduto: e.target.value })}
                   placeholder="Ex: Margem Livre INSS"
-                  className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/50"
+                  className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/50"
                 />
               </div>
 
@@ -275,7 +275,7 @@ export function ProdutosClient({
                     required
                     value={form.bancoId}
                     onChange={(e) => setForm({ ...form, bancoId: e.target.value })}
-                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/50"
+                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/50"
                   >
                     <option value="">Selecione...</option>
                     {bancos.map((b) => (
@@ -288,7 +288,7 @@ export function ProdutosClient({
                   <select
                     value={form.tipoProduto}
                     onChange={(e) => setForm({ ...form, tipoProduto: e.target.value })}
-                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/50"
+                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/50"
                   >
                     {Object.entries(tipoLabel).map(([k, v]) => (
                       <option key={k} value={k}>{v.label}</option>
@@ -303,7 +303,7 @@ export function ProdutosClient({
                   <select
                     value={form.convenioId}
                     onChange={(e) => setForm({ ...form, convenioId: e.target.value })}
-                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/50"
+                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/50"
                   >
                     <option value="">Nenhum</option>
                     {convenios.map((c) => (
@@ -318,7 +318,7 @@ export function ProdutosClient({
                     value={form.prazoMaximo}
                     onChange={(e) => setForm({ ...form, prazoMaximo: e.target.value })}
                     placeholder="84"
-                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/50"
+                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/50"
                   />
                 </div>
                 <div className="space-y-2">
@@ -329,7 +329,7 @@ export function ProdutosClient({
                     value={form.taxaMedia}
                     onChange={(e) => setForm({ ...form, taxaMedia: e.target.value })}
                     placeholder="1.80"
-                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/50"
+                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/50"
                   />
                 </div>
               </div>
@@ -341,7 +341,7 @@ export function ProdutosClient({
                 <button
                   type="submit"
                   disabled={salvando}
-                  className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-violet-500/25 hover:opacity-95 disabled:opacity-50 transition"
+                  className="flex items-center gap-2 rounded-xl bg-brand px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-brand/25 hover:opacity-95 disabled:opacity-50 transition"
                 >
                   {salvando ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
                   {salvando ? "Criando..." : "Criar Produto"}

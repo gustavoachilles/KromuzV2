@@ -55,7 +55,7 @@ const statusConfig: Record<string, { label: string; color: string; bgCard: strin
   PENDENTE: { label: "Pendente", color: "bg-orange-500", bgCard: "border-orange-300 dark:border-orange-800" },
   APROVADA: { label: "Aprovada", color: "bg-emerald-500", bgCard: "border-emerald-300 dark:border-emerald-800" },
   REPROVADA: { label: "Reprovada", color: "bg-red-500", bgCard: "border-red-300 dark:border-red-800" },
-  PAGA: { label: "Paga", color: "bg-violet-500", bgCard: "border-violet-300 dark:border-violet-800" },
+  PAGA: { label: "Paga", color: "bg-brand", bgCard: "border-brand/40 dark:border-brand/60" },
   CANCELADA: { label: "Cancelada", color: "bg-zinc-500", bgCard: "border-zinc-400 dark:border-zinc-600" },
 };
 
@@ -180,7 +180,7 @@ export function EsteiraClient({
         {/* Header */}
         <header className="flex items-start justify-between gap-4 flex-wrap">
           <div>
-            <div className="flex items-center gap-2 text-violet-600 dark:text-violet-400 mb-1">
+            <div className="flex items-center gap-2 text-brand mb-1">
               <Kanban className="h-5 w-5" />
               <span className="text-xs uppercase tracking-widest font-semibold">Esteira de Propostas</span>
             </div>
@@ -191,7 +191,7 @@ export function EsteiraClient({
           </div>
           <button
             onClick={() => setModal(true)}
-            className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-violet-500/25 hover:opacity-95 transition"
+            className="flex items-center gap-2 rounded-xl bg-brand px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-brand/25 hover:opacity-95 transition"
           >
             <Plus className="h-4 w-4" /> Nova Proposta
           </button>
@@ -205,7 +205,7 @@ export function EsteiraClient({
               onClick={() => setFiltroStatus(filtroStatus === f.status ? "" : f.status)}
               className={`rounded-xl border p-4 text-left transition hover:shadow-md ${
                 filtroStatus === f.status
-                  ? "border-violet-400 dark:border-violet-600 bg-violet-50 dark:bg-violet-950/30"
+                  ? "border-brand dark:border-brand/60 bg-brand/10 dark:bg-brand/30"
                   : "border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900"
               }`}
             >
@@ -234,13 +234,13 @@ export function EsteiraClient({
               value={busca}
               onChange={(e) => setBusca(e.target.value)}
               placeholder="Buscar cliente..."
-              className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/50"
+              className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-sm focus:outline-none focus:ring-2 focus:ring-brand/50"
             />
           </div>
           {filtroStatus && (
             <button
               onClick={() => setFiltroStatus("")}
-              className="flex items-center gap-1 text-xs text-violet-600 border border-violet-200 rounded-lg px-3 py-2 hover:bg-violet-50 transition"
+              className="flex items-center gap-1 text-xs text-brand border border-brand/20 rounded-lg px-3 py-2 hover:bg-brand/10 transition"
             >
               <Filter className="h-3 w-3" />
               {statusConfig[filtroStatus]?.label}
@@ -278,7 +278,7 @@ export function EsteiraClient({
                       <div 
                         ref={provided.innerRef} 
                         {...provided.droppableProps} 
-                        className={`flex-1 overflow-y-auto space-y-3 p-1 transition-colors rounded-xl min-h-[150px] ${snapshot.isDraggingOver ? 'bg-violet-50 dark:bg-violet-900/20' : ''}`}
+                        className={`flex-1 overflow-y-auto space-y-3 p-1 transition-colors rounded-xl min-h-[150px] ${snapshot.isDraggingOver ? 'bg-brand/10 dark:bg-brand/20' : ''}`}
                       >
                         {items.length === 0 && !snapshot.isDraggingOver && (
                           <div className="py-10 text-center border-2 border-dashed border-zinc-200 dark:border-zinc-800 rounded-xl opacity-40">
@@ -293,7 +293,7 @@ export function EsteiraClient({
                                 ref={provided.innerRef} 
                                 {...provided.draggableProps} 
                                 {...provided.dragHandleProps}
-                                className={`bg-white dark:bg-zinc-950 rounded-xl p-4 border border-zinc-200 dark:border-zinc-800 shadow-sm flex flex-col gap-3 transition-shadow cursor-pointer ${snapshot.isDragging ? 'shadow-xl ring-2 ring-violet-500/50 opacity-90' : 'hover:shadow-md'}`}
+                                className={`bg-white dark:bg-zinc-950 rounded-xl p-4 border border-zinc-200 dark:border-zinc-800 shadow-sm flex flex-col gap-3 transition-shadow cursor-pointer ${snapshot.isDragging ? 'shadow-xl ring-2 ring-brand/50 opacity-90' : 'hover:shadow-md'}`}
                               >
                                 <div className="flex items-start justify-between gap-2">
                                   <div className="flex-1">
@@ -393,41 +393,41 @@ export function EsteiraClient({
                 <div className="space-y-2 col-span-2">
                   <label className="text-sm font-medium">Nome do Cliente *</label>
                   <input required value={form.clienteNome} onChange={(e) => setForm({ ...form, clienteNome: e.target.value })} placeholder="João da Silva"
-                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/50" />
+                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-zinc-500">CPF</label>
                   <input value={form.clienteCpf} onChange={(e) => setForm({ ...form, clienteCpf: e.target.value })} placeholder="000.000.000-00"
-                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/50" />
+                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-zinc-500">Telefone</label>
                   <input value={form.clienteTelefone} onChange={(e) => setForm({ ...form, clienteTelefone: e.target.value })} placeholder="(11) 99999-0000"
-                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/50" />
+                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Tipo *</label>
                   <select value={form.tipoOperacao} onChange={(e) => setForm({ ...form, tipoOperacao: e.target.value })}
-                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/50">
+                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand">
                     {Object.entries(tipoLabel).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
                   </select>
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-zinc-500">Banco</label>
                   <input value={form.bancoNome} onChange={(e) => setForm({ ...form, bancoNome: e.target.value })} placeholder="BMG, Pan..."
-                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/50" />
+                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
                 </div>
                 <div className="space-y-2 col-span-2">
                   <label className="text-sm font-medium text-zinc-500">Valor Liberado Estimado</label>
                   <input type="number" step="0.01" value={form.valorLiberado} onChange={(e) => setForm({ ...form, valorLiberado: e.target.value })} placeholder="5000.00"
-                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/50" />
+                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
                 </div>
               </div>
 
               <div className="flex justify-end gap-3 pt-2">
                 <button type="button" onClick={() => setModal(false)} className="px-4 py-2 text-sm text-zinc-600 hover:text-zinc-900 transition">Cancelar</button>
                 <button type="submit" disabled={salvando}
-                  className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-violet-500/25 hover:opacity-95 disabled:opacity-50 transition">
+                  className="flex items-center gap-2 rounded-xl bg-brand px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-brand/25 hover:opacity-95 disabled:opacity-50 transition">
                   {salvando ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
                   {salvando ? "Criando..." : "Criar Proposta"}
                 </button>

@@ -161,7 +161,7 @@ export function BancoDetalheClient({
         </button>
 
         <header className="flex items-center gap-4">
-          <div className="h-14 w-14 rounded-xl bg-violet-50 dark:bg-violet-950/40 text-violet-600 dark:text-violet-400 flex items-center justify-center font-bold text-lg shrink-0">
+          <div className="h-14 w-14 rounded-xl bg-brand/10 text-brand flex items-center justify-center font-bold text-lg shrink-0">
             {banco.nome.slice(0, 2).toUpperCase()}
           </div>
           <div>
@@ -185,7 +185,7 @@ export function BancoDetalheClient({
         {/* KPIs */}
         <div className="grid grid-cols-3 gap-4">
           <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 flex items-center gap-4">
-            <div className="h-10 w-10 rounded-lg bg-violet-50 dark:bg-violet-950/40 text-violet-600 dark:text-violet-400 flex items-center justify-center">
+            <div className="h-10 w-10 rounded-lg bg-brand/10 text-brand flex items-center justify-center">
               <Layers className="h-5 w-5" />
             </div>
             <div>
@@ -203,7 +203,7 @@ export function BancoDetalheClient({
             </div>
           </div>
           <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 flex items-center gap-4">
-            <div className="h-10 w-10 rounded-lg bg-fuchsia-50 dark:bg-fuchsia-950/40 text-fuchsia-600 dark:text-fuchsia-400 flex items-center justify-center">
+            <div className="h-10 w-10 rounded-lg bg-brand/10 text-brand flex items-center justify-center">
               <BookOpen className="h-5 w-5" />
             </div>
             <div>
@@ -264,7 +264,7 @@ export function BancoDetalheClient({
             )}
 
             <label className="flex items-center gap-3 cursor-pointer">
-              <input type="checkbox" className="w-5 h-5 rounded border-zinc-300 text-violet-600 focus:ring-violet-500" 
+              <input type="checkbox" className="w-5 h-5 rounded border-zinc-300 text-brand focus:ring-brand/50" 
                 checked={formIntegracao.permiteIntegracao} 
                 onChange={e => setFormIntegracao({...formIntegracao, permiteIntegracao: e.target.checked})} 
               />
@@ -281,7 +281,7 @@ export function BancoDetalheClient({
                   rows={6}
                   value={formIntegracao.credenciaisApi}
                   onChange={(e) => setFormIntegracao({ ...formIntegracao, credenciaisApi: e.target.value })}
-                  className="w-full font-mono text-sm rounded-lg border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-950 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-violet-500/50"
+                  className="w-full font-mono text-sm rounded-lg border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-950 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-brand/50"
                   placeholder='{ "client_id": "...", "client_secret": "..." }'
                 />
                 <p className="text-xs text-zinc-500 mt-1">Insira as chaves fornecidas pelo banco. O formato deve ser um JSON válido.</p>
@@ -292,7 +292,7 @@ export function BancoDetalheClient({
               <button
                 type="submit"
                 disabled={salvandoIntegracao}
-                className="flex items-center gap-2 rounded-xl bg-violet-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-violet-700 disabled:opacity-50 transition"
+                className="flex items-center gap-2 rounded-xl bg-brand px-6 py-2.5 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50 transition"
               >
                 {salvandoIntegracao ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
                 Salvar Credenciais
@@ -309,7 +309,7 @@ export function BancoDetalheClient({
               <button
                 onClick={() => setModalTabela(true)}
                 disabled={banco.produtosCredito.length === 0}
-                className="flex items-center gap-2 rounded-lg bg-violet-600 px-4 py-2 text-sm font-medium text-white hover:bg-violet-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                className="flex items-center gap-2 rounded-lg bg-brand px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition"
               >
                 <Plus className="h-4 w-4" />
                 Nova Tabela
@@ -348,7 +348,7 @@ export function BancoDetalheClient({
                       >
                         <td className="px-4 py-3 font-medium text-zinc-900 dark:text-zinc-100">{t.nome}</td>
                         <td className="px-4 py-3 text-zinc-600 dark:text-zinc-400">
-                          <span className="text-xs bg-violet-50 dark:bg-violet-950/40 text-violet-700 dark:text-violet-400 px-2 py-0.5 rounded-full">
+                          <span className="text-xs bg-brand/10 text-brand px-2 py-0.5 rounded-full">
                             {tipoLabel[t.produto.tipoProduto] || t.produto.tipoProduto}
                           </span>
                         </td>
@@ -384,7 +384,7 @@ export function BancoDetalheClient({
                     key={r.id}
                     className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 flex items-center gap-4"
                   >
-                    <div className="h-10 w-10 rounded-lg bg-fuchsia-50 dark:bg-fuchsia-950/40 text-fuchsia-600 dark:text-fuchsia-400 flex items-center justify-center text-xs font-bold shrink-0">
+                    <div className="h-10 w-10 rounded-lg bg-brand/10 text-brand flex items-center justify-center text-xs font-bold shrink-0">
                       {tipoLabel[r.tipoOperacao]?.slice(0, 3).toUpperCase() || "???"}
                     </div>
                     <div className="flex-1 min-w-0">
@@ -431,7 +431,7 @@ export function BancoDetalheClient({
                   required
                   value={formTabela.produtoId}
                   onChange={(e) => setFormTabela({ ...formTabela, produtoId: e.target.value })}
-                  className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/50"
+                  className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/50"
                 >
                   {banco.produtosCredito.map((p) => (
                     <option key={p.id} value={p.id}>
@@ -448,7 +448,7 @@ export function BancoDetalheClient({
                   value={formTabela.nome}
                   onChange={(e) => setFormTabela({ ...formTabela, nome: e.target.value })}
                   placeholder="Ex: INSS Port 84x"
-                  className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/50"
+                  className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/50"
                 />
               </div>
 
@@ -462,7 +462,7 @@ export function BancoDetalheClient({
                     max={120}
                     value={formTabela.prazo}
                     onChange={(e) => setFormTabela({ ...formTabela, prazo: parseInt(e.target.value) })}
-                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/50"
+                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/50"
                   />
                 </div>
                 <div className="space-y-2">
@@ -474,7 +474,7 @@ export function BancoDetalheClient({
                     min={0}
                     value={formTabela.taxaJurosMensal}
                     onChange={(e) => setFormTabela({ ...formTabela, taxaJurosMensal: parseFloat(e.target.value) })}
-                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/50"
+                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/50"
                   />
                 </div>
                 <div className="space-y-2">
@@ -486,7 +486,7 @@ export function BancoDetalheClient({
                     min={0}
                     value={formTabela.coeficiente}
                     onChange={(e) => setFormTabela({ ...formTabela, coeficiente: parseFloat(e.target.value) })}
-                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/50"
+                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/50"
                   />
                 </div>
               </div>
@@ -500,7 +500,7 @@ export function BancoDetalheClient({
                     value={formTabela.comissaoFlatPct}
                     onChange={(e) => setFormTabela({ ...formTabela, comissaoFlatPct: e.target.value })}
                     placeholder="Opcional"
-                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/50"
+                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/50"
                   />
                 </div>
                 <div className="space-y-2">
@@ -511,7 +511,7 @@ export function BancoDetalheClient({
                     value={formTabela.comissaoRepassePct}
                     onChange={(e) => setFormTabela({ ...formTabela, comissaoRepassePct: e.target.value })}
                     placeholder="Opcional"
-                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/50"
+                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/50"
                   />
                 </div>
               </div>
@@ -527,7 +527,7 @@ export function BancoDetalheClient({
                 <button
                   type="submit"
                   disabled={salvando}
-                  className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-violet-500/25 hover:opacity-95 disabled:opacity-50 transition"
+                  className="flex items-center gap-2 rounded-xl bg-brand px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-brand/25 hover:opacity-95 disabled:opacity-50 transition"
                 >
                   {salvando ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
                   {salvando ? "Salvando..." : "Criar Tabela"}

@@ -169,7 +169,7 @@ export default function CreditBrainClient({ empresaId }: { empresaId: string }) 
                   <button 
                     onClick={() => fileRef.current?.click()}
                     disabled={importandoHiscon}
-                    className="text-xs bg-violet-100 text-violet-700 px-2 py-1 rounded-md font-medium hover:bg-violet-200 transition flex items-center gap-1"
+                    className="text-xs bg-brand/10 text-brand px-2 py-1 rounded-md font-medium hover:opacity-80 transition flex items-center gap-1"
                   >
                     {importandoHiscon ? <Loader2 className="w-3 h-3 animate-spin"/> : <FileText className="w-3 h-3"/>}
                     Preencher via HISCON
@@ -220,7 +220,7 @@ export default function CreditBrainClient({ empresaId }: { empresaId: string }) 
                     <Input type="number" className="mt-1" placeholder="Ex: 10000" value={form.valor_solicitado}
                       onChange={e => setForm(f => ({ ...f, valor_solicitado: e.target.value }))} />
                   </div>
-                  <Button className="w-full gap-2 bg-indigo-600 hover:bg-indigo-700 text-white" onClick={simular} disabled={loading}>
+                   <Button className="w-full gap-2 bg-brand hover:opacity-90 text-zinc-950 font-bold" onClick={simular} disabled={loading}>
                     {loading ? <><Loader2 className="w-4 h-4 animate-spin" /> Analisando...</> : <><Brain className="w-4 h-4" /> SIMULAR</>}
                   </Button>
                   {resultado && <Button variant="ghost" className="w-full text-xs" onClick={limpar}>Limpar resultado</Button>}
@@ -243,8 +243,8 @@ export default function CreditBrainClient({ empresaId }: { empresaId: string }) 
               {loading && (
                 <Card className="h-full flex items-center justify-center min-h-[400px]">
                   <CardContent className="text-center">
-                    <Brain className="w-16 h-16 mx-auto mb-4 text-indigo-400 animate-pulse" />
-                    <p className="font-medium text-indigo-700">Analisando perfil do cliente...</p>
+                    <Brain className="w-16 h-16 mx-auto mb-4 text-brand animate-pulse" />
+                    <p className="font-medium text-brand">Analisando perfil do cliente...</p>
                     <p className="text-sm text-muted-foreground mt-1">Consultando regras de bancos...</p>
                   </CardContent>
                 </Card>
@@ -255,10 +255,10 @@ export default function CreditBrainClient({ empresaId }: { empresaId: string }) 
                   {/* KPIs resultado */}
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                     {[
-                      { label: "Bancos Elegíveis", value: resultado.total_elegiveis, icon: Building2, color: "text-green-600", bg: "bg-green-50" },
+                       { label: "Bancos Elegíveis", value: resultado.total_elegiveis, icon: Building2, color: "text-green-600", bg: "bg-green-50" },
                       { label: "Melhor Score",  value: `${resultado.melhor_score}%`, icon: Trophy,    color: "text-yellow-600", bg: "bg-yellow-50" },
                       { label: "Valor Máximo",  value: fmtBRL(resultado.valor_maximo_aprovavel), icon: DollarSign, color: "text-blue-600", bg: "bg-blue-50" },
-                      { label: "Score Médio",   value: `${resultado.score_medio}%`, icon: Activity,  color: "text-indigo-600", bg: "bg-indigo-50" },
+                      { label: "Score Médio",   value: `${resultado.score_medio}%`, icon: Activity,  color: "text-brand", bg: "bg-brand/10" },
                     ].map(k => (
                       <Card key={k.label} className={`${k.bg} border-0 shadow-sm`}>
                         <CardContent className="p-4 text-center">

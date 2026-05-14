@@ -148,7 +148,7 @@ export default function OnboardingPage() {
         <header className="space-y-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="flex items-center gap-4">
-              <div className="w-14 h-14 bg-violet-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-violet-500/20">
+              <div className="w-14 h-14 bg-brand rounded-2xl flex items-center justify-center text-white shadow-lg shadow-brand/20">
                 <ShieldCheck className="w-8 h-8 fill-current text-white/20" />
               </div>
               <div>
@@ -164,7 +164,7 @@ export default function OnboardingPage() {
                 placeholder="Buscar módulo..." 
                 value={busca}
                 onChange={(e) => setBusca(e.target.value)}
-                className="w-full md:w-64 pl-10 pr-4 py-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl focus:ring-2 focus:ring-violet-500 focus:outline-none transition-all"
+                className="w-full md:w-64 pl-10 pr-4 py-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl focus:ring-2 focus:ring-brand focus:outline-none transition-all"
               />
             </div>
           </div>
@@ -176,11 +176,11 @@ export default function OnboardingPage() {
                 <span className="text-sm font-bold text-zinc-700 dark:text-zinc-300 block">Progresso Global de Homologação</span>
                 <span className="text-xs text-zinc-500">{concluidas.length} de {totalMissoes} módulos testados</span>
               </div>
-              <span className="text-2xl font-black text-violet-600">{Math.round(progressoTotal)}%</span>
+              <span className="text-2xl font-black text-brand">{Math.round(progressoTotal)}%</span>
             </div>
             <div className="w-full h-4 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
               <div 
-                className="h-full bg-violet-600 transition-all duration-700 ease-out shadow-[0_0_15px_rgba(124,58,237,0.5)]"
+                className="h-full bg-brand transition-all duration-700 ease-out shadow-lg shadow-brand/40"
                 style={{ width: `${progressoTotal}%` }}
               />
             </div>
@@ -210,7 +210,7 @@ export default function OnboardingPage() {
                   className="w-full flex items-center justify-between p-6 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors text-left"
                 >
                   <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-lg bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-violet-600">
+                    <div className="w-10 h-10 rounded-lg bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-brand">
                       {categoria.icone}
                     </div>
                     <div>
@@ -242,7 +242,7 @@ export default function OnboardingPage() {
                           {/* Checkbox */}
                           <button 
                             onClick={() => toggleMissao(m.id)}
-                            className={`flex-shrink-0 transition-colors ${concluidas.includes(m.id) ? 'text-emerald-500' : 'text-zinc-300 hover:text-violet-500'}`}
+                            className={`flex-shrink-0 transition-colors ${concluidas.includes(m.id) ? 'text-emerald-500' : 'text-zinc-300 hover:text-brand'}`}
                           >
                             {concluidas.includes(m.id) ? <CheckCircle2 className="w-7 h-7 fill-current bg-white dark:bg-zinc-900 rounded-full" /> : <Circle className="w-7 h-7" />}
                           </button>
@@ -277,7 +277,7 @@ export default function OnboardingPage() {
                             </span>
                             <Link 
                               href={m.rota}
-                              className="w-10 h-10 rounded-lg bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-zinc-500 hover:bg-violet-600 hover:text-white transition-all shadow-sm flex-shrink-0"
+                               className="w-10 h-10 rounded-lg bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-zinc-500 hover:bg-brand hover:text-white transition-all shadow-sm flex-shrink-0"
                             >
                               <ArrowRight className="w-4 h-4" />
                             </Link>
