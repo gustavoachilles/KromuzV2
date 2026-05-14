@@ -20,6 +20,7 @@ import {
   Shield
 } from "lucide-react";
 import { MODULOS_SISTEMA, type Permissoes } from "@/lib/permissions";
+import { maskPhone, maskCPF, maskCEP, maskDate, dateToISO, isoToDate, fetchCEP } from "@/lib/masks";
 
 export function ConfiguracoesClient({ empresa, usuarios, bancos, sessao }: any) {
   const router = useRouter();
@@ -94,10 +95,15 @@ export function ConfiguracoesClient({ empresa, usuarios, bancos, sessao }: any) 
       if (editingUser) {
         // PATCH — envia todos os campos
         const { email: _email, ...editableFields } = userForm;
+        // Converter datas mascaradas dd/mm/aaaa para ISO yyyy-mm-dd
+        const payload = { ...editableFields };
+        if (payload.dataNascimento) payload.dataNascimento = dateToISO(payload.dataNascimento) || payload.dataNascimento;
+        if (payload.dataContratacao) payload.dataContratacao = dateToISO(payload.dataContratacao) || payload.dataContratacao;
+        if (payload.dataDesligamento) payload.dataDesligamento = dateToISO(payload.dataDesligamento) || payload.dataDesligamento;
         const res = await fetch("/api/configuracoes/usuarios", {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ id: editingUser.id, ...editableFields })
+          body: JSON.stringify({ id: editingUser.id, ...payload })
         });
         if (!res.ok) {
            const err = await res.json();
@@ -163,19 +169,19 @@ export function ConfiguracoesClient({ empresa, usuarios, bancos, sessao }: any) 
       email: user.email || "",
       perfilSlug: user.perfilSlug || "vendedor",
       ativo: user.ativo,
-      telefone: user.telefone || "", cpf: user.cpf || "",
-      dataNascimento: user.dataNascimento ? user.dataNascimento.substring(0, 10) : "",
+      telefone: user.telefone ? maskPhone(user.telefone) : "", cpf: user.cpf ? maskCPF(user.cpf) : "",
+      dataNascimento: user.dataNascimento ? isoToDate(user.dataNascimento) : "",
       rg: user.rg || "", orgaoEmissor: user.orgaoEmissor || "",
       genero: user.genero || "", estadoCivil: user.estadoCivil || "",
       timeFavorito: user.timeFavorito || "",
-      cep: user.cep || "", logradouro: user.logradouro || "",
+      cep: user.cep ? maskCEP(user.cep) : "", logradouro: user.logradouro || "",
       numero: user.numero || "", complemento: user.complemento || "",
       bairro: user.bairro || "", cidade: user.cidade || "", uf: user.uf || "",
       bancoNome: user.bancoNome || "", bancoAgencia: user.bancoAgencia || "",
       bancoConta: user.bancoConta || "", bancoTipoConta: user.bancoTipoConta || "",
       chavePix: user.chavePix || "", tipoChavePix: user.tipoChavePix || "",
-      dataContratacao: user.dataContratacao ? user.dataContratacao.substring(0, 10) : "",
-      dataDesligamento: user.dataDesligamento ? user.dataDesligamento.substring(0, 10) : "",
+      dataContratacao: user.dataContratacao ? isoToDate(user.dataContratacao) : "",
+      dataDesligamento: user.dataDesligamento ? isoToDate(user.dataDesligamento) : "",
       observacoesPessoais: user.observacoesPessoais || ""
     });
     setUserModalTab("geral");
@@ -201,6 +207,11 @@ export function ConfiguracoesClient({ empresa, usuarios, bancos, sessao }: any) 
     const res = await fetch("/api/configuracoes/cargos");
     if (res.ok) setCargos(await res.json());
   }
+
+  // Carrega cargos ao montar (necessário para o select de membros)
+  useEffect(() => {
+    fetchCargos();
+  }, []);
 
   useEffect(() => {
     if (tab === "cargos") {
@@ -665,10 +676,14 @@ export function ConfiguracoesClient({ empresa, usuarios, bancos, sessao }: any) 
                 <div className="grid grid-cols-2 gap-4">
                   <div><label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">Perfil de Acesso</label>
                     <select value={userForm.perfilSlug} onChange={e => setUserForm({...userForm, perfilSlug: e.target.value})} className="w-full mt-1 px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm">
-                      <option value="vendedor">Vendedor</option><option value="gerente">Gerente</option><option value="admin">Administrador</option>
+                      {cargos.length > 0 ? cargos.map((c: any) => (
+                        <option key={c.slug} value={c.slug}>{c.nome}</option>
+                      )) : (<>
+                        <option value="vendedor">Vendedor</option><option value="gerente">Gerente</option><option value="admin">Administrador</option>
+                      </>)}
                     </select></div>
                   <div><label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">Telefone</label>
-                    <input type="text" value={userForm.telefone} onChange={e => setUserForm({...userForm, telefone: e.target.value})} className="w-full mt-1 px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm" placeholder="(99) 99999-9999" /></div>
+                    <input type="text" value={userForm.telefone} onChange={e => setUserForm({...userForm, telefone: maskPhone(e.target.value)})} maxLength={15} className="w-full mt-1 px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm" placeholder="(99) 99999-9999" /></div>
                 </div>
                 {editingUser && (<div className="flex items-center gap-2 p-3 bg-zinc-50 dark:bg-zinc-800/50 rounded-lg border border-zinc-100 dark:border-zinc-800">
                   <input type="checkbox" checked={userForm.ativo} onChange={e => setUserForm({...userForm, ativo: e.target.checked})} id="ativo2" className="w-4 h-4 rounded border-zinc-300" />
@@ -676,16 +691,16 @@ export function ConfiguracoesClient({ empresa, usuarios, bancos, sessao }: any) 
                 </div>)}
               </>)}
               {userModalTab === "pessoal" && (<div className="grid grid-cols-2 gap-4">
-                <div><label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">CPF</label><input type="text" value={userForm.cpf} onChange={e => setUserForm({...userForm, cpf: e.target.value})} className="w-full mt-1 px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm" placeholder="000.000.000-00" /></div>
+                <div><label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">CPF</label><input type="text" value={userForm.cpf} onChange={e => setUserForm({...userForm, cpf: maskCPF(e.target.value)})} maxLength={14} className="w-full mt-1 px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm" placeholder="000.000.000-00" /></div>
                 <div><label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">RG</label><input type="text" value={userForm.rg} onChange={e => setUserForm({...userForm, rg: e.target.value})} className="w-full mt-1 px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm" /></div>
                 <div><label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">Órgão Emissor</label><input type="text" value={userForm.orgaoEmissor} onChange={e => setUserForm({...userForm, orgaoEmissor: e.target.value})} className="w-full mt-1 px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm" placeholder="SSP/SC" /></div>
-                <div><label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">Nascimento</label><input type="date" value={userForm.dataNascimento} onChange={e => setUserForm({...userForm, dataNascimento: e.target.value})} className="w-full mt-1 px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm" /></div>
+                <div><label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">Nascimento</label><input type="text" value={userForm.dataNascimento} onChange={e => setUserForm({...userForm, dataNascimento: maskDate(e.target.value)})} maxLength={10} className="w-full mt-1 px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm" placeholder="dd/mm/aaaa" /></div>
                 <div><label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">Gênero</label><select value={userForm.genero} onChange={e => setUserForm({...userForm, genero: e.target.value})} className="w-full mt-1 px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm"><option value="">Selecionar</option><option value="M">Masculino</option><option value="F">Feminino</option><option value="Outro">Outro</option></select></div>
                 <div><label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">Estado Civil</label><select value={userForm.estadoCivil} onChange={e => setUserForm({...userForm, estadoCivil: e.target.value})} className="w-full mt-1 px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm"><option value="">Selecionar</option><option value="Solteiro(a)">Solteiro(a)</option><option value="Casado(a)">Casado(a)</option><option value="Divorciado(a)">Divorciado(a)</option><option value="Viúvo(a)">Viúvo(a)</option></select></div>
                 <div className="col-span-2"><label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">Time que Torce ⚽</label><input type="text" value={userForm.timeFavorito} onChange={e => setUserForm({...userForm, timeFavorito: e.target.value})} className="w-full mt-1 px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm" placeholder="Ex: Flamengo, Corinthians..." /></div>
               </div>)}
               {userModalTab === "endereco" && (<div className="grid grid-cols-2 gap-4">
-                <div><label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">CEP</label><input type="text" value={userForm.cep} onChange={e => setUserForm({...userForm, cep: e.target.value})} className="w-full mt-1 px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm" placeholder="00000-000" /></div>
+                <div><label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">CEP</label><input type="text" value={userForm.cep} onChange={e => setUserForm({...userForm, cep: maskCEP(e.target.value)})} onBlur={async () => { const addr = await fetchCEP(userForm.cep); if (addr) setUserForm(prev => ({...prev, logradouro: addr.logradouro, bairro: addr.bairro, cidade: addr.cidade, uf: addr.uf})); }} maxLength={9} className="w-full mt-1 px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm" placeholder="00000-000" /></div>
                 <div><label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">UF</label><input type="text" value={userForm.uf} maxLength={2} onChange={e => setUserForm({...userForm, uf: e.target.value.toUpperCase()})} className="w-full mt-1 px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm" placeholder="SC" /></div>
                 <div className="col-span-2"><label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">Logradouro</label><input type="text" value={userForm.logradouro} onChange={e => setUserForm({...userForm, logradouro: e.target.value})} className="w-full mt-1 px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm" placeholder="Rua, Avenida..." /></div>
                 <div><label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">Número</label><input type="text" value={userForm.numero} onChange={e => setUserForm({...userForm, numero: e.target.value})} className="w-full mt-1 px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm" /></div>
@@ -702,8 +717,8 @@ export function ConfiguracoesClient({ empresa, usuarios, bancos, sessao }: any) 
                 <div><label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">Chave PIX</label><input type="text" value={userForm.chavePix} onChange={e => setUserForm({...userForm, chavePix: e.target.value})} className="w-full mt-1 px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm" /></div>
               </div>)}
               {userModalTab === "contratacao" && (<div className="grid grid-cols-2 gap-4">
-                <div><label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">Data Contratação</label><input type="date" value={userForm.dataContratacao} onChange={e => setUserForm({...userForm, dataContratacao: e.target.value})} className="w-full mt-1 px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm" /></div>
-                <div><label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">Data Desligamento</label><input type="date" value={userForm.dataDesligamento} onChange={e => setUserForm({...userForm, dataDesligamento: e.target.value})} className="w-full mt-1 px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm" /></div>
+                <div><label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">Data Contratação</label><input type="text" value={userForm.dataContratacao} onChange={e => setUserForm({...userForm, dataContratacao: maskDate(e.target.value)})} maxLength={10} className="w-full mt-1 px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm" placeholder="dd/mm/aaaa" /></div>
+                <div><label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">Data Desligamento</label><input type="text" value={userForm.dataDesligamento} onChange={e => setUserForm({...userForm, dataDesligamento: maskDate(e.target.value)})} maxLength={10} className="w-full mt-1 px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm" placeholder="dd/mm/aaaa" /></div>
                 <div className="col-span-2"><label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">Observações</label><textarea value={userForm.observacoesPessoais} rows={4} onChange={e => setUserForm({...userForm, observacoesPessoais: e.target.value})} className="w-full mt-1 px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm resize-none" placeholder="Anotações sobre o colaborador..." /></div>
               </div>)}
             </div>
