@@ -79,3 +79,43 @@ export async function fetchCEP(cep: string): Promise<{
     return null;
   }
 }
+
+// Máscara de CNPJ: 00.000.000/0000-00
+export function maskCNPJ(value: string): string {
+  const digits = value.replace(/\D/g, "").slice(0, 14);
+  if (digits.length <= 2) return digits;
+  if (digits.length <= 5) return `${digits.slice(0, 2)}.${digits.slice(2)}`;
+  if (digits.length <= 8) return `${digits.slice(0, 2)}.${digits.slice(2, 5)}.${digits.slice(5)}`;
+  if (digits.length <= 12) return `${digits.slice(0, 2)}.${digits.slice(2, 5)}.${digits.slice(5, 8)}/${digits.slice(8)}`;
+  return `${digits.slice(0, 2)}.${digits.slice(2, 5)}.${digits.slice(5, 8)}/${digits.slice(8, 12)}-${digits.slice(12)}`;
+}
+
+// Busca dados da empresa via BrasilAPI (CNPJ)
+export async function fetchCNPJ(cnpj: string): Promise<{
+  razaoSocial: string; nomeFantasia: string; telefone: string; email: string;
+  cep: string; logradouro: string; numero: string; complemento: string;
+  bairro: string; cidade: string; uf: string;
+} | null> {
+  const digits = cnpj.replace(/\D/g, "");
+  if (digits.length !== 14) return null;
+  try {
+    const res = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${digits}`);
+    if (!res.ok) return null;
+    const d = await res.json();
+    return {
+      razaoSocial: d.razao_social || "",
+      nomeFantasia: d.nome_fantasia || "",
+      telefone: d.ddd_telefone_1 ? maskPhone(d.ddd_telefone_1) : "",
+      email: d.email || "",
+      cep: d.cep ? maskCEP(d.cep) : "",
+      logradouro: d.logradouro || "",
+      numero: d.numero || "",
+      complemento: d.complemento || "",
+      bairro: d.bairro || "",
+      cidade: d.municipio || "",
+      uf: d.uf || "",
+    };
+  } catch {
+    return null;
+  }
+}

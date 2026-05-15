@@ -141,6 +141,11 @@ model UsuarioPerfil {
   masterId            String?  @map("master_id") @db.Uuid
   percentualSplitMaster Float? @map("percentual_split_master") // ex: 20% fica pro Master
 
+  // Controle de Horário de Acesso
+  horarioInicio       String?  @map("horario_inicio")   // "08:00"
+  horarioFim          String?  @map("horario_fim")      // "18:00"
+  diasAcesso          Json?    @map("dias_acesso")      // ["seg","ter","qua","qui","sex"]
+
   ativo               Boolean  @default(true)
   createdAt           DateTime @default(now()) @map("created_at")
   updatedAt           DateTime @updatedAt @map("updated_at")

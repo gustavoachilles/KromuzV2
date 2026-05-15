@@ -51,6 +51,10 @@ const AtualizarUsuarioSchema = z.object({
   // Perfil
   avatarUrl: z.string().optional().nullable(),
   email: z.string().email().optional().nullable(),
+  // Horário de Acesso
+  horarioInicio: z.string().optional().nullable(),
+  horarioFim: z.string().optional().nullable(),
+  diasAcesso: z.array(z.string()).optional().nullable(),
 });
 
 // PATCH /api/configuracoes/usuarios — edita perfil de um usuário
@@ -162,6 +166,68 @@ export async function POST(req: NextRequest) {
     });
 
     return Response.json(novoUsuario, { status: 201 });
+  } catch (e: any) {
+    return Response.json({ error: e.message }, { status: 400 });
+  }
+}
+
+// DELETE /api/configuracoes/usuarios — exclui usuário e migra negócios
+export async function DELETE(req: NextRequest) {
+  const sessao = await getSessionEmpresaApi();
+  if (!sessao) return Response.json({ error: "Não autorizado" }, { status: 401 });
+  if (sessao.perfilSlug !== "admin") return Response.json({ error: "Sem permissão." }, { status: 403 });
+
+  try {
+    const { id, migrateToId } = await req.json();
+    if (!id) return Response.json({ error: "ID obrigatório" }, { status: 400 });
+
+    // Verifica que usuário pertence à mesma empresa
+    const usuario = await prisma.usuarioPerfil.findFirst({
+      where: { id, empresaId: sessao.empresaId },
+    });
+    if (!usuario) return Response.json({ error: "Usuário não encontrado" }, { status: 404 });
+
+    // Não pode excluir a si mesmo
+    if (usuario.authUserId === sessao.authUserId) {
+      return Response.json({ error: "Você não pode excluir a si mesmo." }, { status: 400 });
+    }
+
+    // Se há destino para migração, migrar leads e propostas
+    if (migrateToId) {
+      const destino = await prisma.usuarioPerfil.findFirst({
+        where: { id: migrateToId, empresaId: sessao.empresaId },
+      });
+      if (!destino) return Response.json({ error: "Usuário de destino não encontrado" }, { status: 404 });
+
+      // Migrar leads
+      await prisma.lead.updateMany({
+        where: { vendedorId: usuario.authUserId, empresaId: sessao.empresaId },
+        data: { vendedorId: destino.authUserId }
+      });
+
+      // Migrar propostas
+      await prisma.proposta.updateMany({
+        where: { vendedorId: usuario.authUserId, empresaId: sessao.empresaId },
+        data: { vendedorId: destino.authUserId }
+      });
+    }
+
+    // Excluir o perfil do banco local
+    await prisma.usuarioPerfil.delete({ where: { id } });
+
+    // Opcional: desativar no Supabase Auth
+    try {
+      const { createClient } = await import("@supabase/supabase-js");
+      const supabaseAdmin = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!,
+        { auth: { autoRefreshToken: false, persistSession: false } }
+      );
+      // Ban user ao invés de deletar (para manter auditoria)
+      await supabaseAdmin.auth.admin.updateUserById(usuario.authUserId, { ban_duration: "876000h" });
+    } catch { /* silenciar erro auth */ }
+
+    return Response.json({ ok: true });
   } catch (e: any) {
     return Response.json({ error: e.message }, { status: 400 });
   }

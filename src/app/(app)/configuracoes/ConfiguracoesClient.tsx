@@ -20,7 +20,7 @@ import {
   Shield
 } from "lucide-react";
 import { MODULOS_SISTEMA, type Permissoes } from "@/lib/permissions";
-import { maskPhone, maskCPF, maskCEP, maskDate, dateToISO, isoToDate, fetchCEP, isValidDate } from "@/lib/masks";
+import { maskPhone, maskCPF, maskCEP, maskCNPJ, maskDate, dateToISO, isoToDate, fetchCEP, fetchCNPJ, isValidDate } from "@/lib/masks";
 
 export function ConfiguracoesClient({ empresa, usuarios, bancos, sessao }: any) {
   const router = useRouter();
@@ -45,9 +45,13 @@ export function ConfiguracoesClient({ empresa, usuarios, bancos, sessao }: any) 
     bancoNome: "", bancoAgencia: "", bancoConta: "", bancoTipoConta: "", chavePix: "", tipoChavePix: "",
     // Contratação
     dataContratacao: "", dataDesligamento: "", observacoesPessoais: "",
-    avatarUrl: ""
+    avatarUrl: "",
+    // Horário de Acesso
+    horarioInicio: "", horarioFim: "",
+    diasAcesso: ["seg", "ter", "qua", "qui", "sex"] as string[]
   });
   const [cepError, setCepError] = useState("");
+  const [deleteModal, setDeleteModal] = useState<{ user: any; migrateToId: string } | null>(null);
   
   const [formEmpresa, setFormEmpresa] = useState({
     nomeEmpresa: empresa.nomeEmpresa,
@@ -164,7 +168,9 @@ export function ConfiguracoesClient({ empresa, usuarios, bancos, sessao }: any) 
       cep: "", logradouro: "", numero: "", complemento: "", bairro: "", cidade: "", uf: "",
       bancoNome: "", bancoAgencia: "", bancoConta: "", bancoTipoConta: "", chavePix: "", tipoChavePix: "",
       dataContratacao: "", dataDesligamento: "", observacoesPessoais: "",
-      avatarUrl: ""
+      avatarUrl: "",
+      horarioInicio: "", horarioFim: "",
+      diasAcesso: ["seg", "ter", "qua", "qui", "sex"]
     });
   }
 
@@ -197,7 +203,10 @@ export function ConfiguracoesClient({ empresa, usuarios, bancos, sessao }: any) 
       dataContratacao: user.dataContratacao ? isoToDate(user.dataContratacao) : "",
       dataDesligamento: user.dataDesligamento ? isoToDate(user.dataDesligamento) : "",
       observacoesPessoais: user.observacoesPessoais || "",
-      avatarUrl: user.avatarUrl || ""
+      avatarUrl: user.avatarUrl || "",
+      horarioInicio: user.horarioInicio || "",
+      horarioFim: user.horarioFim || "",
+      diasAcesso: (user.diasAcesso as string[]) || ["seg", "ter", "qua", "qui", "sex"]
     });
     setUserModalTab("geral");
     setIsAddModalOpen(true);
@@ -338,6 +347,10 @@ export function ConfiguracoesClient({ empresa, usuarios, bancos, sessao }: any) 
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2 col-span-2">
+                  <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">CNPJ <span className="text-[10px] text-zinc-400">(preencha para buscar dados automaticamente)</span></label>
+                  <input type="text" value={formEmpresa.cpfCnpj} onChange={e => setFormEmpresa({...formEmpresa, cpfCnpj: maskCNPJ(e.target.value)})} onBlur={async () => { const d = await fetchCNPJ(formEmpresa.cpfCnpj); if (d) setFormEmpresa(prev => ({...prev, nomeEmpresa: d.razaoSocial || prev.nomeEmpresa, nomeFantasia: d.nomeFantasia || prev.nomeFantasia, telefone: d.telefone || prev.telefone, email: d.email || prev.email, cep: d.cep || prev.cep, logradouro: d.logradouro || prev.logradouro, numero: d.numero || prev.numero, complemento: d.complemento || prev.complemento, bairro: d.bairro || prev.bairro, cidade: d.cidade || prev.cidade, uf: d.uf || prev.uf})); }} maxLength={18} className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-700 rounded-lg text-sm" placeholder="00.000.000/0000-00" />
+                </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Razão Social</label>
                   <input 
@@ -355,10 +368,6 @@ export function ConfiguracoesClient({ empresa, usuarios, bancos, sessao }: any) 
                     onChange={e => setFormEmpresa({...formEmpresa, nomeFantasia: e.target.value})}
                     className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-700 rounded-lg text-sm"
                   />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">CNPJ / CPF</label>
-                  <input type="text" value={formEmpresa.cpfCnpj} onChange={e => setFormEmpresa({...formEmpresa, cpfCnpj: e.target.value})} className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-700 rounded-lg text-sm" placeholder="00.000.000/0000-00" />
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Telefone</label>
@@ -548,11 +557,19 @@ export function ConfiguracoesClient({ empresa, usuarios, bancos, sessao }: any) 
                           {!u.ativo ? "INATIVO" : u.perfilSlug}
                        </span>
                        <button 
-                         onClick={() => openEditModal(u)}
-                         className="p-2 hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded-lg transition text-zinc-400"
-                       >
-                          <Pencil className="w-4 h-4" />
-                       </button>
+                          onClick={() => openEditModal(u)}
+                          className="p-2 hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded-lg transition text-zinc-400"
+                        >
+                           <Pencil className="w-4 h-4" />
+                        </button>
+                        {u.authUserId !== sessao.authUserId && (
+                          <button 
+                            onClick={() => setDeleteModal({ user: u, migrateToId: '' })}
+                            className="p-2 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition text-zinc-400 hover:text-red-500"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
                     </div>
                   </div>
                 ))}
@@ -818,6 +835,7 @@ export function ConfiguracoesClient({ empresa, usuarios, bancos, sessao }: any) 
                 { key: "endereco", label: "Endereço" },
                 { key: "bancario", label: "Bancário" },
                 { key: "contratacao", label: "Contratação" },
+                { key: "acesso", label: "Acesso" },
               ] as {key: string; label: string}[]).map(t => (
                 <button key={t.key} onClick={() => setUserModalTab(t.key)}
                   className={`px-3 py-1.5 text-xs font-bold rounded-lg transition whitespace-nowrap ${userModalTab === t.key ? 'bg-brand/10 text-brand' : 'text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200'}`}>{t.label}</button>
@@ -898,6 +916,31 @@ export function ConfiguracoesClient({ empresa, usuarios, bancos, sessao }: any) 
                 </div>
                 <div className="col-span-2"><label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">Observações</label><textarea value={userForm.observacoesPessoais} rows={4} onChange={e => setUserForm({...userForm, observacoesPessoais: e.target.value})} className="w-full mt-1 px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm resize-none" placeholder="Anotações sobre o colaborador..." /></div>
               </div>)}
+              {userModalTab === "acesso" && (<div className="space-y-4">
+                <p className="text-sm text-zinc-500">Defina os horários em que este membro pode acessar o sistema.</p>
+                <div className="grid grid-cols-2 gap-4">
+                  <div><label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">Horário Início</label>
+                    <input type="time" value={userForm.horarioInicio} onChange={e => setUserForm({...userForm, horarioInicio: e.target.value})} className="w-full mt-1 px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm" />
+                  </div>
+                  <div><label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">Horário Fim</label>
+                    <input type="time" value={userForm.horarioFim} onChange={e => setUserForm({...userForm, horarioFim: e.target.value})} className="w-full mt-1 px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm" />
+                  </div>
+                </div>
+                <div>
+                  <label className="text-sm font-bold text-zinc-700 dark:text-zinc-300 mb-2 block">Dias Permitidos</label>
+                  <div className="flex flex-wrap gap-2">
+                    {(["seg","ter","qua","qui","sex","sab","dom"] as string[]).map(dia => (
+                      <button key={dia} type="button" onClick={() => {
+                        const arr = userForm.diasAcesso.includes(dia) ? userForm.diasAcesso.filter((d: string) => d !== dia) : [...userForm.diasAcesso, dia];
+                        setUserForm({...userForm, diasAcesso: arr});
+                      }} className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition ${userForm.diasAcesso.includes(dia) ? 'bg-brand/10 border-brand/30 text-brand' : 'bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-400'}`}>
+                        {dia.charAt(0).toUpperCase() + dia.slice(1)}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                {!userForm.horarioInicio && !userForm.horarioFim && <p className="text-[10px] text-zinc-400">Deixe vazio para acesso ilimitado (24h).</p>}
+              </div>)}
             </div>
             <div className="mt-6 flex justify-end gap-3">
               <button onClick={() => { setIsAddModalOpen(false); setEditingUser(null); setEmailError(""); }}
@@ -905,6 +948,37 @@ export function ConfiguracoesClient({ empresa, usuarios, bancos, sessao }: any) 
               <button onClick={handleSaveUsuario} disabled={saving || !userForm.nome || !userForm.email}
                 className="bg-brand text-white px-5 py-2 rounded-lg text-sm font-bold hover:opacity-90 disabled:opacity-50 flex items-center gap-2 transition shadow-lg shadow-brand/20">
                 <Save className="w-4 h-4" /> {saving ? "Salvando..." : "Salvar Membro"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+
+      {/* MODAL DE EXCLUSÃO */}
+      {deleteModal && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-white dark:bg-zinc-900 rounded-2xl w-full max-w-md p-6 border border-zinc-200 dark:border-zinc-800 shadow-2xl">
+            <h3 className="text-lg font-bold text-red-600 mb-2 flex items-center gap-2"><Trash2 className="w-5 h-5" /> Excluir Membro</h3>
+            <p className="text-sm text-zinc-500 mb-4">Você está prestes a excluir <strong>{deleteModal.user.nome}</strong>. Escolha para quem migrar os negócios vinculados:</p>
+            <select value={deleteModal.migrateToId} onChange={e => setDeleteModal({...deleteModal, migrateToId: e.target.value})} className="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm mb-4">
+              <option value="">Não migrar (excluir tudo)</option>
+              {usuarios.filter((u: any) => u.id !== deleteModal.user.id).map((u: any) => (
+                <option key={u.id} value={u.id}>{u.nome} ({u.perfilSlug})</option>
+              ))}
+            </select>
+            <div className="flex justify-end gap-3">
+              <button onClick={() => setDeleteModal(null)} className="px-4 py-2 text-sm font-medium text-zinc-500 hover:text-zinc-800 dark:hover:text-white transition">Cancelar</button>
+              <button onClick={async () => {
+                const res = await fetch('/api/configuracoes/usuarios', {
+                  method: 'DELETE',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ id: deleteModal.user.id, migrateToId: deleteModal.migrateToId || null })
+                });
+                if (res.ok) { alert('✅ Membro excluído com sucesso!'); setDeleteModal(null); router.refresh(); }
+                else { const e = await res.json(); alert(e.error); }
+              }} className="bg-red-600 text-white px-5 py-2 rounded-lg text-sm font-bold hover:opacity-90 flex items-center gap-2 transition">
+                <Trash2 className="w-4 h-4" /> Confirmar Exclusão
               </button>
             </div>
           </div>
