@@ -20,7 +20,7 @@ import {
   Shield
 } from "lucide-react";
 import { MODULOS_SISTEMA, type Permissoes } from "@/lib/permissions";
-import { maskPhone, maskCPF, maskCEP, maskDate, dateToISO, isoToDate, fetchCEP } from "@/lib/masks";
+import { maskPhone, maskCPF, maskCEP, maskDate, dateToISO, isoToDate, fetchCEP, isValidDate } from "@/lib/masks";
 
 export function ConfiguracoesClient({ empresa, usuarios, bancos, sessao }: any) {
   const router = useRouter();
@@ -208,9 +208,12 @@ export function ConfiguracoesClient({ empresa, usuarios, bancos, sessao }: any) 
     if (res.ok) setCargos(await res.json());
   }
 
-  // Carrega cargos ao montar (necessário para o select de membros)
+  // Carrega cargos e garante que os 3 padrão existam
   useEffect(() => {
-    fetchCargos();
+    (async () => {
+      await fetch("/api/configuracoes/cargos/seed", { method: "POST" });
+      fetchCargos();
+    })();
   }, []);
 
   useEffect(() => {
@@ -219,26 +222,7 @@ export function ConfiguracoesClient({ empresa, usuarios, bancos, sessao }: any) 
     }
   }, [tab]);
 
-  // Auto-seed cargos padr\u00e3o quando a empresa n\u00e3o tem nenhum
-  useEffect(() => {
-    if (tab === "cargos" && cargos.length === 0 && !loadingCargos) {
-      // Tenta buscar primeiro, se vazio faz seed autom\u00e1tico
-      (async () => {
-        const res = await fetch("/api/configuracoes/cargos");
-        if (res.ok) {
-          const data = await res.json();
-          if (data.length === 0) {
-            setLoadingCargos(true);
-            await fetch("/api/configuracoes/cargos/seed", { method: "POST" });
-            await fetchCargos();
-            setLoadingCargos(false);
-          } else {
-            setCargos(data);
-          }
-        }
-      })();
-    }
-  }, [tab]);
+
 
   async function seedCargos() {
     setLoadingCargos(true);
@@ -565,6 +549,116 @@ export function ConfiguracoesClient({ empresa, usuarios, bancos, sessao }: any) 
               </div>
             </div>
           )}
+
+          {tab === "seguranca" && (
+            <div className="p-8 space-y-6">
+              <div>
+                <h2 className="text-lg font-bold">Segurança</h2>
+                <p className="text-sm text-zinc-500">Configurações de segurança e políticas de acesso.</p>
+              </div>
+              <div className="space-y-4">
+                <div className="p-4 bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800 rounded-xl space-y-3">
+                  <div className="flex items-center gap-3">
+                    <Lock className="w-5 h-5 text-brand" />
+                    <div>
+                      <p className="text-sm font-bold">Autenticação de Dois Fatores (2FA)</p>
+                      <p className="text-xs text-zinc-500">Adiciona uma camada extra de proteção ao login.</p>
+                    </div>
+                    <span className="ml-auto text-[10px] font-bold bg-zinc-200 dark:bg-zinc-800 text-zinc-500 px-2 py-0.5 rounded">EM BREVE</span>
+                  </div>
+                </div>
+                <div className="p-4 bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800 rounded-xl space-y-3">
+                  <div className="flex items-center gap-3">
+                    <ShieldCheck className="w-5 h-5 text-brand" />
+                    <div>
+                      <p className="text-sm font-bold">Política de Senhas</p>
+                      <p className="text-xs text-zinc-500">Senha mínima: 8 caracteres com letra maiúscula, número e símbolo.</p>
+                    </div>
+                    <span className="ml-auto text-[10px] font-bold bg-green-100 dark:bg-green-900/30 text-green-600 px-2 py-0.5 rounded">ATIVO</span>
+                  </div>
+                </div>
+                <div className="p-4 bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800 rounded-xl space-y-3">
+                  <div className="flex items-center gap-3">
+                    <Globe className="w-5 h-5 text-brand" />
+                    <div>
+                      <p className="text-sm font-bold">Sessões Ativas</p>
+                      <p className="text-xs text-zinc-500">Sessões expiram automaticamente após 24h de inatividade.</p>
+                    </div>
+                    <span className="ml-auto text-[10px] font-bold bg-green-100 dark:bg-green-900/30 text-green-600 px-2 py-0.5 rounded">ATIVO</span>
+                  </div>
+                </div>
+                <div className="p-4 bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800 rounded-xl space-y-3">
+                  <div className="flex items-center gap-3">
+                    <Shield className="w-5 h-5 text-brand" />
+                    <div>
+                      <p className="text-sm font-bold">Isolamento Multi-Tenant</p>
+                      <p className="text-xs text-zinc-500">Dados completamente isolados entre empresas. Nenhum dado é compartilhado.</p>
+                    </div>
+                    <span className="ml-auto text-[10px] font-bold bg-green-100 dark:bg-green-900/30 text-green-600 px-2 py-0.5 rounded">ATIVO</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {tab === "notificacoes" && (
+            <div className="p-8 space-y-6">
+              <div>
+                <h2 className="text-lg font-bold">Notificações</h2>
+                <p className="text-sm text-zinc-500">Configure como e quando receber alertas do sistema.</p>
+              </div>
+              <div className="space-y-4">
+                <div className="p-4 bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800 rounded-xl">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <Bell className="w-5 h-5 text-brand" />
+                      <div>
+                        <p className="text-sm font-bold">Novo Lead Cadastrado</p>
+                        <p className="text-xs text-zinc-500">Receba alerta quando um novo lead entrar no funil.</p>
+                      </div>
+                    </div>
+                    <span className="text-[10px] font-bold bg-zinc-200 dark:bg-zinc-800 text-zinc-500 px-2 py-0.5 rounded">EM BREVE</span>
+                  </div>
+                </div>
+                <div className="p-4 bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800 rounded-xl">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <Bell className="w-5 h-5 text-brand" />
+                      <div>
+                        <p className="text-sm font-bold">Contrato Aprovado</p>
+                        <p className="text-xs text-zinc-500">Seja notificado quando um contrato mudar de status.</p>
+                      </div>
+                    </div>
+                    <span className="text-[10px] font-bold bg-zinc-200 dark:bg-zinc-800 text-zinc-500 px-2 py-0.5 rounded">EM BREVE</span>
+                  </div>
+                </div>
+                <div className="p-4 bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800 rounded-xl">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <Bell className="w-5 h-5 text-brand" />
+                      <div>
+                        <p className="text-sm font-bold">Meta Atingida</p>
+                        <p className="text-xs text-zinc-500">Receba parabéns automáticos ao bater metas mensais.</p>
+                      </div>
+                    </div>
+                    <span className="text-[10px] font-bold bg-zinc-200 dark:bg-zinc-800 text-zinc-500 px-2 py-0.5 rounded">EM BREVE</span>
+                  </div>
+                </div>
+                <div className="p-4 bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800 rounded-xl">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <Bell className="w-5 h-5 text-brand" />
+                      <div>
+                        <p className="text-sm font-bold">Resumo Diário por E-mail</p>
+                        <p className="text-xs text-zinc-500">Relatório resumido dos leads e contratos do dia.</p>
+                      </div>
+                    </div>
+                    <span className="text-[10px] font-bold bg-zinc-200 dark:bg-zinc-800 text-zinc-500 px-2 py-0.5 rounded">EM BREVE</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </main>
       </div>
 
@@ -667,9 +761,10 @@ export function ConfiguracoesClient({ empresa, usuarios, bancos, sessao }: any) 
                 <div className="grid grid-cols-2 gap-4">
                   <div><label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">Nome *</label>
                     <input type="text" value={userForm.nome} onChange={e => setUserForm({...userForm, nome: e.target.value})} className="w-full mt-1 px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm" placeholder="Nome completo" /></div>
-                  <div><label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">E-mail *</label>
-                    <input type="email" value={userForm.email} disabled={!!editingUser} onChange={e => { setUserForm({...userForm, email: e.target.value}); setEmailError(""); }} onBlur={() => !editingUser && userForm.email && validateEmail(userForm.email)} className={`w-full mt-1 px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border rounded-lg text-sm disabled:opacity-50 ${emailError ? 'border-red-400' : 'border-zinc-200 dark:border-zinc-800'}`} placeholder="email@empresa.com" />
+                  <div><label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">E-mail {editingUser ? '' : '*'}</label>
+                    <input type="email" value={userForm.email} disabled={!!editingUser} onChange={e => { setUserForm({...userForm, email: e.target.value}); setEmailError(""); }} onBlur={() => !editingUser && userForm.email && validateEmail(userForm.email)} className={`w-full mt-1 px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border rounded-lg text-sm disabled:opacity-60 disabled:cursor-not-allowed ${emailError ? 'border-red-400' : 'border-zinc-200 dark:border-zinc-800'}`} placeholder="email@empresa.com" />
                     {emailError && <p className="text-xs text-red-500 mt-1">{emailError}</p>}
+                    {editingUser && <p className="text-[10px] text-zinc-400 mt-1">E-mail não pode ser alterado (vinculado à autenticação)</p>}
                     {!editingUser && !emailError && <p className="text-[10px] text-zinc-500 mt-1">Senha provisória: <strong>Mudar@123</strong></p>}
                   </div>
                 </div>
@@ -694,7 +789,9 @@ export function ConfiguracoesClient({ empresa, usuarios, bancos, sessao }: any) 
                 <div><label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">CPF</label><input type="text" value={userForm.cpf} onChange={e => setUserForm({...userForm, cpf: maskCPF(e.target.value)})} maxLength={14} className="w-full mt-1 px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm" placeholder="000.000.000-00" /></div>
                 <div><label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">RG</label><input type="text" value={userForm.rg} onChange={e => setUserForm({...userForm, rg: e.target.value})} className="w-full mt-1 px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm" /></div>
                 <div><label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">Órgão Emissor</label><input type="text" value={userForm.orgaoEmissor} onChange={e => setUserForm({...userForm, orgaoEmissor: e.target.value})} className="w-full mt-1 px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm" placeholder="SSP/SC" /></div>
-                <div><label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">Nascimento</label><input type="text" value={userForm.dataNascimento} onChange={e => setUserForm({...userForm, dataNascimento: maskDate(e.target.value)})} maxLength={10} className="w-full mt-1 px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm" placeholder="dd/mm/aaaa" /></div>
+                <div><label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">Nascimento</label><input type="text" value={userForm.dataNascimento} onChange={e => setUserForm({...userForm, dataNascimento: maskDate(e.target.value)})} maxLength={10} className={`w-full mt-1 px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border rounded-lg text-sm ${userForm.dataNascimento.length === 10 && !isValidDate(userForm.dataNascimento) ? 'border-red-400' : 'border-zinc-200 dark:border-zinc-800'}`} placeholder="dd/mm/aaaa" />
+                  {userForm.dataNascimento.length === 10 && !isValidDate(userForm.dataNascimento) && <p className="text-xs text-red-500 mt-1">Data inválida</p>}
+                </div>
                 <div><label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">Gênero</label><select value={userForm.genero} onChange={e => setUserForm({...userForm, genero: e.target.value})} className="w-full mt-1 px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm"><option value="">Selecionar</option><option value="M">Masculino</option><option value="F">Feminino</option><option value="Outro">Outro</option></select></div>
                 <div><label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">Estado Civil</label><select value={userForm.estadoCivil} onChange={e => setUserForm({...userForm, estadoCivil: e.target.value})} className="w-full mt-1 px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm"><option value="">Selecionar</option><option value="Solteiro(a)">Solteiro(a)</option><option value="Casado(a)">Casado(a)</option><option value="Divorciado(a)">Divorciado(a)</option><option value="Viúvo(a)">Viúvo(a)</option></select></div>
                 <div className="col-span-2"><label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">Time que Torce ⚽</label><input type="text" value={userForm.timeFavorito} onChange={e => setUserForm({...userForm, timeFavorito: e.target.value})} className="w-full mt-1 px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm" placeholder="Ex: Flamengo, Corinthians..." /></div>
@@ -717,8 +814,12 @@ export function ConfiguracoesClient({ empresa, usuarios, bancos, sessao }: any) 
                 <div><label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">Chave PIX</label><input type="text" value={userForm.chavePix} onChange={e => setUserForm({...userForm, chavePix: e.target.value})} className="w-full mt-1 px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm" /></div>
               </div>)}
               {userModalTab === "contratacao" && (<div className="grid grid-cols-2 gap-4">
-                <div><label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">Data Contratação</label><input type="text" value={userForm.dataContratacao} onChange={e => setUserForm({...userForm, dataContratacao: maskDate(e.target.value)})} maxLength={10} className="w-full mt-1 px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm" placeholder="dd/mm/aaaa" /></div>
-                <div><label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">Data Desligamento</label><input type="text" value={userForm.dataDesligamento} onChange={e => setUserForm({...userForm, dataDesligamento: maskDate(e.target.value)})} maxLength={10} className="w-full mt-1 px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm" placeholder="dd/mm/aaaa" /></div>
+                <div><label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">Data Contratação</label><input type="text" value={userForm.dataContratacao} onChange={e => setUserForm({...userForm, dataContratacao: maskDate(e.target.value)})} maxLength={10} className={`w-full mt-1 px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border rounded-lg text-sm ${userForm.dataContratacao.length === 10 && !isValidDate(userForm.dataContratacao) ? 'border-red-400' : 'border-zinc-200 dark:border-zinc-800'}`} placeholder="dd/mm/aaaa" />
+                  {userForm.dataContratacao.length === 10 && !isValidDate(userForm.dataContratacao) && <p className="text-xs text-red-500 mt-1">Data inválida</p>}
+                </div>
+                <div><label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">Data Desligamento</label><input type="text" value={userForm.dataDesligamento} onChange={e => setUserForm({...userForm, dataDesligamento: maskDate(e.target.value)})} maxLength={10} className={`w-full mt-1 px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border rounded-lg text-sm ${userForm.dataDesligamento.length === 10 && !isValidDate(userForm.dataDesligamento) ? 'border-red-400' : 'border-zinc-200 dark:border-zinc-800'}`} placeholder="dd/mm/aaaa" />
+                  {userForm.dataDesligamento.length === 10 && !isValidDate(userForm.dataDesligamento) && <p className="text-xs text-red-500 mt-1">Data inválida</p>}
+                </div>
                 <div className="col-span-2"><label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">Observações</label><textarea value={userForm.observacoesPessoais} rows={4} onChange={e => setUserForm({...userForm, observacoesPessoais: e.target.value})} className="w-full mt-1 px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm resize-none" placeholder="Anotações sobre o colaborador..." /></div>
               </div>)}
             </div>

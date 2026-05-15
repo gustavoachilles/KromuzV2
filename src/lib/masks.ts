@@ -35,6 +35,23 @@ export function dateToISO(masked: string): string {
   return `${parts[2]}-${parts[1]}-${parts[0]}`;
 }
 
+// Valida se a data mascarada é válida
+export function isValidDate(masked: string): boolean {
+  if (!masked || masked.length !== 10) return true; // não validar parcial
+  const parts = masked.split("/");
+  if (parts.length !== 3) return false;
+  const day = parseInt(parts[0], 10);
+  const month = parseInt(parts[1], 10);
+  const year = parseInt(parts[2], 10);
+  if (month < 1 || month > 12) return false;
+  if (day < 1 || day > 31) return false;
+  if (year < 1900 || year > 2100) return false;
+  // Verificar dias do mês
+  const daysInMonth = new Date(year, month, 0).getDate();
+  if (day > daysInMonth) return false;
+  return true;
+}
+
 // Converte yyyy-mm-dd (ISO) para dd/mm/aaaa (display)
 export function isoToDate(iso: string): string {
   if (!iso || iso.length < 10) return "";
