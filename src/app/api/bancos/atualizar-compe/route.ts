@@ -1,18 +1,9 @@
-// Script para atualizar os bancos existentes com código COMPE e tipo correto
-// Execute: npx tsx prisma/update-bancos.ts
+import { NextRequest } from "next/server";
+import { prisma } from "@/lib/prisma";
+import { getSessionEmpresaApi } from "@/lib/session";
 
-import { PrismaClient } from "@prisma/client";
-import { Pool } from "pg";
-import { PrismaPg } from "@prisma/adapter-pg";
-
-const connectionString = process.env.DATABASE_URL!;
-const pool = new Pool({ connectionString });
-const adapter = new PrismaPg(pool);
-const prisma = new PrismaClient({ adapter });
-
-// Mapa de bancos do mercado de consignado brasileiro
-// tipo: "consignado" = opera via Corban | "rede" = opera via agência bancária
-const BANCOS_DADOS: Record<string, { compe: string; tipo: "consignado" | "rede" }> = {
+// Mapa de bancos com COMPE e tipo
+const BANCOS_DADOS: Record<string, { compe: string; tipo: string }> = {
   "Amigoz":         { compe: "",    tipo: "consignado" },
   "Banco do Brasil":{ compe: "001", tipo: "rede" },
   "Banrisul":       { compe: "041", tipo: "rede" },
@@ -44,9 +35,17 @@ const BANCOS_DADOS: Record<string, { compe: string; tipo: "consignado" | "rede" 
   "V8":             { compe: "",    tipo: "consignado" },
 };
 
-async function main() {
-  const bancos = await prisma.banco.findMany();
-  let atualizados = 0;
+// POST /api/bancos/atualizar-compe — atualiza COMPE e tipo de todos os bancos
+export async function POST(req: NextRequest) {
+  const sessao = await getSessionEmpresaApi();
+  if (!sessao) return Response.json({ error: "Não autorizado" }, { status: 401 });
+  if (sessao.perfilSlug !== "admin") return Response.json({ error: "Sem permissão" }, { status: 403 });
+
+  const bancos = await prisma.banco.findMany({
+    where: { empresaId: sessao.empresaId },
+  });
+
+  const resultados: string[] = [];
 
   for (const banco of bancos) {
     const dados = BANCOS_DADOS[banco.nome];
@@ -59,16 +58,11 @@ async function main() {
           tipo: dados.tipo,
         },
       });
-      atualizados++;
-      console.log(`✅ ${banco.nome} → COMPE: ${dados.compe || "N/A"} | Tipo: ${dados.tipo}`);
+      resultados.push(`✅ ${banco.nome} → COMPE: ${dados.compe || "N/A"} | Tipo: ${dados.tipo}`);
     } else {
-      console.log(`⚠️  ${banco.nome} → Não encontrado no mapa (mantido como está)`);
+      resultados.push(`⚠️ ${banco.nome} → Não encontrado no mapa`);
     }
   }
 
-  console.log(`\n🏁 ${atualizados}/${bancos.length} bancos atualizados.`);
+  return Response.json({ ok: true, resultados, total: bancos.length });
 }
-
-main()
-  .catch(console.error)
-  .finally(() => prisma.$disconnect());
