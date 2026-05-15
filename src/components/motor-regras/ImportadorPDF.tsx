@@ -151,22 +151,17 @@ export function ImportadorPDF({ empresaId }: { empresaId: string }) {
     const timeout = setTimeout(() => controller.abort(), 300_000);
 
     try {
-      // 1. Ler arquivo como base64 (assíncrono via FileReader — não congela o browser)
-      updatePasso(itemId, "Lendo arquivo...");
-      const base64 = await fileToBase64(item.arquivo);
+      // 1. Usar FormData (multipart) — evita inflação base64 (+33%)
+      updatePasso(itemId, "Preparando upload...");
+      const formData = new FormData();
+      formData.append("arquivo", item.arquivo);
+      if (bancoHint) formData.append("banco_hint", bancoHint);
 
-      // 2. Enviar JSON puro para a rota — sem FormData, sem Supabase Storage
+      // 2. Enviar via multipart/form-data
       updatePasso(itemId, "Enviando ao motor de IA...");
       const res = await fetch("/api/motor-regras/extrair-pdf", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          pdf_base64: base64,
-          nome_arquivo: item.arquivo.name,
-          media_type: item.arquivo.type || "application/pdf",
-          empresa_id: empresaId,
-          banco_hint: bancoHint || undefined,
-        }),
+        body: formData,
         signal: controller.signal,
       });
 
@@ -184,7 +179,16 @@ export function ImportadorPDF({ empresaId }: { empresaId: string }) {
         return;
       }
 
-      const data = (await res.json()) as Resultado;
+      // Tratar respostas não-JSON (ex: 413 Request Entity Too Large)
+      const contentType = res.headers.get("content-type") || "";
+      let data: Resultado;
+      if (contentType.includes("application/json")) {
+        data = (await res.json()) as Resultado;
+      } else {
+        const text = await res.text();
+        data = { ok: false, error: `Erro ${res.status}: ${text.slice(0, 200)}` };
+      }
+
       setFila((prev) =>
         prev.map((it) =>
           it.id === itemId

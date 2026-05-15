@@ -18,6 +18,11 @@ import { getSessionEmpresaApi } from "@/lib/session";
 export const runtime = "nodejs";
 export const maxDuration = 300;
 
+// Permitir uploads de até 10MB (PDFs de roteiros podem ser grandes)
+export const config = {
+  api: { bodyParser: { sizeLimit: "10mb" } },
+};
+
 const JsonBodySchema = z.object({
   pdf_url: z.string().url().optional(),
   pdf_base64: z.string().optional(),
