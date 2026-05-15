@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { formatBRL, formatPct } from "@/lib/utils";
+import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
 /** Lê um File como base64 usando FileReader (assíncrono, não congela o browser). */
 function fileToBase64(file: File): Promise<string> {
@@ -151,17 +152,31 @@ export function ImportadorPDF({ empresaId }: { empresaId: string }) {
     const timeout = setTimeout(() => controller.abort(), 300_000);
 
     try {
-      // 1. Usar FormData (multipart) — evita inflação base64 (+33%)
-      updatePasso(itemId, "Preparando upload...");
-      const formData = new FormData();
-      formData.append("arquivo", item.arquivo);
-      if (bancoHint) formData.append("banco_hint", bancoHint);
+      // 1. Upload ao Supabase Storage (bypassa limite de 4.5MB do Vercel)
+      updatePasso(itemId, "Enviando arquivo ao storage...");
+      const supabase = createSupabaseBrowserClient();
+      const filePath = `roteiros/${Date.now()}_${item.arquivo.name}`;
+      const { error: uploadError } = await supabase.storage
+        .from("roteiros")
+        .upload(filePath, item.arquivo, { upsert: true });
 
-      // 2. Enviar via multipart/form-data
+      if (uploadError) {
+        throw new Error(`Falha no upload: ${uploadError.message}`);
+      }
+
+      const { data: urlData } = supabase.storage.from("roteiros").getPublicUrl(filePath);
+
+      // 2. Enviar URL para a API de extração (payload leve)
       updatePasso(itemId, "Enviando ao motor de IA...");
       const res = await fetch("/api/motor-regras/extrair-pdf", {
         method: "POST",
-        body: formData,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          pdf_url: urlData.publicUrl,
+          nome_arquivo: item.arquivo.name,
+          media_type: item.arquivo.type || "application/pdf",
+          banco_hint: bancoHint || undefined,
+        }),
         signal: controller.signal,
       });
 
@@ -179,7 +194,6 @@ export function ImportadorPDF({ empresaId }: { empresaId: string }) {
         return;
       }
 
-      // Tratar respostas não-JSON (ex: 413 Request Entity Too Large)
       const contentType = res.headers.get("content-type") || "";
       let data: Resultado;
       if (contentType.includes("application/json")) {
