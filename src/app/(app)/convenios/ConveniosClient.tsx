@@ -333,7 +333,7 @@ export function ConveniosClient({
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Tipo</label>
+                  <label className="text-sm font-medium">Esfera</label>
                   <select
                     value={form.tipo}
                     onChange={(e) => setForm({ ...form, tipo: e.target.value })}
@@ -345,6 +345,7 @@ export function ConveniosClient({
                     <option value="privado">Privado</option>
                     <option value="outro">Outro</option>
                   </select>
+                  <p className="text-[10px] text-zinc-400">Classifica a esfera administrativa</p>
                 </div>
               </div>
 
