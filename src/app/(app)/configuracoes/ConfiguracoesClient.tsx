@@ -562,7 +562,7 @@ export function ConfiguracoesClient({ empresa, usuarios, bancos, sessao }: any) 
                         >
                            <Pencil className="w-4 h-4" />
                         </button>
-                        {u.authUserId !== sessao.authUserId && (
+                        {u.authUserId !== sessao.userId && (
                           <button 
                             onClick={() => setDeleteModal({ user: u, migrateToId: '' })}
                             className="p-2 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition text-zinc-400 hover:text-red-500"
