@@ -38,10 +38,10 @@ type Convenio = {
 type BancoDisponivel = { id: string; nome: string };
 
 const tipoConvenio: Record<string, { label: string; color: string }> = {
-  inss: { label: "INSS", color: "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400" },
-  siape: { label: "SIAPE", color: "bg-indigo-50 text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-400" },
-  forcas_armadas: { label: "Forças Armadas", color: "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400" },
-  estado: { label: "Estado/Município", color: "bg-brand/10 text-brand dark:bg-brand/20 dark:text-brand" },
+  federal: { label: "Federal", color: "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400" },
+  estadual: { label: "Estadual", color: "bg-indigo-50 text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-400" },
+  municipal: { label: "Municipal", color: "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400" },
+  privado: { label: "Privado", color: "bg-brand/10 text-brand dark:bg-brand/20 dark:text-brand" },
   outro: { label: "Outro", color: "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400" },
 };
 
@@ -62,7 +62,7 @@ export function ConveniosClient({
   const [form, setForm] = useState({
     nome: "",
     slug: "",
-    tipo: "inss",
+    tipo: "federal",
     descricao: "",
   });
 
@@ -91,7 +91,7 @@ export function ConveniosClient({
 
     setModal(false);
     setSalvando(false);
-    setForm({ nome: "", slug: "", tipo: "inss", descricao: "" });
+    setForm({ nome: "", slug: "", tipo: "federal", descricao: "" });
     router.refresh();
   }
 
@@ -339,10 +339,10 @@ export function ConveniosClient({
                     onChange={(e) => setForm({ ...form, tipo: e.target.value })}
                     className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/50"
                   >
-                    <option value="inss">INSS</option>
-                    <option value="siape">SIAPE</option>
-                    <option value="forcas_armadas">Forças Armadas</option>
-                    <option value="estado">Estado/Município</option>
+                    <option value="federal">Federal</option>
+                    <option value="estadual">Estadual</option>
+                    <option value="municipal">Municipal</option>
+                    <option value="privado">Privado</option>
                     <option value="outro">Outro</option>
                   </select>
                 </div>
