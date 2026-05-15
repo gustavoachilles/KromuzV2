@@ -201,14 +201,14 @@ export async function DELETE(req: NextRequest) {
 
       // Migrar leads
       await prisma.lead.updateMany({
-        where: { vendedorId: usuario.authUserId, empresaId: sessao.empresaId },
-        data: { vendedorId: destino.authUserId }
+        where: { vendedorEmail: usuario.email, empresaId: sessao.empresaId },
+        data: { vendedorEmail: destino.email, vendedorNome: destino.nome }
       });
 
       // Migrar propostas
       await prisma.proposta.updateMany({
-        where: { vendedorId: usuario.authUserId, empresaId: sessao.empresaId },
-        data: { vendedorId: destino.authUserId }
+        where: { vendedorEmail: usuario.email, empresaId: sessao.empresaId },
+        data: { vendedorEmail: destino.email, vendedorNome: destino.nome }
       });
     }
 
