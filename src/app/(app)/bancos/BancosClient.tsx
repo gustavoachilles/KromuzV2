@@ -14,6 +14,8 @@ import {
   Calculator,
   Loader2,
   X,
+  Pencil,
+  Upload,
 } from "lucide-react";
 
 type BancoComContagem = {
@@ -22,15 +24,36 @@ type BancoComContagem = {
   codigoCompe: string | null;
   cnpj: string | null;
   tipo: string;
+  tipoBanco: string;
   ativo: boolean;
   ativoSimulacao: boolean;
   observacoes: string | null;
+  logoUrl: string | null;
   _count: {
     produtosCredito: number;
     tabelasCoeficiente: number;
     regrasProduto: number;
   };
 };
+
+const TIPOS_BANCO = [
+  { value: "consignado", label: "Consignado (Corban)" },
+  { value: "rede", label: "Rede (Banco de Rede)" },
+];
+
+function displayNomeBanco(banco: BancoComContagem) {
+  const compe = banco.codigoCompe ? `${banco.codigoCompe} - ` : "";
+  const tipo = banco.tipoBanco === "rede" ? " / Rede" : "";
+  return `${compe}${banco.nome}${tipo}`;
+}
+
+function badgeTipo(tipo: string) {
+  const map: Record<string, string> = {
+    consignado: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",
+    rede: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
+  };
+  return map[tipo] || map.consignado;
+}
 
 export function BancosClient({
   bancos: bancosIniciais,
@@ -43,8 +66,9 @@ export function BancosClient({
   const [bancos, setBancos] = useState(bancosIniciais);
   const [busca, setBusca] = useState("");
   const [modalAberto, setModalAberto] = useState(false);
+  const [editando, setEditando] = useState<BancoComContagem | null>(null);
   const [salvando, setSalvando] = useState(false);
-  const [form, setForm] = useState({ nome: "", codigoCompe: "", cnpj: "", tipo: "consignado" });
+  const [form, setForm] = useState({ nome: "", codigoCompe: "", cnpj: "", tipoBanco: "consignado", logoUrl: "" });
   const [erro, setErro] = useState<string | null>(null);
 
   const filtrados = bancos.filter(
@@ -54,26 +78,62 @@ export function BancosClient({
       b.cnpj?.includes(busca)
   );
 
-  async function criarBanco(e: React.FormEvent) {
+  function abrirCriar() {
+    setEditando(null);
+    setForm({ nome: "", codigoCompe: "", cnpj: "", tipoBanco: "consignado", logoUrl: "" });
+    setErro(null);
+    setModalAberto(true);
+  }
+
+  function abrirEditar(banco: BancoComContagem) {
+    setEditando(banco);
+    setForm({
+      nome: banco.nome,
+      codigoCompe: banco.codigoCompe || "",
+      cnpj: banco.cnpj || "",
+      tipoBanco: banco.tipoBanco || "consignado",
+      logoUrl: banco.logoUrl || "",
+    });
+    setErro(null);
+    setModalAberto(true);
+  }
+
+  async function handleLogoUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) { alert("Máximo 2MB"); return; }
+    const reader = new FileReader();
+    reader.onloadend = () => setForm(prev => ({ ...prev, logoUrl: reader.result as string }));
+    reader.readAsDataURL(file);
+  }
+
+  async function salvarBanco(e: React.FormEvent) {
     e.preventDefault();
     setSalvando(true);
     setErro(null);
 
-    const res = await fetch("/api/bancos", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
-    });
-
-    const data = await res.json();
-    if (!res.ok) {
-      setErro(data.error);
-      setSalvando(false);
-      return;
+    if (editando) {
+      // PATCH
+      const res = await fetch(`/api/bancos/${editando.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      const data = await res.json();
+      if (!res.ok) { setErro(data.error); setSalvando(false); return; }
+    } else {
+      // POST
+      const res = await fetch("/api/bancos", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      const data = await res.json();
+      if (!res.ok) { setErro(data.error); setSalvando(false); return; }
     }
 
     setModalAberto(false);
-    setForm({ nome: "", codigoCompe: "", cnpj: "", tipo: "consignado" });
+    setEditando(null);
     setSalvando(false);
     router.refresh();
   }
@@ -109,7 +169,7 @@ export function BancosClient({
             </p>
           </div>
           <button
-            onClick={() => setModalAberto(true)}
+            onClick={abrirCriar}
             className="flex items-center gap-2 rounded-xl bg-brand px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-brand/25 hover:opacity-95 transition"
           >
             <Plus className="h-4 w-4" />
@@ -165,37 +225,50 @@ export function BancosClient({
                 <div className="p-5">
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-lg bg-brand/10 text-brand flex items-center justify-center font-bold text-sm shrink-0">
-                        {banco.nome.slice(0, 2).toUpperCase()}
-                      </div>
+                      {banco.logoUrl ? (
+                        <img src={banco.logoUrl} alt={banco.nome} className="h-10 w-10 rounded-lg object-contain bg-white border border-zinc-100 dark:border-zinc-800 p-0.5" />
+                      ) : (
+                        <div className="h-10 w-10 rounded-lg bg-brand/10 text-brand flex items-center justify-center font-bold text-sm shrink-0">
+                          {banco.nome.slice(0, 2).toUpperCase()}
+                        </div>
+                      )}
                       <div>
                         <h3 className="font-semibold text-zinc-900 dark:text-zinc-100 text-sm">
-                          {banco.nome}
+                          {displayNomeBanco(banco)}
                         </h3>
-                        <p className="text-xs text-zinc-500">
-                          {banco.codigoCompe ? `COMPE ${banco.codigoCompe}` : banco.tipo}
-                        </p>
+                        <span className={`text-[10px] font-bold uppercase px-1.5 py-0.5 rounded ${badgeTipo(banco.tipoBanco)}`}>
+                          {banco.tipoBanco}
+                        </span>
                       </div>
                     </div>
 
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        toggleSimulacao(banco.id, !banco.ativoSimulacao);
-                      }}
-                      className="shrink-0"
-                      title={
-                        banco.ativoSimulacao
-                          ? "Desativar na simulação"
-                          : "Ativar na simulação"
-                      }
-                    >
-                      {banco.ativoSimulacao ? (
-                        <ToggleRight className="h-6 w-6 text-emerald-500" />
-                      ) : (
-                        <ToggleLeft className="h-6 w-6 text-zinc-300 dark:text-zinc-600" />
-                      )}
-                    </button>
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); abrirEditar(banco); }}
+                        className="p-1.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition text-zinc-400"
+                        title="Editar banco"
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleSimulacao(banco.id, !banco.ativoSimulacao);
+                        }}
+                        className="shrink-0"
+                        title={
+                          banco.ativoSimulacao
+                            ? "Desativar na simulação"
+                            : "Ativar na simulação"
+                        }
+                      >
+                        {banco.ativoSimulacao ? (
+                          <ToggleRight className="h-6 w-6 text-emerald-500" />
+                        ) : (
+                          <ToggleLeft className="h-6 w-6 text-zinc-300 dark:text-zinc-600" />
+                        )}
+                      </button>
+                    </div>
                   </div>
 
                   {/* KPIs inline */}
@@ -243,26 +316,42 @@ export function BancosClient({
         )}
       </div>
 
-      {/* Modal de Criação */}
+      {/* Modal de Criação / Edição */}
       {modalAberto && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
           <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-2xl w-full max-w-lg mx-4">
             <div className="flex items-center justify-between p-6 border-b border-zinc-100 dark:border-zinc-800">
-              <h2 className="text-lg font-semibold">Adicionar Banco</h2>
+              <h2 className="text-lg font-semibold">{editando ? `Editar: ${editando.nome}` : "Adicionar Banco"}</h2>
               <button
-                onClick={() => setModalAberto(false)}
+                onClick={() => { setModalAberto(false); setEditando(null); }}
                 className="text-zinc-400 hover:text-zinc-600 transition"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
 
-            <form onSubmit={criarBanco} className="p-6 space-y-4">
+            <form onSubmit={salvarBanco} className="p-6 space-y-4">
               {erro && (
                 <div className="rounded-lg bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900 px-4 py-3 text-sm text-red-700 dark:text-red-300">
                   {erro}
                 </div>
               )}
+
+              {/* Logo Upload */}
+              <div className="flex items-center gap-4">
+                <label className="w-16 h-16 rounded-xl bg-zinc-100 dark:bg-zinc-800 border-2 border-dashed border-zinc-300 dark:border-zinc-700 flex items-center justify-center overflow-hidden cursor-pointer hover:border-brand transition-colors">
+                  <input type="file" className="hidden" accept="image/*" onChange={handleLogoUpload} />
+                  {form.logoUrl ? (
+                    <img src={form.logoUrl} className="w-full h-full object-contain p-1" alt="" />
+                  ) : (
+                    <Upload className="w-5 h-5 text-zinc-400" />
+                  )}
+                </label>
+                <div>
+                  <p className="text-sm font-bold">Logo do Banco</p>
+                  <p className="text-[10px] text-zinc-500">Clique para enviar (máx 2MB)</p>
+                </div>
+              </div>
 
               <div className="space-y-2">
                 <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
@@ -285,7 +374,8 @@ export function BancosClient({
                   <input
                     value={form.codigoCompe}
                     onChange={(e) => setForm({ ...form, codigoCompe: e.target.value })}
-                    placeholder="Ex: 012"
+                    placeholder="Ex: 237"
+                    maxLength={4}
                     className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/50 transition"
                   />
                 </div>
@@ -302,10 +392,25 @@ export function BancosClient({
                 </div>
               </div>
 
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                  Tipo do Banco *
+                </label>
+                <select
+                  value={form.tipoBanco}
+                  onChange={(e) => setForm({ ...form, tipoBanco: e.target.value })}
+                  className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/50 transition"
+                >
+                  {TIPOS_BANCO.map(t => (
+                    <option key={t.value} value={t.value}>{t.label}</option>
+                  ))}
+                </select>
+              </div>
+
               <div className="flex justify-end gap-3 pt-2">
                 <button
                   type="button"
-                  onClick={() => setModalAberto(false)}
+                  onClick={() => { setModalAberto(false); setEditando(null); }}
                   className="px-4 py-2 text-sm text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 transition"
                 >
                   Cancelar
@@ -317,10 +422,12 @@ export function BancosClient({
                 >
                   {salvando ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : editando ? (
+                    <Pencil className="h-4 w-4" />
                   ) : (
                     <Plus className="h-4 w-4" />
                   )}
-                  {salvando ? "Salvando..." : "Criar Banco"}
+                  {salvando ? "Salvando..." : editando ? "Salvar Alterações" : "Criar Banco"}
                 </button>
               </div>
             </form>

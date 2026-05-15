@@ -45,6 +45,8 @@ const AtualizarBancoSchema = z.object({
   codigoCompe: z.string().nullable().optional(),
   cnpj: z.string().nullable().optional(),
   tipo: z.string().optional(),
+  tipoBanco: z.string().optional(),
+  logoUrl: z.string().nullable().optional(),
   ativo: z.boolean().optional(),
   ativoSimulacao: z.boolean().optional(),
   ordem: z.number().int().optional(),
