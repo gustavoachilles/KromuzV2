@@ -28,8 +28,8 @@ export async function GET() {
 const CriarConvenioSchema = z.object({
   nome: z.string().min(2, "Nome obrigatório (mínimo 2 caracteres)"),
   slug: z.string().min(2).regex(/^[a-z0-9_-]+$/, "Slug deve conter apenas letras minúsculas, números, _ ou -"),
-  tipo: z.string().optional(),
-  descricao: z.string().optional(),
+  tipo: z.string().nullable().optional(),
+  descricao: z.string().nullable().optional(),
 });
 
 // POST /api/convenios — cria convênio
