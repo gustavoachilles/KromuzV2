@@ -32,17 +32,83 @@ const tipoLabel: Record<string, string> = {
 };
 
 const INSS_ESPECIES = [
+  { id: 1, nome: "Aposentadoria por Invalidez" },
+  { id: 2, nome: "Aposentadoria por Idade" },
+  { id: 3, nome: "Aposentadoria por Tempo de Serviço" },
+  { id: 4, nome: "Aposentadoria Especial" },
+  { id: 5, nome: "Pensão por Morte" },
+  { id: 6, nome: "Auxílio-Doença" },
+  { id: 7, nome: "Auxílio-Reclusão" },
+  { id: 8, nome: "Salário-Maternidade" },
   { id: 21, nome: "Pensão por Morte Previdenciária" },
-  { id: 31, nome: "Auxílio Doença Previdenciário" },
+  { id: 22, nome: "Pensão por Morte Estatutária" },
+  { id: 23, nome: "Pensão por Morte de Ex-Combatente" },
+  { id: 25, nome: "Auxílio-Reclusão" },
+  { id: 31, nome: "Auxílio-Doença Previdenciário" },
   { id: 32, nome: "Aposentadoria por Invalidez Previdenciária" },
+  { id: 33, nome: "Aposentadoria por Invalidez de Ex-Combatente" },
+  { id: 36, nome: "Auxílio-Acidente Previdenciário" },
   { id: 41, nome: "Aposentadoria por Idade" },
   { id: 42, nome: "Aposentadoria por Tempo de Contribuição" },
+  { id: 43, nome: "Aposentadoria por Tempo de Serviço de Professor" },
+  { id: 44, nome: "Aposentadoria por Tempo de Serviço de Jornalista" },
   { id: 46, nome: "Aposentadoria Especial" },
-  { id: 87, nome: "Amparo Social à Pessoa com Deficiência (LOAS)" },
-  { id: 88, nome: "Amparo Social ao Idoso (LOAS)" },
-  { id: 92, nome: "Aposent. Invalidez Acidente Trabalho" },
-  { id: 93, nome: "Pensão Morte Acidente Trabalho" },
+  { id: 51, nome: "Auxílio-Doença Acidentário" },
+  { id: 52, nome: "Aposentadoria por Invalidez Acidentária" },
+  { id: 53, nome: "Pensão por Morte Acidentária" },
+  { id: 54, nome: "Auxílio-Suplementar por Acidente de Trabalho" },
+  { id: 55, nome: "Pecúlio por Invalidez (Acidente de Trabalho)" },
+  { id: 56, nome: "Auxílio-Acidente" },
+  { id: 57, nome: "Aposentadoria por Tempo de Contribuição de Professor" },
+  { id: 72, nome: "Aposentadoria por Tempo de Serviço de Ex-Combatente" },
+  { id: 78, nome: "Aposentadoria por Idade Rural" },
+  { id: 80, nome: "Salário-Maternidade" },
+  { id: 81, nome: "Aposentadoria por Idade (LC 142/2013 - PCD)" },
+  { id: 82, nome: "Aposentadoria por Tempo de Contribuição (LC 142/2013 - PCD)" },
+  { id: 83, nome: "Aposentadoria por Idade do Trabalhador Rural" },
+  { id: 87, nome: "Amparo Social à Pessoa com Deficiência (LOAS/BPC)" },
+  { id: 88, nome: "Amparo Social ao Idoso (LOAS/BPC)" },
+  { id: 89, nome: "Pensão Especial (Hanseníase)" },
+  { id: 91, nome: "Auxílio-Doença por Acidente de Trabalho" },
+  { id: 92, nome: "Aposentadoria por Invalidez por Acidente de Trabalho" },
+  { id: 93, nome: "Pensão por Morte por Acidente de Trabalho" },
+  { id: 94, nome: "Auxílio-Suplementar por Acidente de Trabalho" },
+  { id: 95, nome: "Auxílio-Acidente por Acidente de Trabalho" },
+  { id: 96, nome: "Pensão Especial para Portadores de Síndrome da Talidomida" },
+  { id: 97, nome: "Pecúlio por Morte Acidentária" },
+  { id: 99, nome: "Pensão Especial Vitalícia" },
 ];
+
+function validarCPF(cpf: string): boolean {
+  cpf = cpf.replace(/\D/g, '');
+  if (cpf.length !== 11) return false;
+  if (/^(\d)\1{10}$/.test(cpf)) return false;
+  let soma = 0;
+  for (let i = 0; i < 9; i++) soma += parseInt(cpf[i]) * (10 - i);
+  let resto = (soma * 10) % 11;
+  if (resto === 10) resto = 0;
+  if (resto !== parseInt(cpf[9])) return false;
+  soma = 0;
+  for (let i = 0; i < 10; i++) soma += parseInt(cpf[i]) * (11 - i);
+  resto = (soma * 10) % 11;
+  if (resto === 10) resto = 0;
+  return resto === parseInt(cpf[10]);
+}
+
+function calcularIdade(dataNasc: string): number | null {
+  if (!dataNasc) return null;
+  const nasc = new Date(dataNasc);
+  if (isNaN(nasc.getTime())) return null;
+  const hoje = new Date();
+  let idade = hoje.getFullYear() - nasc.getFullYear();
+  const m = hoje.getMonth() - nasc.getMonth();
+  if (m < 0 || (m === 0 && hoje.getDate() < nasc.getDate())) idade--;
+  return idade;
+}
+
+function mascaraCep(v: string): string {
+  return v.replace(/\D/g, '').replace(/(\d{5})(\d)/, '$1-$2').substring(0, 9);
+}
 
 const WHATSAPP_SCRIPTS = [
   { id: 'oferta', label: 'Nova Oferta (Isca)', template: 'Olá {nome}, vi que você tem uma margem livre interessante. Podemos fazer uma simulação rápida sem compromisso?' },
@@ -118,11 +184,15 @@ export function LeadsClient({
   const [integracaoModal, setIntegracaoModal] = useState<{ aberto: boolean, leadId: string, banco: string } | null>(null);
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
+  const [cpfErro, setCpfErro] = useState<string | null>(null);
 
   const [form, setForm] = useState({
     id: "", nome: "", cpf: "", telefone: "", email: "", uf: "", cidade: "",
+    dataNascimento: "", renda: "", ddb: "",
+    cep: "", logradouro: "", numero: "", complemento: "", bairro: "",
     numeroBeneficio: "", especieBeneficio: "", margemLivre: "", margemRmc: "", margemRcc: "",
     tipoOperacao: "", valorLiberado: "", bancoPreferido: "", convenioNome: "",
+    bancoCliente: "", agenciaCliente: "", contaCliente: "", tipoContaCliente: "",
     origem: "manual", canalContato: "", observacoes: "",
     arquivosExistem: [] as any[],
   });
@@ -279,16 +349,21 @@ export function LeadsClient({
   const abrirModalNovo = () => {
     setForm({
       id: "", nome: "", cpf: "", telefone: "", email: "", uf: "", cidade: "",
+      dataNascimento: "", renda: "", ddb: "",
+      cep: "", logradouro: "", numero: "", complemento: "", bairro: "",
       numeroBeneficio: "", especieBeneficio: "", margemLivre: "", margemRmc: "", margemRcc: "",
       tipoOperacao: "", valorLiberado: "", bancoPreferido: "", convenioNome: "",
+      bancoCliente: "", agenciaCliente: "", contaCliente: "", tipoContaCliente: "",
       origem: "manual", canalContato: "", observacoes: "", arquivosExistem: []
     });
     setArquivosPendentes([]);
+    setCpfErro(null);
     setErro(null);
     setModal(true);
   };
 
   const abrirModalEditar = (lead: Lead) => {
+    const l = lead as any;
     setForm({
       id: lead.id,
       nome: lead.nome,
@@ -297,6 +372,14 @@ export function LeadsClient({
       email: lead.email || "",
       uf: lead.uf || "",
       cidade: lead.cidade || "",
+      dataNascimento: l.dataNascimento ? new Date(l.dataNascimento).toISOString().split('T')[0] : "",
+      renda: l.renda ? l.renda.toString() : "",
+      ddb: l.ddb ? new Date(l.ddb).toISOString().split('T')[0] : "",
+      cep: l.cep || "",
+      logradouro: l.logradouro || "",
+      numero: l.numero || "",
+      complemento: l.complemento || "",
+      bairro: l.bairro || "",
       numeroBeneficio: lead.numeroBeneficio || "",
       especieBeneficio: lead.especieBeneficio ? lead.especieBeneficio.toString() : "",
       margemLivre: lead.margemLivre ? lead.margemLivre.toString() : "",
@@ -306,12 +389,17 @@ export function LeadsClient({
       valorLiberado: lead.valorLiberado ? lead.valorLiberado.toString() : "",
       bancoPreferido: lead.bancoPreferido || "",
       convenioNome: lead.convenioNome || "",
+      bancoCliente: l.bancoCliente || "",
+      agenciaCliente: l.agenciaCliente || "",
+      contaCliente: l.contaCliente || "",
+      tipoContaCliente: l.tipoContaCliente || "",
       origem: lead.origem || "manual",
       canalContato: lead.canalContato || "",
       observacoes: lead.observacoes || "",
       arquivosExistem: lead.arquivos || [],
     });
     setArquivosPendentes([]);
+    setCpfErro(null);
     setErro(null);
     setModal(true);
   };
@@ -365,6 +453,8 @@ export function LeadsClient({
       margemLivre: payload.margemLivre ? Number(payload.margemLivre.replace(',', '.')) : undefined,
       margemRmc: payload.margemRmc ? Number(payload.margemRmc.replace(',', '.')) : undefined,
       margemRcc: payload.margemRcc ? Number(payload.margemRcc.replace(',', '.')) : undefined,
+      renda: payload.renda ? Number(payload.renda) : undefined,
+      cep: payload.cep ? payload.cep.replace(/\D/g, '') : undefined,
       arquivos: base64Files.length > 0 ? base64Files : undefined
     };
 
@@ -836,17 +926,26 @@ export function LeadsClient({
                       </div>
 
                       <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
+                        <div className="space-y-1">
                           <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">CPF</label>
                           <div className="relative group">
                             <input
                               type={revelarCpf ? "text" : "password"}
                               value={form.cpf}
                               readOnly={!revelarCpf}
-                              onChange={e => setForm({ ...form, cpf: mascaraCpf(e.target.value) })}
+                              onChange={e => {
+                                const val = mascaraCpf(e.target.value);
+                                setForm({ ...form, cpf: val });
+                                const raw = val.replace(/\D/g, '');
+                                if (raw.length === 11) {
+                                  setCpfErro(validarCPF(raw) ? null : "CPF inválido");
+                                } else {
+                                  setCpfErro(null);
+                                }
+                              }}
                               placeholder="***.***.***-**"
                               maxLength={14}
-                              className={`w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100 transition-all ${!revelarCpf ? 'blur-[3px] select-none' : ''}`}
+                              className={`w-full rounded-lg border ${cpfErro ? 'border-red-400' : 'border-zinc-200'} bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 ${cpfErro ? 'focus:ring-red-400' : 'focus:ring-brand/100'} transition-all ${!revelarCpf ? 'blur-[3px] select-none' : ''}`}
                             />
                             <button
                               type="button"
@@ -861,6 +960,7 @@ export function LeadsClient({
                               {revelarCpf ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                             </button>
                           </div>
+                          {cpfErro && <p className="text-[11px] text-red-500 font-medium">⚠ {cpfErro}</p>}
                         </div>
                         <div className="space-y-2">
                           <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Telefone</label>
@@ -890,28 +990,127 @@ export function LeadsClient({
                         </div>
                       </div>
 
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Data de Nascimento</label>
+                          <div className="flex items-center gap-2">
+                            <input type="date" value={form.dataNascimento} onChange={e => setForm({ ...form, dataNascimento: e.target.value })} max={new Date().toISOString().split('T')[0]}
+                              className="flex-1 rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100" />
+                            {form.dataNascimento && calcularIdade(form.dataNascimento) !== null && (
+                              <span className="text-xs font-bold text-brand bg-brand/10 px-2 py-1 rounded-full whitespace-nowrap">
+                                {calcularIdade(form.dataNascimento)} anos
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Renda (R$)</label>
+                          <input type="number" step="0.01" value={form.renda} onChange={e => setForm({ ...form, renda: e.target.value })} placeholder="0.00"
+                            className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100" />
+                        </div>
+                      </div>
+
                       <div className="space-y-2">
                         <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">E-mail</label>
                         <input type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} placeholder="email@exemplo.com"
                           className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100" />
                       </div>
 
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">DDB — Início do Benefício</label>
+                        <input type="date" value={form.ddb} onChange={e => setForm({ ...form, ddb: e.target.value })}
+                          className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100" />
+                      </div>
+
+                      {/* Endereço com busca por CEP */}
+                      <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wider mt-4 mb-1">Endereço</h3>
+                      <div className="grid grid-cols-3 gap-3">
                         <div className="space-y-2">
-                          <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">UF (Estado)</label>
-                          <select value={form.uf} onChange={e => setForm({ ...form, uf: e.target.value, cidade: "" })}
-                            className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100">
-                            <option value="">Selecione UF</option>
-                            {estadosIBGE.map(est => <option key={est.id} value={est.sigla}>{est.nome}</option>)}
-                          </select>
+                          <label className="text-[11px] font-medium text-zinc-700 dark:text-zinc-300">CEP</label>
+                          <input value={form.cep} maxLength={9}
+                            onChange={async (e) => {
+                              const val = mascaraCep(e.target.value);
+                              setForm(prev => ({ ...prev, cep: val }));
+                              const raw = val.replace(/\D/g, '');
+                              if (raw.length === 8) {
+                                try {
+                                  const res = await fetch(`https://viacep.com.br/ws/${raw}/json/`);
+                                  const data = await res.json();
+                                  if (!data.erro) {
+                                    setForm(prev => ({ ...prev, logradouro: data.logradouro || '', bairro: data.bairro || '', cidade: data.localidade || '', uf: data.uf || '' }));
+                                  }
+                                } catch {}
+                              }
+                            }}
+                            placeholder="00000-000"
+                            className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100" />
+                        </div>
+                        <div className="col-span-2 space-y-2">
+                          <label className="text-[11px] font-medium text-zinc-700 dark:text-zinc-300">Logradouro</label>
+                          <input value={form.logradouro} onChange={e => setForm({ ...form, logradouro: e.target.value })}
+                            className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100" />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-4 gap-3">
+                        <div className="space-y-2">
+                          <label className="text-[11px] font-medium text-zinc-700 dark:text-zinc-300">Nº</label>
+                          <input value={form.numero} onChange={e => setForm({ ...form, numero: e.target.value })}
+                            className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100" />
                         </div>
                         <div className="space-y-2">
-                          <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Cidade</label>
-                          <input list="cidades-list" value={form.cidade} onChange={e => setForm({ ...form, cidade: e.target.value })} disabled={!form.uf} placeholder="Pesquise a cidade"
-                            className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100 disabled:opacity-50" />
-                          <datalist id="cidades-list">
-                            {cidadesIBGE.map(cid => <option key={cid.id} value={cid.nome} />)}
-                          </datalist>
+                          <label className="text-[11px] font-medium text-zinc-700 dark:text-zinc-300">Complemento</label>
+                          <input value={form.complemento} onChange={e => setForm({ ...form, complemento: e.target.value })}
+                            className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100" />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-[11px] font-medium text-zinc-700 dark:text-zinc-300">Bairro</label>
+                          <input value={form.bairro} onChange={e => setForm({ ...form, bairro: e.target.value })}
+                            className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100" />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-[11px] font-medium text-zinc-700 dark:text-zinc-300">UF</label>
+                          <select value={form.uf} onChange={e => setForm({ ...form, uf: e.target.value, cidade: "" })}
+                            className="w-full rounded-lg border border-zinc-200 bg-white px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100">
+                            <option value="">UF</option>
+                            {estadosIBGE.map(est => <option key={est.id} value={est.sigla}>{est.sigla}</option>)}
+                          </select>
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[11px] font-medium text-zinc-700 dark:text-zinc-300">Cidade</label>
+                        <input list="cidades-list" value={form.cidade} onChange={e => setForm({ ...form, cidade: e.target.value })} disabled={!form.uf} placeholder="Pesquise a cidade"
+                          className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100 disabled:opacity-50" />
+                        <datalist id="cidades-list">
+                          {cidadesIBGE.map(cid => <option key={cid.id} value={cid.nome} />)}
+                        </datalist>
+                      </div>
+
+                      {/* Dados Bancários do Cliente */}
+                      <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wider mt-4 mb-1">Dados Bancários do Cliente</h3>
+                      <div className="grid grid-cols-4 gap-3">
+                        <div className="space-y-2">
+                          <label className="text-[11px] font-medium text-zinc-700 dark:text-zinc-300">Banco</label>
+                          <input value={form.bancoCliente} onChange={e => setForm({ ...form, bancoCliente: e.target.value })} placeholder="Nome"
+                            className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100" />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-[11px] font-medium text-zinc-700 dark:text-zinc-300">Agência</label>
+                          <input value={form.agenciaCliente} onChange={e => setForm({ ...form, agenciaCliente: e.target.value })} placeholder="0000"
+                            className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100" />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-[11px] font-medium text-zinc-700 dark:text-zinc-300">Conta</label>
+                          <input value={form.contaCliente} onChange={e => setForm({ ...form, contaCliente: e.target.value })} placeholder="00000-0"
+                            className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100" />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-[11px] font-medium text-zinc-700 dark:text-zinc-300">Tipo</label>
+                          <select value={form.tipoContaCliente} onChange={e => setForm({ ...form, tipoContaCliente: e.target.value })}
+                            className="w-full rounded-lg border border-zinc-200 bg-white px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100">
+                            <option value="">—</option>
+                            <option value="CC">Corrente</option>
+                            <option value="CP">Poupança</option>
+                          </select>
                         </div>
                       </div>
                     </div>
@@ -956,7 +1155,7 @@ export function LeadsClient({
 
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
-                          <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Banco Preferido</label>
+                          <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Banco</label>
                           <select value={form.bancoPreferido} onChange={e => setForm({ ...form, bancoPreferido: e.target.value })}
                             className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100">
                             <option value="">Selecione Banco...</option>

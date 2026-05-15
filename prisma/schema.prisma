@@ -670,6 +670,23 @@ model Lead {
   bancoPreferido  String?       @map("banco_preferido")
   convenioNome    String?       @map("convenio_nome")
 
+  // Financeiro
+  renda           Float?
+  ddb             DateTime?     @db.Date  // Data de Despacho do Benefício
+
+  // Endereço
+  cep             String?
+  logradouro      String?
+  numero          String?
+  complemento     String?
+  bairro          String?
+
+  // Dados bancários do cliente
+  bancoCliente    String?       @map("banco_cliente")
+  agenciaCliente  String?       @map("agencia_cliente")
+  contaCliente    String?       @map("conta_cliente")
+  tipoContaCliente String?     @map("tipo_conta_cliente")  // CC, CP
+
   observacoes     String?
   ultimoContato   DateTime?  @map("ultimo_contato")
   proximoContato  DateTime?  @map("proximo_contato")
