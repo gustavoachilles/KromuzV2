@@ -188,7 +188,7 @@ export async function DELETE(req: NextRequest) {
     if (!usuario) return Response.json({ error: "Usuário não encontrado" }, { status: 404 });
 
     // Não pode excluir a si mesmo
-    if (usuario.authUserId === sessao.authUserId) {
+    if (usuario.authUserId === sessao.userId) {
       return Response.json({ error: "Você não pode excluir a si mesmo." }, { status: 400 });
     }
 
