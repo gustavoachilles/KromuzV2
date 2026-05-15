@@ -55,6 +55,10 @@ export function ProdutosClient({
   const [busca, setBusca] = useState("");
   const [filtroBanco, setFiltroBanco] = useState("");
   const [filtroTipo, setFiltroTipo] = useState("");
+  const [bancosLista, setBancosLista] = useState(bancos);
+  const [criarBancoInline, setCriarBancoInline] = useState(false);
+  const [novoBancoNome, setNovoBancoNome] = useState("");
+  const [salvandoBanco, setSalvandoBanco] = useState(false);
   const [form, setForm] = useState({
     bancoId: "",
     convenioId: "",
@@ -102,6 +106,26 @@ export function ProdutosClient({
     setSalvando(false);
     setForm({ bancoId: "", convenioId: "", nomeProduto: "", tipoProduto: "EMPRESTIMO_CONSIGNADO", prazoMaximo: "", taxaMedia: "", observacoes: "" });
     router.refresh();
+  }
+
+  async function criarBancoInlineHandler() {
+    if (!novoBancoNome.trim()) return;
+    setSalvandoBanco(true);
+    const res = await fetch("/api/bancos", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ nome: novoBancoNome.trim(), tipoBanco: "consignado" }),
+    });
+    const data = await res.json();
+    if (res.ok) {
+      setBancosLista(prev => [...prev, { id: data.id, nome: data.nome }].sort((a, b) => a.nome.localeCompare(b.nome)));
+      setForm(prev => ({ ...prev, bancoId: data.id }));
+      setCriarBancoInline(false);
+      setNovoBancoNome("");
+    } else {
+      setErro(data.error || "Erro ao criar banco");
+    }
+    setSalvandoBanco(false);
   }
 
   return (
@@ -269,19 +293,54 @@ export function ProdutosClient({
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
+                  <div className="space-y-2">
                   <label className="text-sm font-medium">Banco *</label>
                   <select
-                    required
+                    required={!criarBancoInline}
                     value={form.bancoId}
                     onChange={(e) => setForm({ ...form, bancoId: e.target.value })}
                     className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/50"
                   >
                     <option value="">Selecione...</option>
-                    {bancos.map((b) => (
+                    {bancosLista.map((b) => (
                       <option key={b.id} value={b.id}>{b.nome}</option>
                     ))}
                   </select>
+                  {!criarBancoInline ? (
+                    <button
+                      type="button"
+                      onClick={() => setCriarBancoInline(true)}
+                      className="flex items-center gap-1 text-xs text-brand hover:underline mt-1"
+                    >
+                      <Plus className="h-3 w-3" /> Novo Banco
+                    </button>
+                  ) : (
+                    <div className="flex gap-2 mt-1">
+                      <input
+                        autoFocus
+                        value={novoBancoNome}
+                        onChange={(e) => setNovoBancoNome(e.target.value)}
+                        placeholder="Nome do banco"
+                        className="flex-1 rounded-lg border border-brand/50 bg-white dark:bg-zinc-800 px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-brand/50"
+                        onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), criarBancoInlineHandler())}
+                      />
+                      <button
+                        type="button"
+                        onClick={criarBancoInlineHandler}
+                        disabled={salvandoBanco}
+                        className="rounded-lg bg-brand px-3 py-1.5 text-xs font-semibold text-white hover:opacity-90 disabled:opacity-50 transition"
+                      >
+                        {salvandoBanco ? <Loader2 className="h-3 w-3 animate-spin" /> : "Criar"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setCriarBancoInline(false); setNovoBancoNome(""); }}
+                        className="text-xs text-zinc-400 hover:text-zinc-600"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Tipo *</label>
