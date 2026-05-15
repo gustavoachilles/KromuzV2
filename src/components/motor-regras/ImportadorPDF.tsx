@@ -155,7 +155,11 @@ export function ImportadorPDF({ empresaId }: { empresaId: string }) {
       // 1. Upload ao Supabase Storage (bypassa limite de 4.5MB do Vercel)
       updatePasso(itemId, "Enviando arquivo ao storage...");
       const supabase = createSupabaseBrowserClient();
-      const filePath = `roteiros/${Date.now()}_${item.arquivo.name}`;
+      const safeNome = item.arquivo.name
+        .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-zA-Z0-9._-]/g, "_")
+        .replace(/_+/g, "_");
+      const filePath = `${Date.now()}_${safeNome}`;
       const { error: uploadError } = await supabase.storage
         .from("roteiros")
         .upload(filePath, item.arquivo, { upsert: true });
