@@ -953,7 +953,6 @@ export function ConfiguracoesClient({ empresa, usuarios, bancos, sessao }: any) 
           </div>
         </div>
       )}
-    </div>
 
       {/* MODAL DE EXCLUSÃO */}
       {deleteModal && (
