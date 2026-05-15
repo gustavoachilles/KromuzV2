@@ -44,14 +44,28 @@ export function ConfiguracoesClient({ empresa, usuarios, bancos, sessao }: any) 
     // Bancário
     bancoNome: "", bancoAgencia: "", bancoConta: "", bancoTipoConta: "", chavePix: "", tipoChavePix: "",
     // Contratação
-    dataContratacao: "", dataDesligamento: "", observacoesPessoais: ""
+    dataContratacao: "", dataDesligamento: "", observacoesPessoais: "",
+    avatarUrl: ""
   });
+  const [cepError, setCepError] = useState("");
   
   const [formEmpresa, setFormEmpresa] = useState({
     nomeEmpresa: empresa.nomeEmpresa,
     nomeFantasia: empresa.nomeFantasia || "",
     logoUrl: empresa.logoUrl || "",
     corPrimaria: empresa.corPrimaria || "#7c3aed",
+    cpfCnpj: empresa.cpfCnpj || "",
+    telefone: empresa.telefone || "",
+    email: empresa.email || "",
+    inscricaoEstadual: empresa.inscricaoEstadual || "",
+    inscricaoMunicipal: empresa.inscricaoMunicipal || "",
+    cep: empresa.cep ? maskCEP(empresa.cep) : "",
+    logradouro: empresa.logradouro || "",
+    numero: empresa.numero || "",
+    complemento: empresa.complemento || "",
+    bairro: empresa.bairro || "",
+    cidade: empresa.cidade || "",
+    uf: empresa.uf || "",
   });
 
   async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -94,9 +108,8 @@ export function ConfiguracoesClient({ empresa, usuarios, bancos, sessao }: any) 
     try {
       if (editingUser) {
         // PATCH — envia todos os campos
-        const { email: _email, ...editableFields } = userForm;
         // Converter datas mascaradas dd/mm/aaaa para ISO yyyy-mm-dd
-        const payload = { ...editableFields };
+        const payload = { ...userForm } as any;
         if (payload.dataNascimento) payload.dataNascimento = dateToISO(payload.dataNascimento) || payload.dataNascimento;
         if (payload.dataContratacao) payload.dataContratacao = dateToISO(payload.dataContratacao) || payload.dataContratacao;
         if (payload.dataDesligamento) payload.dataDesligamento = dateToISO(payload.dataDesligamento) || payload.dataDesligamento;
@@ -150,7 +163,8 @@ export function ConfiguracoesClient({ empresa, usuarios, bancos, sessao }: any) 
       genero: "", estadoCivil: "", timeFavorito: "",
       cep: "", logradouro: "", numero: "", complemento: "", bairro: "", cidade: "", uf: "",
       bancoNome: "", bancoAgencia: "", bancoConta: "", bancoTipoConta: "", chavePix: "", tipoChavePix: "",
-      dataContratacao: "", dataDesligamento: "", observacoesPessoais: ""
+      dataContratacao: "", dataDesligamento: "", observacoesPessoais: "",
+      avatarUrl: ""
     });
   }
 
@@ -182,7 +196,8 @@ export function ConfiguracoesClient({ empresa, usuarios, bancos, sessao }: any) 
       chavePix: user.chavePix || "", tipoChavePix: user.tipoChavePix || "",
       dataContratacao: user.dataContratacao ? isoToDate(user.dataContratacao) : "",
       dataDesligamento: user.dataDesligamento ? isoToDate(user.dataDesligamento) : "",
-      observacoesPessoais: user.observacoesPessoais || ""
+      observacoesPessoais: user.observacoesPessoais || "",
+      avatarUrl: user.avatarUrl || ""
     });
     setUserModalTab("geral");
     setIsAddModalOpen(true);
@@ -340,6 +355,60 @@ export function ConfiguracoesClient({ empresa, usuarios, bancos, sessao }: any) 
                     onChange={e => setFormEmpresa({...formEmpresa, nomeFantasia: e.target.value})}
                     className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-700 rounded-lg text-sm"
                   />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">CNPJ / CPF</label>
+                  <input type="text" value={formEmpresa.cpfCnpj} onChange={e => setFormEmpresa({...formEmpresa, cpfCnpj: e.target.value})} className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-700 rounded-lg text-sm" placeholder="00.000.000/0000-00" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Telefone</label>
+                  <input type="text" value={formEmpresa.telefone} onChange={e => setFormEmpresa({...formEmpresa, telefone: maskPhone(e.target.value)})} maxLength={15} className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-700 rounded-lg text-sm" placeholder="(99) 99999-9999" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">E-mail da Empresa</label>
+                  <input type="email" value={formEmpresa.email} onChange={e => setFormEmpresa({...formEmpresa, email: e.target.value})} className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-700 rounded-lg text-sm" placeholder="contato@empresa.com" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Inscrição Estadual</label>
+                  <input type="text" value={formEmpresa.inscricaoEstadual} onChange={e => setFormEmpresa({...formEmpresa, inscricaoEstadual: e.target.value})} className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-700 rounded-lg text-sm" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Inscrição Municipal</label>
+                  <input type="text" value={formEmpresa.inscricaoMunicipal} onChange={e => setFormEmpresa({...formEmpresa, inscricaoMunicipal: e.target.value})} className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-700 rounded-lg text-sm" />
+                </div>
+              </div>
+
+              <div className="pt-6 border-t border-zinc-100 dark:border-zinc-800">
+                <h3 className="text-sm font-bold text-zinc-700 dark:text-zinc-300 mb-4">Endereço</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">CEP</label>
+                    <input type="text" value={formEmpresa.cep} onChange={e => setFormEmpresa({...formEmpresa, cep: maskCEP(e.target.value)})} onBlur={async () => { const addr = await fetchCEP(formEmpresa.cep); if (addr) setFormEmpresa(prev => ({...prev, logradouro: addr.logradouro, bairro: addr.bairro, cidade: addr.cidade, uf: addr.uf})); }} maxLength={9} className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-700 rounded-lg text-sm" placeholder="00000-000" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">UF</label>
+                    <input type="text" value={formEmpresa.uf} maxLength={2} onChange={e => setFormEmpresa({...formEmpresa, uf: e.target.value.toUpperCase()})} className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-700 rounded-lg text-sm" placeholder="SC" />
+                  </div>
+                  <div className="space-y-2 col-span-2">
+                    <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Logradouro</label>
+                    <input type="text" value={formEmpresa.logradouro} onChange={e => setFormEmpresa({...formEmpresa, logradouro: e.target.value})} className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-700 rounded-lg text-sm" placeholder="Rua, Avenida..." />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Número</label>
+                    <input type="text" value={formEmpresa.numero} onChange={e => setFormEmpresa({...formEmpresa, numero: e.target.value})} className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-700 rounded-lg text-sm" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Complemento</label>
+                    <input type="text" value={formEmpresa.complemento} onChange={e => setFormEmpresa({...formEmpresa, complemento: e.target.value})} className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-700 rounded-lg text-sm" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Bairro</label>
+                    <input type="text" value={formEmpresa.bairro} onChange={e => setFormEmpresa({...formEmpresa, bairro: e.target.value})} className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-700 rounded-lg text-sm" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Cidade</label>
+                    <input type="text" value={formEmpresa.cidade} onChange={e => setFormEmpresa({...formEmpresa, cidade: e.target.value})} className="w-full px-4 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-700 rounded-lg text-sm" />
+                  </div>
                 </div>
               </div>
 
@@ -745,12 +814,10 @@ export function ConfiguracoesClient({ empresa, usuarios, bancos, sessao }: any) 
             <div className="flex gap-1 mb-5 border-b border-zinc-100 dark:border-zinc-800 pb-2 overflow-x-auto">
               {([
                 { key: "geral", label: "Geral" },
-                ...(editingUser ? [
-                  { key: "pessoal", label: "Pessoal" },
-                  { key: "endereco", label: "Endereço" },
-                  { key: "bancario", label: "Bancário" },
-                  { key: "contratacao", label: "Contratação" },
-                ] : [])
+                { key: "pessoal", label: "Pessoal" },
+                { key: "endereco", label: "Endereço" },
+                { key: "bancario", label: "Bancário" },
+                { key: "contratacao", label: "Contratação" },
               ] as {key: string; label: string}[]).map(t => (
                 <button key={t.key} onClick={() => setUserModalTab(t.key)}
                   className={`px-3 py-1.5 text-xs font-bold rounded-lg transition whitespace-nowrap ${userModalTab === t.key ? 'bg-brand/10 text-brand' : 'text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200'}`}>{t.label}</button>
@@ -758,14 +825,21 @@ export function ConfiguracoesClient({ empresa, usuarios, bancos, sessao }: any) 
             </div>
             <div className="space-y-4">
               {userModalTab === "geral" && (<>
+                <div className="flex items-center gap-4 mb-2">
+                  <label className="w-16 h-16 rounded-full bg-zinc-100 dark:bg-zinc-800 border-2 border-dashed border-zinc-300 dark:border-zinc-700 flex items-center justify-center overflow-hidden cursor-pointer hover:border-brand transition-colors relative group">
+                    <input type="file" className="hidden" accept="image/*" onChange={e => { const file = e.target.files?.[0]; if (!file) return; if (file.size > 2*1024*1024) { alert('Máximo 2MB'); return; } const reader = new FileReader(); reader.onloadend = () => setUserForm(prev => ({...prev, avatarUrl: reader.result as string})); reader.readAsDataURL(file); }} />
+                    {userForm.avatarUrl ? (<img src={userForm.avatarUrl} className="w-full h-full object-cover" alt="" />) : (<Upload className="w-5 h-5 text-zinc-400 group-hover:text-brand" />)}
+                  </label>
+                  <div><p className="text-sm font-bold">Foto do Membro</p><p className="text-[10px] text-zinc-500">Clique para enviar (máx 2MB)</p></div>
+                </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div><label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">Nome *</label>
                     <input type="text" value={userForm.nome} onChange={e => setUserForm({...userForm, nome: e.target.value})} className="w-full mt-1 px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm" placeholder="Nome completo" /></div>
                   <div><label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">E-mail {editingUser ? '' : '*'}</label>
-                    <input type="email" value={userForm.email} disabled={!!editingUser} onChange={e => { setUserForm({...userForm, email: e.target.value}); setEmailError(""); }} onBlur={() => !editingUser && userForm.email && validateEmail(userForm.email)} className={`w-full mt-1 px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border rounded-lg text-sm disabled:opacity-60 disabled:cursor-not-allowed ${emailError ? 'border-red-400' : 'border-zinc-200 dark:border-zinc-800'}`} placeholder="email@empresa.com" />
+                    <input type="email" value={userForm.email} onChange={e => { setUserForm({...userForm, email: e.target.value}); setEmailError(""); }} onBlur={() => userForm.email && validateEmail(userForm.email)} className={`w-full mt-1 px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border rounded-lg text-sm ${emailError ? 'border-red-400' : 'border-zinc-200 dark:border-zinc-800'}`} placeholder="email@empresa.com" />
                     {emailError && <p className="text-xs text-red-500 mt-1">{emailError}</p>}
-                    {editingUser && <p className="text-[10px] text-zinc-400 mt-1">E-mail não pode ser alterado (vinculado à autenticação)</p>}
                     {!editingUser && !emailError && <p className="text-[10px] text-zinc-500 mt-1">Senha provisória: <strong>Mudar@123</strong></p>}
+                    {editingUser && <p className="text-[10px] text-zinc-400 mt-1">Alterar o e-mail atualiza apenas o perfil interno</p>}
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
@@ -797,7 +871,9 @@ export function ConfiguracoesClient({ empresa, usuarios, bancos, sessao }: any) 
                 <div className="col-span-2"><label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">Time que Torce ⚽</label><input type="text" value={userForm.timeFavorito} onChange={e => setUserForm({...userForm, timeFavorito: e.target.value})} className="w-full mt-1 px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm" placeholder="Ex: Flamengo, Corinthians..." /></div>
               </div>)}
               {userModalTab === "endereco" && (<div className="grid grid-cols-2 gap-4">
-                <div><label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">CEP</label><input type="text" value={userForm.cep} onChange={e => setUserForm({...userForm, cep: maskCEP(e.target.value)})} onBlur={async () => { const addr = await fetchCEP(userForm.cep); if (addr) setUserForm(prev => ({...prev, logradouro: addr.logradouro, bairro: addr.bairro, cidade: addr.cidade, uf: addr.uf})); }} maxLength={9} className="w-full mt-1 px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm" placeholder="00000-000" /></div>
+                <div><label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">CEP</label><input type="text" value={userForm.cep} onChange={e => { setUserForm({...userForm, cep: maskCEP(e.target.value)}); setCepError(""); }} onBlur={async () => { if (userForm.cep.replace(/\D/g,'').length === 8) { const addr = await fetchCEP(userForm.cep); if (addr) { setUserForm(prev => ({...prev, logradouro: addr.logradouro, bairro: addr.bairro, cidade: addr.cidade, uf: addr.uf})); setCepError(""); } else { setCepError("CEP não encontrado"); } } else if (userForm.cep.replace(/\D/g,'').length > 0) { setCepError("CEP inválido (8 dígitos)"); } }} maxLength={9} className={`w-full mt-1 px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border rounded-lg text-sm ${cepError ? 'border-red-400' : 'border-zinc-200 dark:border-zinc-800'}`} placeholder="00000-000" />
+                  {cepError && <p className="text-xs text-red-500 mt-1">{cepError}</p>}
+                </div>
                 <div><label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">UF</label><input type="text" value={userForm.uf} maxLength={2} onChange={e => setUserForm({...userForm, uf: e.target.value.toUpperCase()})} className="w-full mt-1 px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm" placeholder="SC" /></div>
                 <div className="col-span-2"><label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">Logradouro</label><input type="text" value={userForm.logradouro} onChange={e => setUserForm({...userForm, logradouro: e.target.value})} className="w-full mt-1 px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm" placeholder="Rua, Avenida..." /></div>
                 <div><label className="text-sm font-bold text-zinc-700 dark:text-zinc-300">Número</label><input type="text" value={userForm.numero} onChange={e => setUserForm({...userForm, numero: e.target.value})} className="w-full mt-1 px-3 py-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm" /></div>

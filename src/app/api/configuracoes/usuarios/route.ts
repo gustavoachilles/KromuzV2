@@ -48,6 +48,9 @@ const AtualizarUsuarioSchema = z.object({
   dataContratacao: z.string().optional().nullable(),
   dataDesligamento: z.string().optional().nullable(),
   observacoesPessoais: z.string().optional().nullable(),
+  // Perfil
+  avatarUrl: z.string().optional().nullable(),
+  email: z.string().email().optional().nullable(),
 });
 
 // PATCH /api/configuracoes/usuarios — edita perfil de um usuário

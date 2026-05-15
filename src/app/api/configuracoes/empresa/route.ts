@@ -7,16 +7,27 @@ export async function PATCH(req: Request) {
     const sessao = await getSessionEmpresaApi();
     if (!sessao) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    const { nomeEmpresa, nomeFantasia, logoUrl, corPrimaria } = await req.json();
+    const body = await req.json();
+
+    // Campos permitidos para atualização
+    const allowed = [
+      "nomeEmpresa", "nomeFantasia", "logoUrl", "corPrimaria",
+      "cpfCnpj", "telefone", "email",
+      "inscricaoEstadual", "inscricaoMunicipal",
+      "cep", "logradouro", "numero", "complemento",
+      "bairro", "cidade", "uf"
+    ];
+
+    const data: Record<string, any> = {};
+    for (const key of allowed) {
+      if (body[key] !== undefined) {
+        data[key] = body[key];
+      }
+    }
 
     const empresa = await prisma.empresa.update({
       where: { id: sessao.empresaId },
-      data: {
-        nomeEmpresa,
-        nomeFantasia,
-        logoUrl,
-        corPrimaria
-      }
+      data
     });
 
     // Registrar na auditoria
@@ -28,7 +39,7 @@ export async function PATCH(req: Request) {
         acao: "Editou",
         entidade: "Configurações",
         entidadeNome: "Perfil da Empresa",
-        detalhes: { nomeEmpresa, corPrimaria }
+        detalhes: { nomeEmpresa: data.nomeEmpresa, corPrimaria: data.corPrimaria }
       }
     });
 

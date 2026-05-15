@@ -33,6 +33,17 @@ model Empresa {
   nivelPlataforma String    @default("inicio") @map("nivel_plataforma")
   logoUrl         String?   @map("logo_url")
   corPrimaria     String?   @map("cor_primaria")
+  telefone        String?
+  email           String?
+  inscricaoEstadual String? @map("inscricao_estadual")
+  inscricaoMunicipal String? @map("inscricao_municipal")
+  cep             String?
+  logradouro      String?
+  numero          String?
+  complemento     String?
+  bairro          String?
+  cidade          String?
+  uf              String?
   asaasCustomerId String?   @map("asaas_customer_id")
   statusAssinatura String   @default("ACTIVE") @map("status_assinatura")
   planoSaasId     String?   @map("plano_saas_id") @db.Uuid
@@ -83,6 +94,7 @@ model UsuarioPerfil {
   perfilSlug          String   @default("vendedor") @map("perfil_slug")
   isSuperAdmin        Boolean  @default(false) @map("is_super_admin")
   cargoId             String?  @map("cargo_id") @db.Uuid
+  avatarUrl           String?  @map("avatar_url")
 
   // Dados Pessoais
   telefone            String?
