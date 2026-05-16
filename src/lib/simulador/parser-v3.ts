@@ -112,10 +112,8 @@ export async function parseHisconPdf(buffer: Buffer): Promise<ExtratoHisconRaw> 
       // Estima saldo devedor
       const saldoEstimado = valorParcela * Math.max(0, parcelas - parcelasPagas);
 
-      // Normaliza nome do banco
-      if (bancoNome.includes("QI") || bancoNome.includes("CREDITO DIRETO")) {
-        bancoNome = "QI SOCIEDADE DE CREDITO DIRETO S A";
-      }
+      // Normaliza nome do banco (pdf-parse quebra nomes em linhas)
+      bancoNome = normalizarBanco(bancoNome);
 
       contratos.push({
         numero_contrato: `${bancoCode}-${contratos.length}`,
@@ -142,9 +140,7 @@ export async function parseHisconPdf(buffer: Buffer): Promise<ExtratoHisconRaw> 
       const bancoM = block.match(/(\d{3})\s*-\s*([A-ZÀ-Ú][A-ZÀ-Ú\s]*)/);
       if (!bancoM) continue;
 
-      let bancoNome = bancoM[2].trim().replace(/\s+/g, ' ');
-      if (bancoNome.includes("QI") || bancoNome.includes("CREDITO DIRETO"))
-        bancoNome = "QI SOCIEDADE DE CREDITO DIRETO S A";
+      let bancoNome = normalizarBanco(bancoM[2].trim());
 
       // Extrai datas MM/YYYY
       const datas = [...block.matchAll(/(\d{2})\/(\d{4})/g)];
@@ -210,4 +206,35 @@ function parseMoeda(val: string | undefined): number {
   if (!val) return 0;
   const cleaned = val.replace(/\./g, "").replace(",", ".");
   return parseFloat(cleaned) || 0;
+}
+
+/** Normaliza nomes de banco quebrados pelo pdf-parse */
+function normalizarBanco(nome: string): string {
+  const n = nome.replace(/\s+/g, ' ').trim().toUpperCase();
+  const map: Record<string, string> = {
+    "QI": "QI SOCIEDADE DE CREDITO DIRETO S A",
+    "CREDITO DIRETO": "QI SOCIEDADE DE CREDITO DIRETO S A",
+    "INBURS": "BANCO INBURSA SA",
+    "BRADE": "BANCO BRADESCO SA",
+    "BRADESCO": "BANCO BRADESCO SA",
+    "C6 CONSIG": "BANCO C6 CONSIGNADO SA",
+    "C6": "BANCO C6 CONSIGNADO SA",
+    "FACTA": "FACTA FINANCEIRA SA",
+    "FINANC": "FACTA FINANCEIRA SA",
+    "PAN": "BANCO PAN SA",
+    "DAYCOVAL": "BANCO DAYCOVAL SA",
+    "BMG": "BANCO BMG SA",
+    "SAFRA": "BANCO SAFRA SA",
+    "ITAU": "BANCO ITAU SA",
+    "BANRISUL": "BANCO BANRISUL SA",
+    "CAIXA": "CAIXA ECONOMICA FEDERAL",
+    "CETELEM": "CETELEM SA",
+    "OLE": "OLE CONSIGNADO SA",
+    "MERCANTIL": "BANCO MERCANTIL DO BRASIL SA",
+    "AGIBANK": "AGIBANK SA",
+  };
+  for (const [key, val] of Object.entries(map)) {
+    if (n.includes(key)) return val;
+  }
+  return n;
 }
