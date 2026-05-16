@@ -122,7 +122,15 @@ export async function POST(req: NextRequest) {
         nome: hiscon.dados_cliente.nome
       },
       contratos: contratosAtualizados,
-      oportunidades
+      oportunidades,
+      _debug: {
+        regrasAtivas: regras.length,
+        tabelasAtivas: tabelas.length,
+        bancosAtivos: bancos.length,
+        margemExtraida: hiscon.dados_cliente.margens,
+        contratosExtraidos: hiscon.contratos_ativos.length,
+        fonte: (hiscon as any)._fonte || "parser+ia",
+      }
     });
 
   } catch (error: any) {
