@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getSessionEmpresaApi } from "@/lib/session";
 
 const BANCOS_LEGADOS = [
   { nome: "Daycoval", minPag: 12, minParc: 20, port: true, refin: true, portRefin: true, fatorSaldo: 1.0, valorMinimo: 500, trocoMin: 100, hasEmprestimo: true, hasCartao: true },
@@ -24,6 +25,11 @@ const BANCOS_LEGADOS = [
 ];
 
 export async function GET() {
+  const sessao = await getSessionEmpresaApi();
+  if (!sessao || sessao.perfilSlug !== "admin") {
+    return NextResponse.json({ error: "Acesso restrito a administradores." }, { status: 403 });
+  }
+
   try {
     const empresas = await prisma.empresa.findMany();
     if (empresas.length === 0) {
