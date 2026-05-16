@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Brain, FileText, Layers, Settings, Calculator, BookOpen, BarChart3, Shield, Package, ScrollText, Kanban, Users, DollarSign, Target, Trophy, Upload, ArrowRightLeft, PieChart, CreditCard, Inbox, Megaphone, RefreshCcw, UserPlus } from "lucide-react";
+import { Brain, FileText, Layers, Settings, Calculator, BookOpen, BarChart3, Shield, Package, ScrollText, Kanban, Users, DollarSign, Target, Trophy, Upload, ArrowRightLeft, PieChart, CreditCard, Inbox, Megaphone, RefreshCcw, MessageSquare, GraduationCap, Clock, Activity } from "lucide-react";
 import type { Permissoes } from "@/lib/permissions";
 
 export function SidebarNav({ permissoes }: { permissoes: Permissoes }) {
@@ -25,6 +25,11 @@ export function SidebarNav({ permissoes }: { permissoes: Permissoes }) {
       {p("vendedores") && (
         <NavLink href="/vendedores" icon={<PieChart className="h-4 w-4" />} active={pathname === "/vendedores"}>
           Vendedores
+        </NavLink>
+      )}
+      {p("vendedores") && (
+        <NavLink href="/dashboard-vendedores" icon={<Activity className="h-4 w-4" />} active={pathname === "/dashboard-vendedores"}>
+          Perf. Vendedores
         </NavLink>
       )}
 
@@ -55,6 +60,9 @@ export function SidebarNav({ permissoes }: { permissoes: Permissoes }) {
       {p("leads") && (
         <NavLink href="/marketing" icon={<Megaphone className="h-4 w-4" />} active={pathname === "/marketing"}>Marketing</NavLink>
       )}
+      {p("leads") && (
+        <NavLink href="/canais" icon={<MessageSquare className="h-4 w-4" />} active={pathname.startsWith("/canais")}>Canais</NavLink>
+      )}
 
       {(p("simulador") || p("motor_regras") || p("roteiros") || p("mapa_port")) && (
         <SectionLabel>Inteligência</SectionLabel>
@@ -70,6 +78,9 @@ export function SidebarNav({ permissoes }: { permissoes: Permissoes }) {
       )}
       {p("mapa_port") && (
         <NavLink href="/mapa-portabilidade" icon={<ArrowRightLeft className="h-4 w-4" />} active={pathname === "/mapa-portabilidade"}>Mapa Port.</NavLink>
+      )}
+      {p("roteiros") && (
+        <NavLink href="/conhecimento" icon={<GraduationCap className="h-4 w-4" />} active={pathname === "/conhecimento"}>Base Conhecimento</NavLink>
       )}
 
       {(p("cadastro") || p("importacao")) && (
@@ -95,6 +106,9 @@ export function SidebarNav({ permissoes }: { permissoes: Permissoes }) {
       )}
       {p("auditoria") && (
         <NavLink href="/auditoria" icon={<ScrollText className="h-4 w-4" />} active={pathname === "/auditoria"}>Auditoria</NavLink>
+      )}
+      {p("auditoria") && (
+        <NavLink href="/sla" icon={<Clock className="h-4 w-4" />} active={pathname === "/sla"}>SLA</NavLink>
       )}
       {p("configuracoes") && (
         <NavLink href="/configuracoes" icon={<Settings className="h-4 w-4" />} active={pathname === "/configuracoes"}>Configurações</NavLink>
