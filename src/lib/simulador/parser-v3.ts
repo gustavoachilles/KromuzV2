@@ -109,8 +109,13 @@ export async function parseHisconPdf(buffer: Buffer): Promise<ExtratoHisconRaw> 
       const agora = new Date();
       const parcelasPagas = Math.max(0, (agora.getFullYear() - anoInicio) * 12 + (agora.getMonth() + 1 - mesInicio));
 
-      // Estima saldo devedor
-      const saldoEstimado = valorParcela * Math.max(0, parcelas - parcelasPagas);
+      // Estima saldo devedor usando fórmula de valor presente (como Promosys)
+      // SD = P × [(1 - (1+i)^-n) / i]  onde i = taxa/100, n = parcelas restantes
+      const n = Math.max(0, parcelas - parcelasPagas);
+      const i = taxa / 100;
+      const saldoEstimado = i > 0 && n > 0
+        ? valorParcela * ((1 - Math.pow(1 + i, -n)) / i)
+        : valorParcela * n;
 
       // Normaliza nome do banco (pdf-parse quebra nomes em linhas)
       bancoNome = normalizarBanco(bancoNome);
@@ -172,7 +177,7 @@ export async function parseHisconPdf(buffer: Buffer): Promise<ExtratoHisconRaw> 
           taxa_juros_mensal: taxa,
           parcelas_pagas: Math.min(pp, parcelas),
           prazo_total: parcelas,
-          saldo_devedor_estimado: valorParcela * Math.max(0, parcelas - pp),
+          saldo_devedor_estimado: (() => { const nn = Math.max(0, parcelas - pp); const ii = taxa / 100; return ii > 0 && nn > 0 ? valorParcela * ((1 - Math.pow(1 + ii, -nn)) / ii) : valorParcela * nn; })(),
           data_inicio: `${anoInicio}-${String(mesInicio).padStart(2, '0')}-01`
         });
       }
