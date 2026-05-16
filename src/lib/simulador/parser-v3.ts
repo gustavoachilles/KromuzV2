@@ -43,27 +43,21 @@ export async function parseHisconPdf(buffer: Buffer): Promise<ExtratoHisconRaw> 
   // Formato HISCON: "EMPRÉSTIMOS\nRMC\nRCC\nR$567,35\nR$0,05\nR$81,05\n..."
   // Ou: "MARGEM DISPONÍVEL*\nR$0,00"
   let margemLivre = 0, margemRmc = 0, margemRcc = 0;
+  let margemFound = false;
 
-  // Tenta formato tabular: MARGEM DISPONÍVEL seguido de valores
+  // Padrão principal: MARGEM DISPONÍVEL seguido de R$ valor
   const margemSection = flat.match(/MARGEM DISPON[IÍ]VEL\*?\s*R\$([\d.,]+)/i);
   if (margemSection) {
     margemLivre = parseMoeda(margemSection[1]);
-    console.log(`✅ [Robô V3] Margem empréstimo: R$ ${margemLivre}`);
+    margemFound = true; // NÃO tentar alternativas — este é o valor correto
+    console.log(`✅ [Robô V3] Margem empréstimo: R$ ${margemLivre} (via MARGEM DISPONÍVEL)`);
   }
 
-  // Tenta formato alternativo
-  if (margemLivre === 0) {
+  // Alternativas SÓ se MARGEM DISPONÍVEL não existir no texto
+  if (!margemFound) {
     const alt = flat.match(/Margem\s+consign[aá]vel\s+dispon[ií]vel.*?R\$([\d.,]+)/i);
-    if (alt) margemLivre = parseMoeda(alt[1]);
+    if (alt) { margemLivre = parseMoeda(alt[1]); margemFound = true; }
   }
-  if (margemLivre === 0) {
-    const alt = flat.match(/35%.*?Empr[eé]stimo.*?R\$([\d.,]+)/i);
-    if (alt) margemLivre = parseMoeda(alt[1]);
-  }
-
-  // RMC/RCC - procura após a seção de margem
-  const rccMatch = flat.match(/RCC.*?R\$([\d.,]+).*?R\$([\d.,]+)/i);
-  // Não extraímos RMC/RCC aqui pois o formato é ambíguo
 
   console.log(`📊 [Robô V3] Margens: Livre=${margemLivre}, RMC=${margemRmc}, RCC=${margemRcc}`);
 
@@ -79,7 +73,7 @@ export async function parseHisconPdf(buffer: Buffer): Promise<ExtratoHisconRaw> 
   if (secContratos) {
     // Encontra todos os blocos "Ativo" com dados ao redor
     // Regex: captura banco (3 dígitos - NOME), datas MM/YYYY, parcelas, R$ valores, taxa
-    const bankPattern = /(\d{3})\s*-\s*((?:[A-ZÀ-Ú\s]+?)+?)\s+(\d{2}\/\d{4})\s+(\d{2}\/\d{4})\s+(\d{2,3})\s+R\$([\d.,]+)\s+R\$([\d.,]+)/g;
+    const bankPattern = /(\d{3})\s*-\s*((?:[A-ZÀ-Ú0-9\s]+?)+?)\s+(\d{2}\/\d{4})\s+(\d{2}\/\d{4})\s+(\d{2,3})\s+R\$([\d.,]+)\s+R\$([\d.,]+)/g;
     let m;
 
     while ((m = bankPattern.exec(secContratos)) !== null) {
@@ -91,17 +85,23 @@ export async function parseHisconPdf(buffer: Buffer): Promise<ExtratoHisconRaw> 
       const valorParcela = parseMoeda(m[6]);
       const valorEmprestado = parseMoeda(m[7]);
 
-      // Procura taxa de juros mensal após este match (padrão: 1,XX entre 1.0 e 3.0)
-      const afterMatch = secContratos.substring(m.index + m[0].length, m.index + m[0].length + 300);
-      const taxaMatch = afterMatch.match(/(\d,\d{2})\s+\d{2,3},\d{2}\s+(\d,\d{2})\s+\d{2,3},\d{2}/);
+      // Procura taxa de juros mensal após este match
+      // Formato HISCON: ... CET_MENSAL CET_ANUAL TAXA_JUROS_MENSAL TAXA_JUROS_ANUAL ...
+      // Ex: "2,48 34,26 1,79 23,87" ou "1,85 24,60"
+      const afterMatch = secContratos.substring(m.index + m[0].length, m.index + m[0].length + 500);
       let taxa = 1.66; // default
-      if (taxaMatch) {
-        // O padrão é: CET_MENSAL CET_ANUAL TAXA_MENSAL TAXA_ANUAL
-        taxa = parseMoeda(taxaMatch[2]) || 1.66;
+      // Procura padrão: X,XX XX,XX X,XX XX,XX (CET_M CET_A TAXA_M TAXA_A)
+      const taxaPattern = afterMatch.match(/(\d,\d{2})\s+(\d{2},\d{2})\s+(\d,\d{2})\s+(\d{2},\d{2})/);
+      if (taxaPattern) {
+        taxa = parseMoeda(taxaPattern[3]); // 3rd group = TAXA JUROS MENSAL
+        console.log(`💰 [Robô V3] Taxa encontrada: ${taxa}% (padrão CET/TAXA)`);
       } else {
-        // Fallback: procura qualquer 1,XX
-        const taxaSimples = afterMatch.match(/\b(1,\d{2})\b/);
-        if (taxaSimples) taxa = parseMoeda(taxaSimples[1]);
+        // Fallback: procura "1,XX" que NÃO está dentro de "R$"
+        const allTaxas = [...afterMatch.matchAll(/(?<!R\$|\d)(\d,\d{2})(?=\s)/g)];
+        for (const t of allTaxas) {
+          const v = parseMoeda(t[1]);
+          if (v >= 1.0 && v <= 3.0) { taxa = v; break; }
+        }
       }
 
       // Calcula parcelas pagas
