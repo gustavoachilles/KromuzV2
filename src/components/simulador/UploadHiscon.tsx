@@ -58,6 +58,7 @@ export function UploadHiscon({ onProcessamentoCompleto, empresaId }: UploadHisco
             throw new Error(data.error || "Erro ao processar o extrato.");
           }
 
+          console.log("📊 [DEBUG] Resposta completa da API:", JSON.stringify(data, null, 2));
           onProcessamentoCompleto(data);
           setLoading(false);
         } catch (err: any) {
