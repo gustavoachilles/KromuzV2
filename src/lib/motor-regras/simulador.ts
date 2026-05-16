@@ -181,10 +181,16 @@ export function calcularOportunidades(
       const RESTRICOES_ORIGEM: Record<string, string[]> = {
         "C6": ["AGIPLAN", "CETELEM", "FACTA", "DAYCOVAL", "PAN", "MERCANTIL", "BANCO OBM", "BANCO BMG"],
         "DAYCOVAL": ["C6", "SAFRA", "PAN", "BMG", "MERCANTIL", "AGIPLAN"],
-        "BANRISUL": [], // Banrisul aceita quase todos, mas exige R$ 5.000 saldo
+        "BANRISUL": [],
         "BRB": [],
         "FACTA": ["CETELEM", "AGIPLAN"],
-        "ICRED": [] // iCred aceita FACTA
+        "ICRED": [],
+        "TOTAL CASH": ["PINE", "INBURSA", "QI TECH", "QI SOCIEDADE", "BRB"],
+        "PAN": [],
+        "QUERO MAIS": [],
+        "NBC": [],
+        "PRESENÇA": [],
+        "CRED CAPITAL": []
       };
 
       for (const contrato of contratos) {
@@ -331,7 +337,13 @@ export function calcularOportunidades(
         "BANRISUL": [],
         "BRB": [],
         "FACTA": ["CETELEM", "AGIPLAN"],
-        "ICRED": []
+        "ICRED": [],
+        "TOTAL CASH": ["PINE", "INBURSA", "QI TECH", "QI SOCIEDADE", "BRB"],
+        "PAN": [],
+        "QUERO MAIS": [],
+        "NBC": [],
+        "PRESENÇA": [],
+        "CRED CAPITAL": []
       };
 
       for (const contrato of contratos) {

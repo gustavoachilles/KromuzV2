@@ -28,24 +28,29 @@ interface BancoBeviHelp {
 }
 
 const BANCOS_BEVIHELP: BancoBeviHelp[] = [
-  { nome: "Banrisul",       taxaEmprestimo: 1.83, taxaPortabilidade: 1.83, taxaCartaoRMC: null, taxaCartaoRCC: null, prazoMaxEmprestimo: 84, idadeMin: 18, idadeMaxQuitacao: 72, portPermitido: true,  portParcelasMin: 6,  refinPermitido: true,  refinParcelasMin: 6,  fatorSaldo: 0.72, ativo: true,  portRefin: false },
-  { nome: "C6 Bank",        taxaEmprestimo: 1.80, taxaPortabilidade: 1.80, taxaCartaoRMC: null, taxaCartaoRCC: null, prazoMaxEmprestimo: 84, idadeMin: 18, idadeMaxQuitacao: 77, portPermitido: true,  portParcelasMin: 6,  refinPermitido: true,  refinParcelasMin: 6,  fatorSaldo: 0.73, ativo: true,  portRefin: true },
-  { nome: "Facta",          taxaEmprestimo: 1.83, taxaPortabilidade: 1.83, taxaCartaoRMC: 2.49, taxaCartaoRCC: 2.49, prazoMaxEmprestimo: 84, idadeMin: 18, idadeMaxQuitacao: 73, portPermitido: true,  portParcelasMin: 6,  refinPermitido: true,  refinParcelasMin: 6,  fatorSaldo: 0.73, ativo: true,  portRefin: true },
-  { nome: "NBC Bank",       taxaEmprestimo: 1.80, taxaPortabilidade: 1.80, taxaCartaoRMC: null, taxaCartaoRCC: null, prazoMaxEmprestimo: 84, idadeMin: 18, idadeMaxQuitacao: 78, portPermitido: true,  portParcelasMin: 6,  refinPermitido: true,  refinParcelasMin: 6,  fatorSaldo: 0.73, ativo: true,  portRefin: true },
-  { nome: "Presença Bank",  taxaEmprestimo: 1.80, taxaPortabilidade: 1.80, taxaCartaoRMC: null, taxaCartaoRCC: null, prazoMaxEmprestimo: 84, idadeMin: 18, idadeMaxQuitacao: 80, portPermitido: true,  portParcelasMin: 0,  refinPermitido: true,  refinParcelasMin: 0,  fatorSaldo: 0.74, ativo: true,  portRefin: true },
-  { nome: "Total Cash",     taxaEmprestimo: 1.80, taxaPortabilidade: 1.52, taxaCartaoRMC: null, taxaCartaoRCC: null, prazoMaxEmprestimo: 84, idadeMin: 18, idadeMaxQuitacao: 80, portPermitido: true,  portParcelasMin: 6,  refinPermitido: true,  refinParcelasMin: 6,  fatorSaldo: 0.74, ativo: true,  portRefin: true },
-  { nome: "Cred Capital",   taxaEmprestimo: 1.76, taxaPortabilidade: 1.76, taxaCartaoRMC: null, taxaCartaoRCC: null, prazoMaxEmprestimo: 96, idadeMin: 18, idadeMaxQuitacao: 80, portPermitido: true,  portParcelasMin: 0,  refinPermitido: true,  refinParcelasMin: 0,  fatorSaldo: 0.74, ativo: true,  portRefin: true },
-  { nome: "Daycoval",       taxaEmprestimo: 1.80, taxaPortabilidade: null, taxaCartaoRMC: null, taxaCartaoRCC: null, prazoMaxEmprestimo: 84, idadeMin: 18, idadeMaxQuitacao: 68, portPermitido: false, portParcelasMin: 12, refinPermitido: true,  refinParcelasMin: 12, fatorSaldo: 0.85, ativo: true,  portRefin: false },
-  { nome: "BMG",            taxaEmprestimo: 1.84, taxaPortabilidade: null, taxaCartaoRMC: 2.49, taxaCartaoRCC: 2.49, prazoMaxEmprestimo: 84, idadeMin: 21, idadeMaxQuitacao: 80, portPermitido: false, portParcelasMin: 6,  refinPermitido: true,  refinParcelasMin: 6,  fatorSaldo: 0.72, ativo: true,  portRefin: false },
-  { nome: "BRB",            taxaEmprestimo: 1.85, taxaPortabilidade: null, taxaCartaoRMC: null, taxaCartaoRCC: null, prazoMaxEmprestimo: 84, idadeMin: 18, idadeMaxQuitacao: 80, portPermitido: false, portParcelasMin: 12, refinPermitido: true,  refinParcelasMin: 12, fatorSaldo: 0.73, ativo: true,  portRefin: false },
+  // === ATIVOS COM PORTABILIDADE (confirmado BeviHelp) ===
+  { nome: "Banrisul",       taxaEmprestimo: 1.83, taxaPortabilidade: 1.83, taxaCartaoRMC: null, taxaCartaoRCC: null, prazoMaxEmprestimo: 96, idadeMin: 18, idadeMaxQuitacao: 72, portPermitido: true,  portParcelasMin: 6,  refinPermitido: true,  refinParcelasMin: 6,  fatorSaldo: 0.72, ativo: true,  portRefin: false },
+  { nome: "C6 Bank",        taxaEmprestimo: 1.80, taxaPortabilidade: 1.80, taxaCartaoRMC: null, taxaCartaoRCC: null, prazoMaxEmprestimo: 96, idadeMin: 21, idadeMaxQuitacao: 79, portPermitido: true,  portParcelasMin: 6,  refinPermitido: true,  refinParcelasMin: 12, fatorSaldo: 0.73, ativo: true,  portRefin: true },
+  { nome: "Facta",          taxaEmprestimo: 1.83, taxaPortabilidade: 1.83, taxaCartaoRMC: 2.49, taxaCartaoRCC: 2.49, prazoMaxEmprestimo: 96, idadeMin: 18, idadeMaxQuitacao: 73, portPermitido: true,  portParcelasMin: 6,  refinPermitido: true,  refinParcelasMin: 6,  fatorSaldo: 0.73, ativo: true,  portRefin: true },
+  { nome: "NBC Bank",       taxaEmprestimo: 1.80, taxaPortabilidade: 1.80, taxaCartaoRMC: null, taxaCartaoRCC: null, prazoMaxEmprestimo: 96, idadeMin: 18, idadeMaxQuitacao: 78, portPermitido: true,  portParcelasMin: 6,  refinPermitido: true,  refinParcelasMin: 6,  fatorSaldo: 0.73, ativo: true,  portRefin: true },
+  { nome: "Presença Bank",  taxaEmprestimo: 1.80, taxaPortabilidade: 1.80, taxaCartaoRMC: null, taxaCartaoRCC: null, prazoMaxEmprestimo: 96, idadeMin: 21, idadeMaxQuitacao: 80, portPermitido: true,  portParcelasMin: 0,  refinPermitido: true,  refinParcelasMin: 0,  fatorSaldo: 0.74, ativo: true,  portRefin: true },
+  { nome: "Total Cash",     taxaEmprestimo: 1.80, taxaPortabilidade: 1.52, taxaCartaoRMC: null, taxaCartaoRCC: null, prazoMaxEmprestimo: 96, idadeMin: 21, idadeMaxQuitacao: 80, portPermitido: true,  portParcelasMin: 6,  refinPermitido: true,  refinParcelasMin: 6,  fatorSaldo: 0.74, ativo: true,  portRefin: true },
+  { nome: "Cred Capital",   taxaEmprestimo: 1.76, taxaPortabilidade: 1.76, taxaCartaoRMC: null, taxaCartaoRCC: null, prazoMaxEmprestimo: 108, idadeMin: 18, idadeMaxQuitacao: 80, portPermitido: true,  portParcelasMin: 0,  refinPermitido: true,  refinParcelasMin: 0,  fatorSaldo: 0.74, ativo: true,  portRefin: true },
+
+  // === CORREÇÕES: Estes bancos FAZEM portabilidade (erro anterior) ===
+  { nome: "Daycoval",       taxaEmprestimo: 1.80, taxaPortabilidade: 1.80, taxaCartaoRMC: null, taxaCartaoRCC: null, prazoMaxEmprestimo: 96, idadeMin: 21, idadeMaxQuitacao: 80, portPermitido: true,  portParcelasMin: 12, refinPermitido: true,  refinParcelasMin: 12, fatorSaldo: 0.85, ativo: true,  portRefin: true },
+  { nome: "Quero Mais",     taxaEmprestimo: 1.85, taxaPortabilidade: 1.85, taxaCartaoRMC: null, taxaCartaoRCC: null, prazoMaxEmprestimo: 96, idadeMin: 21, idadeMaxQuitacao: 80, portPermitido: true,  portParcelasMin: 6,  refinPermitido: true,  refinParcelasMin: 6,  fatorSaldo: 0.73, ativo: true,  portRefin: true },
+  { nome: "Pan",            taxaEmprestimo: 1.85, taxaPortabilidade: 1.85, taxaCartaoRMC: null, taxaCartaoRCC: null, prazoMaxEmprestimo: 96, idadeMin: 18, idadeMaxQuitacao: 70, portPermitido: true,  portParcelasMin: 6,  refinPermitido: true,  refinParcelasMin: 6,  fatorSaldo: 0.74, ativo: true,  portRefin: false },
+  { nome: "iCred",          taxaEmprestimo: 1.80, taxaPortabilidade: 1.80, taxaCartaoRMC: null, taxaCartaoRCC: null, prazoMaxEmprestimo: 96, idadeMin: 21, idadeMaxQuitacao: 74, portPermitido: true,  portParcelasMin: 6,  refinPermitido: true,  refinParcelasMin: 6,  fatorSaldo: 0.74, ativo: true,  portRefin: true },
+  { nome: "BRB",            taxaEmprestimo: 1.85, taxaPortabilidade: 1.85, taxaCartaoRMC: null, taxaCartaoRCC: null, prazoMaxEmprestimo: 96, idadeMin: 18, idadeMaxQuitacao: 80, portPermitido: true,  portParcelasMin: 12, refinPermitido: true,  refinParcelasMin: 12, fatorSaldo: 0.73, ativo: true,  portRefin: false },
+
+  // === ATIVOS SEM PORTABILIDADE ===
+  { nome: "BMG",            taxaEmprestimo: 1.84, taxaPortabilidade: null, taxaCartaoRMC: 2.49, taxaCartaoRCC: 2.49, prazoMaxEmprestimo: 96, idadeMin: 21, idadeMaxQuitacao: 80, portPermitido: false, portParcelasMin: 6,  refinPermitido: true,  refinParcelasMin: 6,  fatorSaldo: 0.72, ativo: true,  portRefin: false },
+  { nome: "Safra",          taxaEmprestimo: 1.83, taxaPortabilidade: null, taxaCartaoRMC: null, taxaCartaoRCC: null, prazoMaxEmprestimo: 96, idadeMin: 26, idadeMaxQuitacao: 77, portPermitido: false, portParcelasMin: 12, refinPermitido: true,  refinParcelasMin: 12, fatorSaldo: 0.72, ativo: true,  portRefin: false },
+  { nome: "Finanto Bank",   taxaEmprestimo: 1.85, taxaPortabilidade: null, taxaCartaoRMC: null, taxaCartaoRCC: null, prazoMaxEmprestimo: 96, idadeMin: 22, idadeMaxQuitacao: 70, portPermitido: false, portParcelasMin: 6,  refinPermitido: false, refinParcelasMin: 6,  fatorSaldo: 0.73, ativo: true,  portRefin: false },
   { nome: "Digio",          taxaEmprestimo: 1.85, taxaPortabilidade: null, taxaCartaoRMC: null, taxaCartaoRCC: null, prazoMaxEmprestimo: 84, idadeMin: 18, idadeMaxQuitacao: 80, portPermitido: false, portParcelasMin: 6,  refinPermitido: false, refinParcelasMin: 6,  fatorSaldo: 0.74, ativo: true,  portRefin: false },
-  { nome: "Finanto Bank",   taxaEmprestimo: 1.85, taxaPortabilidade: null, taxaCartaoRMC: null, taxaCartaoRCC: null, prazoMaxEmprestimo: 84, idadeMin: 18, idadeMaxQuitacao: 75, portPermitido: false, portParcelasMin: 6,  refinPermitido: false, refinParcelasMin: 6,  fatorSaldo: 0.73, ativo: true,  portRefin: false },
-  { nome: "iCred",          taxaEmprestimo: 1.80, taxaPortabilidade: null, taxaCartaoRMC: null, taxaCartaoRCC: null, prazoMaxEmprestimo: 84, idadeMin: 18, idadeMaxQuitacao: 80, portPermitido: false, portParcelasMin: 6,  refinPermitido: false, refinParcelasMin: 6,  fatorSaldo: 0.74, ativo: true,  portRefin: false },
-  { nome: "Pan",            taxaEmprestimo: 1.85, taxaPortabilidade: null, taxaCartaoRMC: null, taxaCartaoRCC: null, prazoMaxEmprestimo: 84, idadeMin: 18, idadeMaxQuitacao: 65, portPermitido: false, portParcelasMin: 6,  refinPermitido: true,  refinParcelasMin: 6,  fatorSaldo: 0.74, ativo: true,  portRefin: false },
   { nome: "PicPay",         taxaEmprestimo: 1.85, taxaPortabilidade: null, taxaCartaoRMC: null, taxaCartaoRCC: null, prazoMaxEmprestimo: 84, idadeMin: 18, idadeMaxQuitacao: 80, portPermitido: false, portParcelasMin: 6,  refinPermitido: false, refinParcelasMin: 6,  fatorSaldo: 0.73, ativo: true,  portRefin: false },
-  { nome: "Quero Mais",     taxaEmprestimo: 1.85, taxaPortabilidade: null, taxaCartaoRMC: null, taxaCartaoRCC: null, prazoMaxEmprestimo: 84, idadeMin: 18, idadeMaxQuitacao: 80, portPermitido: false, portParcelasMin: 6,  refinPermitido: false, refinParcelasMin: 6,  fatorSaldo: 0.73, ativo: true,  portRefin: false },
-  { nome: "Safra",          taxaEmprestimo: 1.83, taxaPortabilidade: null, taxaCartaoRMC: null, taxaCartaoRCC: null, prazoMaxEmprestimo: 84, idadeMin: 21, idadeMaxQuitacao: 70, portPermitido: false, portParcelasMin: 12, refinPermitido: true,  refinParcelasMin: 12, fatorSaldo: 0.72, ativo: true,  portRefin: false },
-  { nome: "Mercantil",      taxaEmprestimo: 1.85, taxaPortabilidade: null, taxaCartaoRMC: null, taxaCartaoRCC: null, prazoMaxEmprestimo: 84, idadeMin: 18, idadeMaxQuitacao: 80, portPermitido: false, portParcelasMin: 6,  refinPermitido: false, refinParcelasMin: 6,  fatorSaldo: 0.73, ativo: true,  portRefin: false },
+  { nome: "Mercantil",      taxaEmprestimo: 1.85, taxaPortabilidade: null, taxaCartaoRMC: null, taxaCartaoRCC: null, prazoMaxEmprestimo: 84, idadeMin: 22, idadeMaxQuitacao: 70, portPermitido: false, portParcelasMin: 6,  refinPermitido: false, refinParcelasMin: 6,  fatorSaldo: 0.73, ativo: false, portRefin: false },
   { nome: "VCTeX",          taxaEmprestimo: 1.80, taxaPortabilidade: null, taxaCartaoRMC: null, taxaCartaoRCC: null, prazoMaxEmprestimo: 84, idadeMin: 18, idadeMaxQuitacao: 80, portPermitido: false, portParcelasMin: 6,  refinPermitido: false, refinParcelasMin: 6,  fatorSaldo: 0.73, ativo: true,  portRefin: false },
 ];
 
@@ -106,15 +111,24 @@ export async function GET() {
           await prisma.produtoCredito.update({ where: { id: produto.id }, data: { ativo: true } });
         }
 
-        const prazo = b.prazoMaxEmprestimo;
-        const coeficiente = calcularCoeficiente(prod.taxa, prazo);
+        // Gera tabelas para múltiplos prazos (84, 96, 108 meses)
+        const prazos = [84, 96, 108].filter(p => p <= (b.prazoMaxEmprestimo || 84));
+        // Se o prazoMax é maior que 84 mas não está na lista, inclui
+        if (b.prazoMaxEmprestimo && !prazos.includes(b.prazoMaxEmprestimo) && b.prazoMaxEmprestimo <= 108) {
+          prazos.push(b.prazoMaxEmprestimo);
+          prazos.sort((a, c) => a - c);
+        }
 
-        const tabelaExistente = await prisma.tabelaCoeficiente.findFirst({ where: { bancoId: banco.id, produtoId: produto.id, prazo } });
-        if (!tabelaExistente) {
-          await prisma.tabelaCoeficiente.create({ data: { empresaId: empresa.id, bancoId: banco.id, produtoId: produto.id, convenioId: inss?.id, nome: `${b.nome} - ${prod.nome} ${prazo}x (${prod.taxa}%)`, prazo, taxaJurosMensal: prod.taxa, coeficiente: Number(coeficiente.toFixed(8)), ativo: true } });
-          totalTabelas++;
-        } else {
-          await prisma.tabelaCoeficiente.update({ where: { id: tabelaExistente.id }, data: { taxaJurosMensal: prod.taxa, coeficiente: Number(coeficiente.toFixed(8)), ativo: true, nome: `${b.nome} - ${prod.nome} ${prazo}x (${prod.taxa}%)` } });
+        for (const prazo of prazos) {
+          const coeficiente = calcularCoeficiente(prod.taxa, prazo);
+
+          const tabelaExistente = await prisma.tabelaCoeficiente.findFirst({ where: { bancoId: banco.id, produtoId: produto.id, prazo } });
+          if (!tabelaExistente) {
+            await prisma.tabelaCoeficiente.create({ data: { empresaId: empresa.id, bancoId: banco.id, produtoId: produto.id, convenioId: inss?.id, nome: `${b.nome} - ${prod.nome} ${prazo}x (${prod.taxa}%)`, prazo, taxaJurosMensal: prod.taxa, coeficiente: Number(coeficiente.toFixed(8)), ativo: true } });
+            totalTabelas++;
+          } else {
+            await prisma.tabelaCoeficiente.update({ where: { id: tabelaExistente.id }, data: { taxaJurosMensal: prod.taxa, coeficiente: Number(coeficiente.toFixed(8)), ativo: true, nome: `${b.nome} - ${prod.nome} ${prazo}x (${prod.taxa}%)` } });
+          }
         }
 
         const regraExistente = await prisma.regraProdutoCredito.findFirst({ where: { bancoId: banco.id, produtoId: produto.id } });
