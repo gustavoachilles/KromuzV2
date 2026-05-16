@@ -2,16 +2,19 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { Oportunidade, ContratoAtivo } from "@/lib/motor-regras/simulador";
-import { RefreshCw, Sparkles, ArrowRight } from "lucide-react";
+import { RefreshCw, Sparkles, ArrowRight, X, AlertTriangle, CheckCircle } from "lucide-react";
 
 interface SimuladorTableRowProps {
   contrato: ContratoAtivo;
   oportunidades: Oportunidade[];
   onOpenInsight?: (context: any) => void;
+  clienteNome?: string;
 }
 
-export function SimuladorTableRow({ contrato, oportunidades, onOpenInsight }: SimuladorTableRowProps) {
+export function SimuladorTableRow({ contrato, oportunidades, onOpenInsight, clienteNome }: SimuladorTableRowProps) {
   const [checked, setChecked] = useState(false);
+  const [propostaGerada, setPropostaGerada] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
   
   // Filtra oportunidades para este contrato
   const opsValidas = oportunidades.filter(op => op.contratoOriginalId === contrato.id);
@@ -33,11 +36,12 @@ export function SimuladorTableRow({ contrato, oportunidades, onOpenInsight }: Si
 
   const opsModalidade = opsValidas.filter(op => op.tipo === modalidade);
   
+  // CORRIGIDO: Mostra TODOS os bancos disponíveis para este contrato (não filtra por modalidade)
   const bancosDisp = useMemo(() => {
     const mapa = new Map<string, string>();
-    opsModalidade.forEach(op => mapa.set(op.bancoId, op.bancoNome));
+    opsValidas.forEach(op => mapa.set(op.bancoId, op.bancoNome));
     return Array.from(mapa.entries()).map(([id, nome]) => ({ id, nome }));
-  }, [opsModalidade]);
+  }, [opsValidas]);
 
   useEffect(() => {
     if (opsModalidade.length > 0 && !opsModalidade.some(op => op.bancoId === bancoId) && checked) {
@@ -50,7 +54,7 @@ export function SimuladorTableRow({ contrato, oportunidades, onOpenInsight }: Si
   const opsBanco = opsModalidade.filter(op => op.bancoId === bancoId);
 
   const prazosDisp = useMemo(() => {
-    return Array.from(new Set(opsBanco.map(op => op.prazo))).sort((a, b) => b - a);
+    return Array.from(new Set(opsBanco.map(op => op.prazo))).sort((a, b) => a - b);
   }, [opsBanco]);
 
   useEffect(() => {
@@ -71,14 +75,14 @@ export function SimuladorTableRow({ contrato, oportunidades, onOpenInsight }: Si
   const [gerandoProposta, setGerandoProposta] = useState(false);
 
   async function handleGerarProposta() {
-    if (!simulacaoSelecionada) return;
+    if (!simulacaoSelecionada || propostaGerada) return;
     setGerandoProposta(true);
     try {
       const res = await fetch("/api/propostas", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          clienteNome: "Cliente do Simulador", // Poderia vir de um campo de nome no topo
+          clienteNome: clienteNome || "Cliente do Simulador",
           clienteCpf: undefined,
           tipoOperacao: simulacaoSelecionada.tipo,
           bancoNome: simulacaoSelecionada.bancoNome,
@@ -94,8 +98,8 @@ export function SimuladorTableRow({ contrato, oportunidades, onOpenInsight }: Si
 
       if (!res.ok) throw new Error("Erro ao criar proposta");
       
-      const data = await res.json();
-      alert(`✅ Proposta gerada com sucesso para o banco ${data.bancoNome}!`);
+      setPropostaGerada(true);
+      setShowConfirmModal(false);
     } catch (err) {
       alert("Erro ao gerar proposta na esteira.");
     } finally {
@@ -139,7 +143,10 @@ export function SimuladorTableRow({ contrato, oportunidades, onOpenInsight }: Si
           {contrato.saldoDevedorEstimado.toFixed(2)}
         </td>
         <td className="p-3 text-center">
-          <button className="text-slate-400 hover:text-brand">
+          <button 
+            className="text-slate-400 hover:text-brand transition-colors"
+            title="Recalcular saldo devedor"
+          >
             <RefreshCw className="w-4 h-4" />
           </button>
         </td>
@@ -170,7 +177,6 @@ export function SimuladorTableRow({ contrato, oportunidades, onOpenInsight }: Si
                   value={bancoId}
                   onChange={(e) => setBancoId(e.target.value)}
                   className="w-full bg-white border border-slate-200 rounded-md px-3 py-1.5 text-sm font-medium focus:ring-2 focus:ring-indigo-500 outline-none"
-                  disabled={bancosDisp.length <= 1}
                 >
                   {bancosDisp.map(b => (
                     <option key={b.id} value={b.id}>{b.nome}</option>
@@ -215,33 +221,57 @@ export function SimuladorTableRow({ contrato, oportunidades, onOpenInsight }: Si
                     </div>
                   </div>
 
-                  <button
-                    onClick={() => onOpenInsight?.({
-                      bancoNome: simulacaoSelecionada.bancoNome,
-                      produtoNome: simulacaoSelecionada.produtoNome,
-                      clienteEspecie: contrato.especieOriginal || '---',
-                      clienteIdade: 0, // Idade não está disponível no contrato, mas está no simulador pai
-                      valorParcela: simulacaoSelecionada.valorParcela,
-                      prazo: simulacaoSelecionada.prazo
-                    })}
-                    className="p-3 bg-brand text-white rounded-xl hover:opacity-90 transition-all shadow-lg shadow-brand/20 group/ai"
-                    title="Analisar com IA"
-                  >
-                    <Sparkles className="w-5 h-5 group-hover/ai:rotate-12 transition-transform" />
-                  </button>
+                  {/* Botão IA — com tooltip */}
+                  <div className="relative group/tip">
+                    <button
+                      onClick={() => onOpenInsight?.({
+                        bancoNome: simulacaoSelecionada.bancoNome,
+                        produtoNome: simulacaoSelecionada.produtoNome,
+                        clienteEspecie: contrato.especieOriginal || '---',
+                        clienteIdade: 0,
+                        valorParcela: simulacaoSelecionada.valorParcela,
+                        prazo: simulacaoSelecionada.prazo
+                      })}
+                      className="p-3 bg-brand text-white rounded-xl hover:opacity-90 transition-all shadow-lg shadow-brand/20 group/ai"
+                    >
+                      <Sparkles className="w-5 h-5 group-hover/ai:rotate-12 transition-transform" />
+                    </button>
+                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 bg-slate-800 text-white text-xs rounded-lg whitespace-nowrap opacity-0 group-hover/tip:opacity-100 transition-opacity pointer-events-none z-50">
+                      Analisar regras com IA (BeviHelp)
+                      <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-800"></div>
+                    </div>
+                  </div>
 
-                  <button
-                    disabled={gerandoProposta}
-                    onClick={handleGerarProposta}
-                    className="p-3 bg-emerald-600 text-white rounded-xl hover:bg-emerald-500 transition-all shadow-lg shadow-emerald-600/20 group/sell"
-                    title="Gerar Proposta na Esteira"
-                  >
-                    {gerandoProposta ? (
-                      <RefreshCw className="w-5 h-5 animate-spin" />
-                    ) : (
-                      <ArrowRight className="w-5 h-5 group-hover/sell:translate-x-1 transition-transform" />
-                    )}
-                  </button>
+                  {/* Botão Proposta — com tooltip */}
+                  <div className="relative group/tip2">
+                    <button
+                      disabled={gerandoProposta}
+                      onClick={() => {
+                        if (propostaGerada) {
+                          alert("⚠️ Proposta já foi gerada para esta simulação. Verifique a esteira de propostas.");
+                          return;
+                        }
+                        setShowConfirmModal(true);
+                      }}
+                      className={`p-3 rounded-xl transition-all shadow-lg group/sell ${
+                        propostaGerada 
+                          ? 'bg-slate-400 text-white cursor-not-allowed shadow-slate-400/20' 
+                          : 'bg-emerald-600 text-white hover:bg-emerald-500 shadow-emerald-600/20'
+                      }`}
+                    >
+                      {gerandoProposta ? (
+                        <RefreshCw className="w-5 h-5 animate-spin" />
+                      ) : propostaGerada ? (
+                        <CheckCircle className="w-5 h-5" />
+                      ) : (
+                        <ArrowRight className="w-5 h-5 group-hover/sell:translate-x-1 transition-transform" />
+                      )}
+                    </button>
+                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 bg-slate-800 text-white text-xs rounded-lg whitespace-nowrap opacity-0 group-hover/tip2:opacity-100 transition-opacity pointer-events-none z-50">
+                      {propostaGerada ? "Proposta já gerada ✓" : "Gerar proposta na esteira"}
+                      <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-800"></div>
+                    </div>
+                  </div>
                 </>
               )}
 
@@ -254,6 +284,91 @@ export function SimuladorTableRow({ contrato, oportunidades, onOpenInsight }: Si
         <tr className="bg-slate-50 border-b border-slate-200">
           <td colSpan={12} className="p-4 text-center text-sm text-rose-500 font-medium">
             Nenhuma oportunidade disponível para este contrato.
+          </td>
+        </tr>
+      )}
+
+      {/* Modal de Confirmação de Proposta */}
+      {showConfirmModal && simulacaoSelecionada && (
+        <tr>
+          <td colSpan={12}>
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+              <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
+                <div className="bg-gradient-to-r from-emerald-600 to-emerald-500 p-4 flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-white">
+                    <AlertTriangle className="w-5 h-5" />
+                    <h3 className="font-bold text-lg">Confirmar Proposta</h3>
+                  </div>
+                  <button onClick={() => setShowConfirmModal(false)} className="text-white/80 hover:text-white">
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+                
+                <div className="p-6 space-y-4">
+                  <p className="text-sm text-slate-600">
+                    Deseja realmente gerar esta proposta na esteira? Confira os dados:
+                  </p>
+                  
+                  <div className="bg-slate-50 rounded-xl p-4 space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">Cliente:</span>
+                      <span className="font-semibold">{clienteNome || "Cliente do Simulador"}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">Operação:</span>
+                      <span className="font-semibold">{parseTipo(simulacaoSelecionada.tipo)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">Banco Destino:</span>
+                      <span className="font-semibold">{simulacaoSelecionada.bancoNome}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">Banco Origem:</span>
+                      <span className="font-semibold">{contrato.bancoNome}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">Prazo:</span>
+                      <span className="font-semibold">{simulacaoSelecionada.prazo} meses</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">Taxa:</span>
+                      <span className="font-semibold">{simulacaoSelecionada.taxaJuros.toFixed(2)}% a.m.</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">Parcela:</span>
+                      <span className="font-semibold">R$ {simulacaoSelecionada.valorParcela.toFixed(2)}</span>
+                    </div>
+                    <hr className="border-slate-200" />
+                    <div className="flex justify-between text-base">
+                      <span className="text-emerald-600 font-bold">Valor Cliente:</span>
+                      <span className="font-black text-emerald-600">
+                        R$ {(simulacaoSelecionada.trocoEstimado || 0).toFixed(2)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-4 bg-slate-50 flex gap-3 justify-end">
+                  <button 
+                    onClick={() => setShowConfirmModal(false)}
+                    className="px-4 py-2 text-sm font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-100 transition-colors"
+                  >
+                    Cancelar
+                  </button>
+                  <button 
+                    onClick={handleGerarProposta}
+                    disabled={gerandoProposta}
+                    className="px-6 py-2 text-sm font-bold text-white bg-emerald-600 rounded-lg hover:bg-emerald-500 transition-colors flex items-center gap-2"
+                  >
+                    {gerandoProposta ? (
+                      <><RefreshCw className="w-4 h-4 animate-spin" /> Gerando...</>
+                    ) : (
+                      <><CheckCircle className="w-4 h-4" /> Confirmar Proposta</>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
           </td>
         </tr>
       )}

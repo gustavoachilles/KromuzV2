@@ -452,11 +452,11 @@ export function calcularOportunidades(
   // Ordenar por score desc, depois valor liberado desc
   oportunidades.sort((a, b) => b.score - a.score || (b.valorLiberado || 0) - (a.valorLiberado || 0));
 
-  // Deduplicação: mostra apenas a MELHOR oportunidade por banco + tipo de operação
-  // Evita mostrar 3 prazos (84x, 96x, 108x) do mesmo banco com mesma taxa
+  // Deduplicação: preserva diferentes prazos do mesmo banco (84x, 96x, 108x)
+  // Apenas dedup se MESMO banco + tipo + contrato + prazo
   const seen = new Map<string, Oportunidade>();
   for (const op of oportunidades) {
-    const key = `${op.bancoId}-${op.tipo}-${op.contratoOriginalId || "novo"}`;
+    const key = `${op.bancoId}-${op.tipo}-${op.contratoOriginalId || "novo"}-${op.prazo}`;
     const existing = seen.get(key);
     if (!existing || op.valorLiberado > existing.valorLiberado) {
       seen.set(key, op);
