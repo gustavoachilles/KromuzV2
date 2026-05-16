@@ -24,6 +24,8 @@ export async function parseHisconPdf(buffer: Buffer): Promise<ExtratoHisconRaw> 
   
   const textStr: string = data.text || "";
   const text = textStr;
+  console.log(`📄 [Robô V3] Texto extraído do PDF (primeiros 500 chars):\n${text.substring(0, 500)}`);
+  console.log(`📄 [Robô V3] Texto total: ${text.length} chars`);
 
   // 1. Extração de Dados Básicos
   const nBeneficio = textStr.match(/Nº Benefício:\s*([\d.-]+)/)?.[1] || "000.000.000-0";
@@ -56,10 +58,27 @@ export async function parseHisconPdf(buffer: Buffer): Promise<ExtratoHisconRaw> 
   const possuiRepresentante = text.includes("Não possui representante legal") ? false : true;
   const uf = text.match(/UF:\s*([A-Z]{2})/i)?.[1] || text.match(/([A-Z]{2})\s*$/m)?.[1] || "SP";
 
-  // 2. Extração de Margens
-  const margemLivre = parseMoeda(text.match(/EMPRÉSTIMOS[\s\S]*?MARGEM DISPONÍVEL\*[\s\S]*?R\$\s*([\d.,]+)/)?.[1] || text.match(/Margem Consignável.*?R\$\s*([\d.,]+)/i)?.[1]) || 0;
-  const margemRmc = parseMoeda(text.match(/RMC[\s\S]*?MARGEM DISPONÍVEL\*[\s\S]*?R\$\s*([\d.,]+)/)?.[1]) || 0;
-  const margemRcc = parseMoeda(text.match(/RCC[\s\S]*?MARGEM DISPONÍVEL\*[\s\S]*?R\$\s*([\d.,]+)/)?.[1]) || 0;
+  // 2. Extração de Margens — HISCON usa vários formatos:
+  // "MARGEM DISPONÍVEL*  R$ 250,00" / "Margem consignável disponível: R$ 250,00" / "35% Empréstimo: R$ 250,00"
+  const margemLivre = extrairMargem(text, [
+    /EMPRÉSTIMOS?[\s\S]{0,200}?MARGEM DISPON[IÍ]VEL\*?\s*R\$\s*([\d.,]+)/i,
+    /Margem\s+consign[aá]vel\s+dispon[ií]vel[:\s]*R\$\s*([\d.,]+)/i,
+    /35%\s*(?:[-–])?\s*Empr[eé]stimo[s]?[:\s]*R\$\s*([\d.,]+)/i,
+    /Margem\s+Livre[:\s]*R\$\s*([\d.,]+)/i,
+    /Margem\s+dispon[ií]vel\s+para\s+empr[eé]stimo[:\s]*R\$\s*([\d.,]+)/i,
+    /EMPR[EÉ]STIMO[\s\S]{0,50}?R\$\s*([\d.,]+)\s*(?:dispon[ií]vel|livre)/i,
+    /Valor\s+dispon[ií]vel[:\s]*R\$\s*([\d.,]+)/i,
+  ]);
+  const margemRmc = extrairMargem(text, [
+    /RMC[\s\S]{0,200}?MARGEM DISPON[IÍ]VEL\*?\s*R\$\s*([\d.,]+)/i,
+    /5%\s*(?:[-–])?\s*Cart[aã]o\s+(?:Consignado|RMC)[:\s]*R\$\s*([\d.,]+)/i,
+    /Cart[aã]o\s+Consignado[:\s]*R\$\s*([\d.,]+)/i,
+  ]);
+  const margemRcc = extrairMargem(text, [
+    /RCC[\s\S]{0,200}?MARGEM DISPON[IÍ]VEL\*?\s*R\$\s*([\d.,]+)/i,
+    /5%\s*(?:[-–])?\s*Cart[aã]o\s+(?:Benef[ií]cio|RCC)[:\s]*R\$\s*([\d.,]+)/i,
+    /Cart[aã]o\s+Benef[ií]cio[:\s]*R\$\s*([\d.,]+)/i,
+  ]);
 
   // 3. Extração de Contratos Ativos
   const contratos: any[] = [];
@@ -118,4 +137,18 @@ function parseMoeda(val: string | undefined): number {
   if (!val) return 0;
   const cleaned = val.replace(/\./g, "").replace(",", ".");
   return parseFloat(cleaned) || 0;
+}
+
+function extrairMargem(text: string, patterns: RegExp[]): number {
+  for (const pattern of patterns) {
+    const match = text.match(pattern);
+    if (match?.[1]) {
+      const valor = parseMoeda(match[1]);
+      if (valor > 0) {
+        console.log(`✅ [Robô V3] Margem extraída: R$ ${valor} (regex: ${pattern.source.substring(0, 40)}...)`);
+        return valor;
+      }
+    }
+  }
+  return 0;
 }

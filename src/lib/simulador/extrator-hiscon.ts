@@ -13,6 +13,21 @@ Para não errar nos cálculos matemáticos (como calcular as parcelas pagas base
 Dentro da tag, você vai detalhar seu raciocínio passo a passo: "Contrato X começou em 01/2025. Estamos em maio de 2026. Logo, pagou 16 parcelas".
 Somente APÓS fechar a tag </analise>, retorne EXCLUSIVAMENTE o JSON estruturado.
 
+SEÇÕES DO HISCON QUE VOCÊ DEVE EXTRAIR:
+
+1. DADOS DO BENEFÍCIO: Nome, número do benefício, espécie, UF, data de despacho.
+
+2. MARGEM CONSIGNÁVEL (SEÇÃO CRÍTICA - NÃO PULE):
+   O HISCON tem uma seção chamada "Margem Consignável" ou "EMPRÉSTIMOS / RMC / RCC".
+   Para CADA tipo (Empréstimo 35%, Cartão RMC 5%, Cartão RCC 5%), procure:
+   - "MARGEM DISPONÍVEL" ou "Margem consignável disponível"
+   - O valor aparece como "R$ XXX,XX"
+   - Se disser "MARGEM DISPONÍVEL* R$ 250,00", o emprestimo_livre é 250.00
+   - Se disser "MARGEM DISPONÍVEL* R$ 0,00", o valor é 0.00
+   - IMPORTANTE: Nunca retorne 0 sem verificar. Se não encontrar a seção, diga 0, mas na <analise> explique por quê.
+
+3. CONTRATOS ATIVOS: Lista de contratos com banco, parcela, prazo, data início.
+
 ESTRUTURA OBRIGATÓRIA DO JSON (logo após fechar a tag de análise):
 {
   "dados_cliente": {
@@ -49,6 +64,7 @@ Considere o ano atual como 2026 (Mês atual: Maio de 2026). IMPORTANTE:
 1. Use o bloco <analise> para calcular as 'parcelas_pagas' (quantidade de meses desde a Data de Início até maio de 2026).
 2. Nomeie o banco QI sempre como 'QI SOCIEDADE DE CREDITO DIRETO S A'.
 3. Use o bloco <analise> para estimar o saldo devedor se não estiver explícito.
+4. Na <analise>, SEMPRE descreva o valor de margem encontrado: "Margem empréstimo: R$ XXX,XX".
 Nunca escreva nada após o final do JSON.`;
 
 export async function processarHisconV3(pdfBufferBase64: string): Promise<ResultadoExtracaoHiscon> {
