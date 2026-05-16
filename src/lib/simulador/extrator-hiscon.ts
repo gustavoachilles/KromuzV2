@@ -79,7 +79,7 @@ export async function processarHisconV3(pdfBufferBase64: string): Promise<Result
 
     // Timeout de 20s para não travar a rota toda
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 20000);
+    const timeout = setTimeout(() => controller.abort(), 30000);
 
     let response;
     try {

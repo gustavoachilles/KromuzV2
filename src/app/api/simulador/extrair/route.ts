@@ -31,8 +31,17 @@ export async function POST(req: NextRequest) {
     // 1. Tenta extrair dados via Robô (Parser Local)
     console.log("📄 [Simulador] Iniciando extração do PDF com o Robô Local...");
     let hiscon;
+    let pdfRawText = "";
+    let iaRan = false;
+    let iaResult = "";
     try {
       hiscon = await parseHisconPdf(buffer);
+      // Captura texto raw para debug
+      try {
+        const pdfParseMod: any = (await import('pdf-parse')).default || (await import('pdf-parse'));
+        const pdfData = await pdfParseMod(buffer);
+        pdfRawText = (pdfData.text || "").substring(0, 1000);
+      } catch { /* ignore */ }
       console.log(`✅ [Simulador] Robô leu o PDF com sucesso! (Contratos achados: ${hiscon.contratos_ativos.length})`);
       
       // Se o robô não achar contratos OU não achar margem, tenta IA
@@ -40,11 +49,14 @@ export async function POST(req: NextRequest) {
       if (hiscon.contratos_ativos.length === 0 || margemZero) {
         console.log(`⚠️ [Simulador] Robô incompleto (contratos: ${hiscon.contratos_ativos.length}, margem: ${margemZero ? '0' : 'OK'}). Tentando IA...`);
         const extracao = await processarHisconV3(pdfBase64);
+        iaRan = true;
         if (extracao.ok) {
           console.log("✅ [Simulador] IA completou a extração!");
+          iaResult = JSON.stringify(extracao.dados.dados_cliente?.margens);
           hiscon = extracao.dados;
         } else {
-          console.log("ℹ️ [Simulador] IA falhou. Mantendo resultado do Robô.");
+          iaResult = `FALHOU: ${extracao.erro}`;
+          console.log("ℹ️ [Simulador] IA falhou:", extracao.erro);
         }
       }
     } catch (e: any) {
@@ -130,6 +142,9 @@ export async function POST(req: NextRequest) {
         margemExtraida: hiscon.dados_cliente.margens,
         contratosExtraidos: hiscon.contratos_ativos.length,
         fonte: (hiscon as any)._fonte || "parser+ia",
+        pdfRawText: pdfRawText,
+        iaRan,
+        iaResult,
       }
     });
 
