@@ -35,15 +35,16 @@ export async function POST(req: NextRequest) {
       hiscon = await parseHisconPdf(buffer);
       console.log(`✅ [Simulador] Robô leu o PDF com sucesso! (Contratos achados: ${hiscon.contratos_ativos.length})`);
       
-      // Se o robô não achar contratos, a regex pode ter falhado. Tenta a IA silenciosamente.
-      if (hiscon.contratos_ativos.length === 0) {
-        console.log("⚠️ [Simulador] Robô encontrou 0 contratos. Tentando IA para garantir...");
+      // Se o robô não achar contratos OU não achar margem, tenta IA
+      const margemZero = (hiscon.dados_cliente.margens?.emprestimo_livre || 0) === 0;
+      if (hiscon.contratos_ativos.length === 0 || margemZero) {
+        console.log(`⚠️ [Simulador] Robô incompleto (contratos: ${hiscon.contratos_ativos.length}, margem: ${margemZero ? '0' : 'OK'}). Tentando IA...`);
         const extracao = await processarHisconV3(pdfBase64);
-        if (extracao.ok && extracao.dados.contratos_ativos.length > 0) {
-          console.log("✅ [Simulador] IA salvou o dia e encontrou os contratos!");
+        if (extracao.ok) {
+          console.log("✅ [Simulador] IA completou a extração!");
           hiscon = extracao.dados;
         } else {
-          console.log("ℹ️ [Simulador] IA também não encontrou contratos ou falhou. Mantendo resultado do Robô.");
+          console.log("ℹ️ [Simulador] IA falhou. Mantendo resultado do Robô.");
         }
       }
     } catch (e: any) {
