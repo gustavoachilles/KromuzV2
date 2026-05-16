@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
       try {
         const pdfParseMod: any = (await import('pdf-parse')).default || (await import('pdf-parse'));
         const pdfData = await pdfParseMod(buffer);
-        pdfRawText = (pdfData.text || "").substring(0, 1000);
+        pdfRawText = (pdfData.text || "").substring(0, 3000);
       } catch { /* ignore */ }
       console.log(`✅ [Simulador] Robô leu o PDF com sucesso! (Contratos achados: ${hiscon.contratos_ativos.length})`);
       
