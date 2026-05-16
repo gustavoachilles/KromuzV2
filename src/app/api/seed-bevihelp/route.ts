@@ -152,7 +152,8 @@ export async function GET() {
           await prisma.regraProdutoCredito.update({ where: { id: regraExistente.id }, data: { ...regraData, ativa: true } });
         }
 
-        logs.push(`  📋 ${b.nome} → ${prod.tipo} ${prod.taxa}% | Coef: ${coeficiente.toFixed(6)}`);
+          logs.push(`  📋 ${b.nome} → ${prod.tipo} ${prod.taxa}% | Coef: ${coeficiente.toFixed(6)} | Prazo: ${prazo}x`);
+        }
       }
     }
 
