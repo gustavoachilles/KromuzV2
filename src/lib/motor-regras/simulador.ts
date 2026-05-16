@@ -450,7 +450,34 @@ export function calcularOportunidades(
   }
 
   // Ordenar por score desc, depois valor liberado desc
-  const oportunidadesOrdenadas = oportunidades.sort((a, b) => b.score - a.score || (b.valorLiberado || 0) - (a.valorLiberado || 0));
-  
-  return { oportunidades: oportunidadesOrdenadas, contratosAtualizados: contratos };
+  oportunidades.sort((a, b) => b.score - a.score || (b.valorLiberado || 0) - (a.valorLiberado || 0));
+
+  // Deduplicação: mostra apenas a MELHOR oportunidade por banco + tipo de operação
+  // Evita mostrar 3 prazos (84x, 96x, 108x) do mesmo banco com mesma taxa
+  const seen = new Map<string, Oportunidade>();
+  for (const op of oportunidades) {
+    const key = `${op.bancoId}-${op.tipo}-${op.contratoOriginalId || "novo"}`;
+    const existing = seen.get(key);
+    if (!existing || op.valorLiberado > existing.valorLiberado) {
+      seen.set(key, op);
+    }
+  }
+  const oportunidadesDedup = Array.from(seen.values());
+
+  // Re-ordena após deduplicação
+  oportunidadesDedup.sort((a, b) => b.score - a.score || (b.valorLiberado || 0) - (a.valorLiberado || 0));
+
+  // Limita a 10 melhores por tipo para não poluir a tela
+  const porTipo = new Map<string, Oportunidade[]>();
+  for (const op of oportunidadesDedup) {
+    const list = porTipo.get(op.tipo) || [];
+    list.push(op);
+    porTipo.set(op.tipo, list);
+  }
+  const oportunidadesFinais: Oportunidade[] = [];
+  for (const [, list] of porTipo) {
+    oportunidadesFinais.push(...list.slice(0, 5)); // Top 5 por tipo
+  }
+
+  return { oportunidades: oportunidadesFinais, contratosAtualizados: contratos };
 }
