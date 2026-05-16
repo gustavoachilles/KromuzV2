@@ -61,18 +61,30 @@ export async function processarHisconV3(pdfBufferBase64: string): Promise<Result
     console.log("🤖 [IA] Chamando Google Generative AI (Gemini 2.5 Flash)...");
     const ai = new GoogleGenAI({ apiKey });
 
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: [
-        PROMPT_HISCON,
-        {
-          inlineData: {
-            data: pdfBufferBase64,
-            mimeType: "application/pdf"
+    // Timeout de 20s para não travar a rota toda
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 20000);
+
+    let response;
+    try {
+      response = await ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: [
+          PROMPT_HISCON,
+          {
+            inlineData: {
+              data: pdfBufferBase64,
+              mimeType: "application/pdf"
+            }
           }
+        ],
+        config: {
+          abortSignal: controller.signal
         }
-      ]
-    });
+      });
+    } finally {
+      clearTimeout(timeout);
+    }
 
     const text = response.text;
     if (!text) return { ok: false, erro: "Resposta vazia do modelo.", isRetryable: true };
@@ -91,22 +103,9 @@ export async function processarHisconV3(pdfBufferBase64: string): Promise<Result
   } catch (error: any) {
     console.error("❌ Erro na extração via Google SDK:", error);
     
-    // Tentar buscar a lista de modelos para entender por que o 1.5 flash não funciona
-    try {
-      const ai = new GoogleGenAI({ apiKey });
-      const modelsResponse = await ai.models.list();
-      const modelNames = [];
-      for await (const m of modelsResponse) {
-        modelNames.push(m.name);
-      }
-      console.log("✅ MODELOS DISPONÍVEIS NA SUA API KEY:", modelNames.join(", "));
-      return { 
-        ok: false, 
-        erro: `Erro na IA (${error.message}). Modelos disponíveis: ${modelNames.slice(0, 5).join(", ")}...`, 
-        isRetryable: false 
-      };
-    } catch (listError) {
-      console.error("Não foi possível listar os modelos:", listError);
+    const isAbort = error.name === "AbortError" || error.message?.includes("abort");
+    if (isAbort) {
+      return { ok: false, erro: "IA demorou demais para processar o PDF. Tente um arquivo menor.", isRetryable: false };
     }
 
     return { ok: false, erro: error.message || "Erro desconhecido na IA.", isRetryable: true };
