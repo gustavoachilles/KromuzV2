@@ -165,3 +165,4 @@ export async function GET() {
     return NextResponse.json({ error: e.message }, { status: 500 });
   }
 }
+// v2.1 - multi-prazo + portabilidade corrigida
