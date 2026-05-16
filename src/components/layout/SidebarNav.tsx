@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Brain, FileText, Layers, Settings, Calculator, BookOpen, BarChart3, Shield, Package, ScrollText, Kanban, Users, DollarSign, Target, Trophy, Upload, ArrowRightLeft, PieChart, CreditCard } from "lucide-react";
+import { Brain, FileText, Layers, Settings, Calculator, BookOpen, BarChart3, Shield, Package, ScrollText, Kanban, Users, DollarSign, Target, Trophy, Upload, ArrowRightLeft, PieChart, CreditCard, Inbox, Megaphone, RefreshCcw, UserPlus } from "lucide-react";
 import type { Permissoes } from "@/lib/permissions";
 
 export function SidebarNav({ permissoes }: { permissoes: Permissoes }) {
@@ -45,6 +45,15 @@ export function SidebarNav({ permissoes }: { permissoes: Permissoes }) {
       )}
       {p("ranking") && (
         <NavLink href="/ranking" icon={<Trophy className="h-4 w-4" />} active={pathname === "/ranking"}>Ranking</NavLink>
+      )}
+      {p("leads") && (
+        <NavLink href="/inbox" icon={<Inbox className="h-4 w-4" />} active={pathname === "/inbox"}>Inbox</NavLink>
+      )}
+      {p("leads") && (
+        <NavLink href="/recuperacao" icon={<RefreshCcw className="h-4 w-4" />} active={pathname === "/recuperacao"}>Recuperação</NavLink>
+      )}
+      {p("leads") && (
+        <NavLink href="/marketing" icon={<Megaphone className="h-4 w-4" />} active={pathname === "/marketing"}>Marketing</NavLink>
       )}
 
       {(p("simulador") || p("motor_regras") || p("roteiros") || p("mapa_port")) && (
