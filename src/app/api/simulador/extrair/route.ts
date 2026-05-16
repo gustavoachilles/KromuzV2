@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
     const targetEmpresaId = sessao.empresaId;
 
     const body = await req.json();
-    const { pdfBase64, idadeManual } = body;
+    const { pdfBase64, idadeManual, margemManual } = body;
 
     if (!pdfBase64) {
       return NextResponse.json({ error: "Parâmetro pdfBase64 é obrigatório." }, { status: 400 });
@@ -79,7 +79,7 @@ export async function POST(req: NextRequest) {
       numeroBeneficio: (hiscon.dados_cliente as any).numero_beneficio ?? null,
       possuiRepresentanteLegal: hiscon.dados_cliente.possui_representante_legal,
       dataDespachoBeneficio: ddb,
-      margemLivre: hiscon.dados_cliente.margens?.emprestimo_livre || 0,
+      margemLivre: margemManual || hiscon.dados_cliente.margens?.emprestimo_livre || 0,
       margemRmc: hiscon.dados_cliente.margens?.cartao_rmc_livre || 0,
       margemRcc: hiscon.dados_cliente.margens?.cartao_rcc_livre || 0,
     };

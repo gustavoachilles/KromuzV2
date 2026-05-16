@@ -14,6 +14,7 @@ export function UploadHiscon({ onProcessamentoCompleto, empresaId }: UploadHisco
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [idadeInput, setIdadeInput] = useState<string>("");
+  const [margemInput, setMargemInput] = useState<string>("");
 
   const handleFile = async (selectedFile: File) => {
     if (selectedFile.type !== "application/pdf") {
@@ -39,7 +40,8 @@ export function UploadHiscon({ onProcessamentoCompleto, empresaId }: UploadHisco
             body: JSON.stringify({ 
               pdfBase64: base64, 
               empresaId,
-              idadeManual: idadeInput ? Number(idadeInput) : undefined 
+              idadeManual: idadeInput ? Number(idadeInput) : undefined,
+              margemManual: margemInput ? Number(margemInput.replace(',', '.')) : undefined
             }),
           });
 
@@ -83,21 +85,39 @@ export function UploadHiscon({ onProcessamentoCompleto, empresaId }: UploadHisco
   return (
     <div className="w-full max-w-2xl mx-auto mt-8 space-y-6">
       
-      {/* Aviso e Input de Idade */}
-      <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-4 flex flex-col sm:flex-row items-center gap-4 justify-between">
-        <div className="text-sm text-indigo-900">
-          <p className="font-semibold mb-1">Idade do Cliente (Opcional)</p>
-          <p className="opacity-80">Como o HISCON não traz a idade, se você não preencher, o motor calculará com o padrão de <strong>60 anos</strong>.</p>
+      {/* Inputs Opcionais */}
+      <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-4 space-y-3">
+        <div className="flex flex-col sm:flex-row items-center gap-4 justify-between">
+          <div className="text-sm text-indigo-900">
+            <p className="font-semibold mb-1">Idade do Cliente (Opcional)</p>
+            <p className="opacity-80">Padrão: <strong>60 anos</strong> se não preencher.</p>
+          </div>
+          <div className="w-full sm:w-32">
+            <input 
+              type="number" 
+              placeholder="Ex: 65" 
+              value={idadeInput}
+              onChange={(e) => setIdadeInput(e.target.value)}
+              disabled={loading}
+              className="w-full px-3 py-2 border border-indigo-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white text-indigo-900 placeholder:text-indigo-300 font-medium text-center"
+            />
+          </div>
         </div>
-        <div className="w-full sm:w-32">
-          <input 
-            type="number" 
-            placeholder="Ex: 65" 
-            value={idadeInput}
-            onChange={(e) => setIdadeInput(e.target.value)}
-            disabled={loading}
-            className="w-full px-3 py-2 border border-indigo-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white text-indigo-900 placeholder:text-indigo-300 font-medium text-center"
-          />
+        <div className="flex flex-col sm:flex-row items-center gap-4 justify-between border-t border-indigo-100 pt-3">
+          <div className="text-sm text-indigo-900">
+            <p className="font-semibold mb-1">Margem Livre (Opcional)</p>
+            <p className="opacity-80">Se a IA não extrair, <strong>digite o valor manualmente</strong>.</p>
+          </div>
+          <div className="w-full sm:w-32">
+            <input 
+              type="text" 
+              placeholder="Ex: 250" 
+              value={margemInput}
+              onChange={(e) => setMargemInput(e.target.value)}
+              disabled={loading}
+              className="w-full px-3 py-2 border border-indigo-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white text-indigo-900 placeholder:text-indigo-300 font-medium text-center"
+            />
+          </div>
         </div>
       </div>
 
