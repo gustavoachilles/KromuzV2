@@ -128,6 +128,37 @@ export async function POST(req: NextRequest) {
     const { oportunidades, contratosAtualizados } = calcularOportunidades(clienteSimulacao, contratosAtivos, regras, tabelas, bancos);
     console.log("🏁 [Simulador] Simulação concluída!");
 
+    // Debug: Análise de portabilidade por contrato
+    const portRegras = regras.filter(r => r.tipoOperacao === "PORTABILIDADE");
+    const portRefinRegras = regras.filter(r => r.tipoOperacao === "PORTABILIDADE_REFIN");
+    const portOps = oportunidades.filter(o => o.tipo === "PORTABILIDADE" || o.tipo === "PORTABILIDADE_REFIN");
+    
+    const debugPort = contratosAtivos.map(c => ({
+      contrato: c.bancoNome,
+      parcela: c.valorParcela,
+      taxa: c.taxaJuros,
+      prazoRestante: c.prazoRestante,
+      saldoDevedor: c.saldoDevedorEstimado,
+      opsGeradas: portOps.filter(o => o.contratoOriginalId === c.id).map(o => ({
+        banco: o.bancoNome,
+        tipo: o.tipo,
+        troco: o.trocoEstimado,
+        prazo: o.prazo
+      })),
+      regrasPortChecadas: portRegras.map(r => {
+        const tab = tabelas.find(t => t.bancoId === r.bancoId && t.produtoId === r.produtoId && t.prazo >= c.prazoRestante);
+        return {
+          banco: r.bancoNome,
+          temTabela: !!tab,
+          tabelaPrazo: tab?.prazo,
+          coef: tab?.coeficiente,
+          liberado: tab ? c.valorParcela / tab.coeficiente : 0,
+          troco: tab ? (c.valorParcela / tab.coeficiente) - c.saldoDevedorEstimado : 0,
+          mesmoBanco: c.bancoNome.toUpperCase().includes(r.bancoNome.toUpperCase()) || r.bancoNome.toUpperCase().includes(c.bancoNome.toUpperCase()),
+        };
+      })
+    }));
+
     return NextResponse.json({
       cliente: {
         ...clienteSimulacao,
@@ -139,12 +170,16 @@ export async function POST(req: NextRequest) {
         regrasAtivas: regras.length,
         tabelasAtivas: tabelas.length,
         bancosAtivos: bancos.length,
+        portRegras: portRegras.length,
+        portRefinRegras: portRefinRegras.length,
+        opsPortGeradas: portOps.length,
         margemExtraida: hiscon.dados_cliente.margens,
         contratosExtraidos: hiscon.contratos_ativos.length,
         fonte: (hiscon as any)._fonte || "parser+ia",
         pdfRawText: pdfRawText,
         iaRan,
         iaResult,
+        debugPortabilidade: debugPort,
       }
     });
 
