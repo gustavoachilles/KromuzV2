@@ -466,6 +466,15 @@ export function calcularOportunidades(
     }
   }
 
+  // Debug: mostra TODAS as oportunidades geradas antes do dedup
+  console.log(`📊 [MOTOR] Total oportunidades ANTES dedup: ${oportunidades.length}`);
+  const tipoCount: Record<string, number> = {};
+  for (const op of oportunidades) {
+    tipoCount[op.tipo] = (tipoCount[op.tipo] || 0) + 1;
+  }
+  console.log(`📊 [MOTOR] Por tipo:`, JSON.stringify(tipoCount));
+  console.log(`📊 [MOTOR] Bancos únicos:`, [...new Set(oportunidades.map(o => o.bancoNome))].join(', '));
+
   // Ordenar por score desc, depois valor liberado desc
   oportunidades.sort((a, b) => b.score - a.score || (b.valorLiberado || 0) - (a.valorLiberado || 0));
 
@@ -493,7 +502,7 @@ export function calcularOportunidades(
   }
   const oportunidadesFinais: Oportunidade[] = [];
   for (const [, list] of porTipo) {
-    oportunidadesFinais.push(...list.slice(0, 5)); // Top 5 por tipo
+    oportunidadesFinais.push(...list.slice(0, 50)); // Sem limite artificial
   }
 
   return { oportunidades: oportunidadesFinais, contratosAtualizados: contratos };
