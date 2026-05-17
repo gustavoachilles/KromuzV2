@@ -195,7 +195,10 @@ export function calcularOportunidades(
 
       for (const contrato of contratos) {
         // Regra de Ouro: Portabilidade só faz sentido para bancos diferentes
-        if (isMesmoBanco(contrato.bancoNome, regra.bancoNome)) continue;
+        if (isMesmoBanco(contrato.bancoNome, regra.bancoNome)) {
+          console.log(`  ❌ SKIP ${regra.bancoNome} ← ${contrato.bancoNome}: mesmo banco`);
+          continue;
+        }
 
         // Regra de Ouro 2: Bloqueio de Origem (Ex: C6 não compra de Facta)
         const blacklist = Object.keys(RESTRICOES_ORIGEM).find(k => isMesmoBanco(k, regra.bancoNome));
@@ -203,17 +206,31 @@ export function calcularOportunidades(
           const isBloqueado = RESTRICOES_ORIGEM[blacklist].some(bloqueado => 
             contrato.bancoNome.toUpperCase().includes(bloqueado)
           );
-          if (isBloqueado) continue;
+          if (isBloqueado) {
+            console.log(`  ❌ SKIP ${regra.bancoNome} ← ${contrato.bancoNome}: blacklist [${RESTRICOES_ORIGEM[blacklist].join(',')}]`);
+            continue;
+          }
         }
 
-        if (regra.portParcelasMinPagas && contrato.parcelasPagas < regra.portParcelasMinPagas) continue;
-        if (regra.taxaMinimaAm && contrato.taxaJuros < regra.taxaMinimaAm) continue;
+        if (regra.portParcelasMinPagas && contrato.parcelasPagas < regra.portParcelasMinPagas) {
+          console.log(`  ❌ SKIP ${regra.bancoNome} ← ${contrato.bancoNome}: parcelas ${contrato.parcelasPagas} < min ${regra.portParcelasMinPagas}`);
+          continue;
+        }
+        if (regra.taxaMinimaAm && contrato.taxaJuros < regra.taxaMinimaAm) {
+          console.log(`  ❌ SKIP ${regra.bancoNome} ← ${contrato.bancoNome}: taxa ${contrato.taxaJuros} < min ${regra.taxaMinimaAm}`);
+          continue;
+        }
         
         const tabPort = tabelas.find(t => 
           t.bancoId === regra.bancoId && 
           t.produtoId === regra.produtoId &&
           t.prazo >= contrato.prazoRestante
         );
+
+        if (!tabPort) {
+          console.log(`  ❌ SKIP ${regra.bancoNome} ← ${contrato.bancoNome}: sem tabela (prazoRestante=${contrato.prazoRestante}, bancoId=${regra.bancoId}, produtoId=${regra.produtoId})`);
+          console.log(`     Tabelas disponíveis para este banco/produto:`, tabelas.filter(t => t.bancoId === regra.bancoId).map(t => `${t.produtoId}/${t.prazo}x`));
+        }
 
           if (tabPort) {
             // Busca fator_saldo do banco de origem
@@ -227,19 +244,19 @@ export function calcularOportunidades(
             const novoValorLiberado = contrato.valorParcela / tabPort.coeficiente;
             
             const trocoBruto = novoValorLiberado - saldoParaQuitacao;
-            // O Promosys já embute IOF e taxas no coeficiente do banco (Ex: 0.023105)
-            // Portanto, o Troco é exatamente Bruto - Saldo.
             const trocoLiquido = trocoBruto;
             
-            // Taxa Ponderada = Média ponderada entre a dívida velha (taxa original) e o dinheiro novo (taxa nova)
             const taxaPonderada = trocoBruto > 0 
               ? ((saldoParaQuitacao * contrato.taxaJuros) + (trocoBruto * tabPort.taxaJurosMensal)) / novoValorLiberado
               : tabPort.taxaJurosMensal;
 
+            console.log(`  🔍 ${regra.bancoNome} ← ${contrato.bancoNome}: tabela=${tabPort.prazo}x, coef=${tabPort.coeficiente}, saldo=${saldoParaQuitacao.toFixed(2)}, liberado=${novoValorLiberado.toFixed(2)}, troco=${trocoLiquido.toFixed(2)}`);
+
             if (trocoLiquido >= (regra.trocoMinimoLiberado ?? 0)) {
-              // Pontua mais alto se a taxa de origem for maior que a destino
               const taxaReduzida = contrato.taxaJuros > tabPort.taxaJurosMensal;
               const score = taxaReduzida ? 100 : 80;
+
+              console.log(`  ✅ MATCH ${regra.bancoNome} ← ${contrato.bancoNome}: troco R$${trocoLiquido.toFixed(2)} >= min R$${regra.trocoMinimoLiberado}`);
 
               oportunidades.push({
                 tipo: "PORTABILIDADE",
@@ -260,6 +277,8 @@ export function calcularOportunidades(
                   `Taxa Ponderada: ${taxaPonderada.toFixed(2)}% a.m.`
                 ]
               });
+            } else {
+              console.log(`  ❌ SKIP ${regra.bancoNome} ← ${contrato.bancoNome}: troco ${trocoLiquido.toFixed(2)} < min ${regra.trocoMinimoLiberado}`);
             }
           }
       }
