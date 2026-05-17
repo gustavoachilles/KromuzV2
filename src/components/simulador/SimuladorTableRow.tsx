@@ -36,11 +36,17 @@ export function SimuladorTableRow({ contrato, oportunidades, onOpenInsight, clie
 
   const opsModalidade = opsValidas.filter(op => op.tipo === modalidade);
   
-  // CORRIGIDO: Mostra TODOS os bancos disponíveis para este contrato (não filtra por modalidade)
+  // CORRIGIDO: Mostra TODOS os bancos com melhor troco estimado, ordenados do maior troco para o menor
   const bancosDisp = useMemo(() => {
-    const mapa = new Map<string, string>();
-    opsValidas.forEach(op => mapa.set(op.bancoId, op.bancoNome));
-    return Array.from(mapa.entries()).map(([id, nome]) => ({ id, nome }));
+    const mapa = new Map<string, { id: string; nome: string; melhorTroco: number; taxa: number }>();
+    opsValidas.forEach(op => {
+      const existing = mapa.get(op.bancoId);
+      const troco = op.trocoEstimado || 0;
+      if (!existing || troco > existing.melhorTroco) {
+        mapa.set(op.bancoId, { id: op.bancoId, nome: op.bancoNome, melhorTroco: troco, taxa: op.taxaJuros });
+      }
+    });
+    return Array.from(mapa.values()).sort((a, b) => b.melhorTroco - a.melhorTroco);
   }, [opsValidas]);
 
   useEffect(() => {
@@ -179,7 +185,9 @@ export function SimuladorTableRow({ contrato, oportunidades, onOpenInsight, clie
                   className="w-full bg-white border border-slate-200 rounded-md px-3 py-1.5 text-sm font-medium focus:ring-2 focus:ring-indigo-500 outline-none"
                 >
                   {bancosDisp.map(b => (
-                    <option key={b.id} value={b.id}>{b.nome}</option>
+                    <option key={b.id} value={b.id}>
+                      {b.nome} — R$ {b.melhorTroco.toFixed(0)} ({b.taxa.toFixed(2)}%)
+                    </option>
                   ))}
                 </select>
               </div>
