@@ -233,30 +233,24 @@ export function calcularOportunidades(
         }
 
           if (tabPort) {
-            // Busca fator_saldo do banco de origem
-            const bancoOrigem = bancos.find(b => 
-              contrato.bancoNome.toUpperCase().includes(b.nome.toUpperCase()) ||
-              b.nome.toUpperCase().includes(contrato.bancoNome.toUpperCase())
-            );
-            const fatorSaldo = bancoOrigem?.fatorSaldo ?? 1.0;
-            
-            const saldoParaQuitacao = contrato.saldoDevedorEstimado * fatorSaldo;
+            // Promosys lógica: Saldo Devedor = PV total das parcelas restantes (sem fator de redução)
+            // O fatorSaldo só é usado quando estimamos saldo a partir do valor ORIGINAL do contrato
+            // Quando já temos o PV calculado, usamos ele direto
+            const saldoParaQuitacao = contrato.saldoDevedorEstimado;
             const novoValorLiberado = contrato.valorParcela / tabPort.coeficiente;
             
-            const trocoBruto = novoValorLiberado - saldoParaQuitacao;
-            const trocoLiquido = trocoBruto;
+            const trocoLiquido = novoValorLiberado - saldoParaQuitacao;
             
-            const taxaPonderada = trocoBruto > 0 
-              ? ((saldoParaQuitacao * contrato.taxaJuros) + (trocoBruto * tabPort.taxaJurosMensal)) / novoValorLiberado
+            // Taxa Ponderada (Promosys): média ponderada entre dívida velha e dinheiro novo
+            const taxaPonderada = trocoLiquido > 0 
+              ? ((saldoParaQuitacao * contrato.taxaJuros) + (trocoLiquido * tabPort.taxaJurosMensal)) / novoValorLiberado
               : tabPort.taxaJurosMensal;
 
-            console.log(`  🔍 ${regra.bancoNome} ← ${contrato.bancoNome}: tabela=${tabPort.prazo}x, coef=${tabPort.coeficiente}, saldo=${saldoParaQuitacao.toFixed(2)}, liberado=${novoValorLiberado.toFixed(2)}, troco=${trocoLiquido.toFixed(2)}`);
+            console.log(`  🔍 PORT ${regra.bancoNome} ← ${contrato.bancoNome}: coef=${tabPort.coeficiente.toFixed(6)}, saldo=${saldoParaQuitacao.toFixed(2)}, liberado=${novoValorLiberado.toFixed(2)}, troco=${trocoLiquido.toFixed(2)}`);
 
             if (trocoLiquido >= (regra.trocoMinimoLiberado ?? 0)) {
               const taxaReduzida = contrato.taxaJuros > tabPort.taxaJurosMensal;
               const score = taxaReduzida ? 100 : 80;
-
-              console.log(`  ✅ MATCH ${regra.bancoNome} ← ${contrato.bancoNome}: troco R$${trocoLiquido.toFixed(2)} >= min R$${regra.trocoMinimoLiberado}`);
 
               oportunidades.push({
                 tipo: "PORTABILIDADE",
@@ -388,23 +382,15 @@ export function calcularOportunidades(
         );
 
         if (tab) {
-          const bancoOrigem = bancos.find(b => 
-            contrato.bancoNome.toUpperCase().includes(b.nome.toUpperCase()) ||
-            b.nome.toUpperCase().includes(contrato.bancoNome.toUpperCase())
-          );
-          const fatorSaldo = bancoOrigem?.fatorSaldo ?? 1.0;
-
-          const saldoParaQuitacao = contrato.saldoDevedorEstimado * fatorSaldo;
+          // Promosys lógica: Saldo Devedor = PV das parcelas restantes (sem fator)
+          const saldoParaQuitacao = contrato.saldoDevedorEstimado;
           const novoLiberado = contrato.valorParcela / tab.coeficiente;
           
-          const trocoBruto = novoLiberado - saldoParaQuitacao;
-          // O Promosys já embute IOF e taxas no coeficiente do banco (Ex: 0.023105)
-          // Portanto, o Troco é exatamente Bruto - Saldo.
-          const trocoLiquido = trocoBruto;
+          const trocoLiquido = novoLiberado - saldoParaQuitacao;
           
-          // Taxa Ponderada = Média ponderada entre a dívida velha (taxa original) e o dinheiro novo (taxa nova)
-          const taxaPonderada = trocoBruto > 0 
-            ? ((saldoParaQuitacao * contrato.taxaJuros) + (trocoBruto * tab.taxaJurosMensal)) / novoLiberado
+          // Taxa Ponderada (Promosys)
+          const taxaPonderada = trocoLiquido > 0 
+            ? ((saldoParaQuitacao * contrato.taxaJuros) + (trocoLiquido * tab.taxaJurosMensal)) / novoLiberado
             : tab.taxaJurosMensal;
 
           if (trocoLiquido >= (regra.trocoMinimoLiberado ?? 0)) {
