@@ -17,7 +17,12 @@ export async function POST(req: Request) {
     const lastMessage = messages[messages.length - 1];
     
     // 1. Busca contexto via Biblioteca Central de RAG
-    const contextoStr = await getKnowledgeContext(lastMessage.content);
+    let contextoStr = "";
+    try {
+      contextoStr = await getKnowledgeContext(lastMessage.content);
+    } catch (ragError) {
+      console.warn("⚠️ RAG falhou, continuando sem contexto:", ragError);
+    }
 
     const systemPrompt = `Você é o Especialista Sênior Kromuz, um oráculo infalível de crédito consignado. Você vai analisar manuais para encontrar quais bancos atendem o perfil do cliente.
 
@@ -39,32 +44,42 @@ SUA RESPOSTA FINAL:
 - Se NENHUM banco aprovar, diga que não existem opções.
 
 CONTEXTO DOS MANUAIS COMPLETOS:
-${contextoStr}`;
+${contextoStr || "Nenhum manual encontrado no momento. Use seu conhecimento geral sobre crédito consignado INSS."}`;
 
-    // 4. Gerar resposta via OpenAI (GPT-4o mini)
-    const chatRes = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: lastMessage.content }
-        ],
-        temperature: 0.1
-      })
-    });
-
-    const chatData = await chatRes.json();
+    // Usa Google Gemini (GOOGLE_GENERATIVE_AI_API_KEY)
+    const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY || process.env.GEMINI_API_KEY;
     
-    if (chatData.error) {
-      throw new Error(`OpenAI API Error: ${chatData.error.message}`);
+    if (!apiKey) {
+      throw new Error("Nenhuma API key configurada (GOOGLE_GENERATIVE_AI_API_KEY ou GEMINI_API_KEY)");
     }
 
-    let aiContent = chatData.choices[0].message.content;
+    const geminiRes = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [
+            {
+              role: "user",
+              parts: [{ text: `${systemPrompt}\n\n---\n\nPergunta do operador:\n${lastMessage.content}` }]
+            }
+          ],
+          generationConfig: {
+            temperature: 0.1,
+            maxOutputTokens: 2048,
+          }
+        })
+      }
+    );
+
+    const geminiData = await geminiRes.json();
+    
+    if (geminiData.error) {
+      throw new Error(`Gemini API Error: ${geminiData.error.message}`);
+    }
+
+    let aiContent = geminiData.candidates?.[0]?.content?.parts?.[0]?.text || "Sem resposta da IA.";
 
     // Remove o bloco de raciocínio invisível antes de enviar para o front-end
     aiContent = aiContent.replace(/<analise>[\s\S]*?<\/analise>/gi, '').trim();
@@ -75,4 +90,3 @@ ${contextoStr}`;
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
-

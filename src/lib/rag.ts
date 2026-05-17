@@ -2,28 +2,41 @@ import { prisma } from "@/lib/prisma";
 
 export async function getKnowledgeContext(query: string) {
   try {
-    // 1. Gerar o embedding da pergunta (OpenAI)
-    let queryEmbedding: number[] = [];
-    if (process.env.OPENAI_API_KEY) {
-      const embRes = await fetch('https://api.openai.com/v1/embeddings', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          model: 'text-embedding-3-small',
-          input: query,
-          dimensions: 768
-        })
-      });
-      const embData = await embRes.json();
-      if (!embData.error) {
-        queryEmbedding = embData.data[0].embedding;
-      }
+    const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY || process.env.GEMINI_API_KEY;
+    
+    if (!apiKey) {
+      console.warn("⚠️ [RAG] Sem API key para embeddings");
+      return "";
     }
 
-    if (queryEmbedding.length !== 768) return "";
+    // 1. Gerar o embedding da pergunta (Google Gemini)
+    let queryEmbedding: number[] = [];
+    
+    const embRes = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent?key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: "models/text-embedding-004",
+          content: { parts: [{ text: query }] },
+          outputDimensionality: 768
+        })
+      }
+    );
+    
+    const embData = await embRes.json();
+    if (embData.error) {
+      console.warn("⚠️ [RAG] Embedding falhou:", embData.error.message);
+      return "";
+    }
+    
+    queryEmbedding = embData.embedding?.values || [];
+
+    if (queryEmbedding.length !== 768) {
+      console.warn(`⚠️ [RAG] Embedding retornou ${queryEmbedding.length} dimensões (esperava 768)`);
+      return "";
+    }
 
     // 2. Busca Híbrida
     const queryText = query.toLowerCase();
