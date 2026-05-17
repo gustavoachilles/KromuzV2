@@ -84,7 +84,8 @@ ${contextoStr || "Nenhum manual encontrado para esta pesquisa. Informe ao operad
           ],
           generationConfig: {
             temperature: 0.1,
-            maxOutputTokens: 2048,
+            maxOutputTokens: 4096,
+            thinkingConfig: { thinkingBudget: 0 }
           }
         })
       }
@@ -96,10 +97,21 @@ ${contextoStr || "Nenhum manual encontrado para esta pesquisa. Informe ao operad
       throw new Error(`Gemini API Error: ${geminiData.error.message}`);
     }
 
-    let aiContent = geminiData.candidates?.[0]?.content?.parts?.[0]?.text || "Sem resposta da IA.";
+    let aiContent = geminiData.candidates?.[0]?.content?.parts?.[0]?.text || "";
+    
+    // Se o modelo retornou múltiplas parts (thinking + response), pegar a última
+    const parts = geminiData.candidates?.[0]?.content?.parts || [];
+    if (parts.length > 1) {
+      aiContent = parts[parts.length - 1]?.text || aiContent;
+    }
 
-    // Remove o bloco de raciocínio invisível antes de enviar para o front-end
+    // Remove blocos de raciocínio (tags e qualquer prefixo de análise)
     aiContent = aiContent.replace(/<analise>[\s\S]*?<\/analise>/gi, '').trim();
+    aiContent = aiContent.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+    
+    if (!aiContent) {
+      aiContent = "Não consegui gerar uma análise. Tente reformular a pergunta.";
+    }
 
     return NextResponse.json({ text: aiContent });
   } catch (error: any) {
