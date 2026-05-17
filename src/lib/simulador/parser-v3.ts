@@ -128,7 +128,10 @@ export async function parseHisconPdf(buffer: Buffer): Promise<ExtratoHisconRaw> 
         parcelas_pagas: Math.min(parcelasPagas, parcelas),
         prazo_total: parcelas,
         saldo_devedor_estimado: saldoEstimado,
-        data_inicio: `${anoInicio}-${String(mesInicio).padStart(2, '0')}-01`
+        data_inicio: `${anoInicio}-${String(mesInicio).padStart(2, '0')}-01`,
+        data_fim: dataFim ? `20${dataFim.split('/')[1].slice(-2)}-${dataFim.split('/')[0]}-01` : null,
+        valor_emprestado: valorEmprestado,
+        especie: especie,
       });
     }
   }

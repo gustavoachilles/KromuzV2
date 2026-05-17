@@ -130,10 +130,14 @@ export function SimuladorTableRow({ contrato, oportunidades, onOpenInsight, clie
           {contrato.bancoNome}
         </td>
         <td className="p-3 text-sm text-slate-600">
-          N/D
+          {contrato.especieOriginal || "N/D"}
         </td>
-        <td className="p-3 text-sm text-slate-600 text-center">-</td>
-        <td className="p-3 text-sm text-slate-600 text-center">-</td>
+        <td className="p-3 text-sm text-slate-600 text-center">
+          {contrato.dataInicio ? new Date(contrato.dataInicio).toLocaleDateString('pt-BR', { month: '2-digit', year: 'numeric' }) : "-"}
+        </td>
+        <td className="p-3 text-sm text-slate-600 text-center">
+          {contrato.dataFim ? new Date(contrato.dataFim).toLocaleDateString('pt-BR', { month: '2-digit', year: 'numeric' }) : "-"}
+        </td>
         <td className="p-3 text-sm text-slate-600 text-center">-</td>
         <td className="p-3 text-sm text-slate-600 text-center">-</td>
         <td className="p-3 text-sm font-medium text-brand text-center">

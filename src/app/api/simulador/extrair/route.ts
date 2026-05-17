@@ -105,7 +105,10 @@ export async function POST(req: NextRequest) {
       taxaJuros: c.taxa_juros_mensal || c.interest_monthly || c.interest_rate || 1.66,
       saldoDevedorEstimado: c.saldo_devedor_estimado || c.amount_loaned || 0,
       prazoRestante: (c.prazo_total || c.number_of_installments || 84) - (c.parcelas_pagas || c.installments_paid || 0),
-      especieOriginal: hiscon.dados_cliente.especie_beneficio?.toString() || "",
+      especieOriginal: (c.especie || hiscon.dados_cliente.especie_beneficio)?.toString() || "",
+      dataInicio: c.data_inicio || c.start_date || null,
+      dataFim: c.data_fim || c.end_date || null,
+      valorContrato: c.valor_emprestado || c.amount_loaned || 0,
     }));
 
     // 3. Busca Regras e Tabelas do Banco de Dados

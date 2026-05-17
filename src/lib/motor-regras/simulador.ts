@@ -25,6 +25,11 @@ export interface ContratoAtivo {
   saldoDevedorEstimado: number;
   prazoRestante: number;
   especieOriginal?: string;
+  dataInicio?: string;
+  dataFim?: string;
+  averbacao?: string;
+  digitacao?: string;
+  valorContrato?: number;
 }
 
 export interface Oportunidade {
