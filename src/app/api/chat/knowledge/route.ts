@@ -65,9 +65,6 @@ ${contextoStr}`;
     }
 
     let aiContent = chatData.choices[0].message.content;
-    
-    const fs = require('fs');
-    fs.writeFileSync('DEBUG_RAW_RESPONSE.txt', aiContent);
 
     // Remove o bloco de raciocínio invisível antes de enviar para o front-end
     aiContent = aiContent.replace(/<analise>[\s\S]*?<\/analise>/gi, '').trim();

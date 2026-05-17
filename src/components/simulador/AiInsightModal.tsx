@@ -52,31 +52,22 @@ export function AiInsightModal({ isOpen, onClose, context }: AiInsightModalProps
         })
       });
 
-      if (!res.ok) throw new Error("Erro ao consultar IA");
-
-      const reader = res.body?.getReader();
-      if (!reader) throw new Error("Falha ao ler stream de dados da IA");
-      
-      const decoder = new TextDecoder();
-      
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        const chunk = decoder.decode(value);
-        const lines = chunk.split("\n");
-        for (const line of lines) {
-          if (line.startsWith('0:')) {
-            try {
-              const text = JSON.parse(line.substring(2));
-              setInsight(prev => prev + text);
-            } catch (e) {}
-          } else if (!line.includes(':')) {
-            setInsight(prev => prev + line);
-          }
-        }
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({ error: `HTTP ${res.status}` }));
+        throw new Error(errData.error || `Erro ${res.status}`);
       }
-    } catch (err) {
-      setInsight("Desculpe, não consegui analisar esta regra no momento. Por favor, consulte o manual BeviHelp manualmente.");
+
+      const data = await res.json();
+      
+      if (data.text) {
+        setInsight(data.text);
+      } else if (data.error) {
+        setInsight(`⚠️ Erro: ${data.error}`);
+      } else {
+        setInsight("Resposta inesperada da API.");
+      }
+    } catch (err: any) {
+      setInsight(`⚠️ ${err.message || "Não consegui analisar esta regra. Consulte o manual BeviHelp manualmente."}`);
     } finally {
       setIsLoading(false);
     }
@@ -138,7 +129,7 @@ export function AiInsightModal({ isOpen, onClose, context }: AiInsightModalProps
                       Espécie {context.clienteEspecie}
                     </div>
                   )}
-                  {context.clienteIdade && (
+                  {context.clienteIdade && context.clienteIdade > 0 && (
                     <div className="px-3 py-1 bg-white/5 border border-white/5 rounded-full text-[10px] font-bold text-zinc-400 uppercase tracking-tighter">
                       {context.clienteIdade} Anos
                     </div>
