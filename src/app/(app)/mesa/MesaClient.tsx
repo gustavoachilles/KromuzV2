@@ -63,6 +63,8 @@ export function MesaClient({ sessao, propostas, leadsHoje, ultimasPropostas=[], 
   const router = useRouter();
   const [loading, setLoading] = useState<string|null>(null);
   const [propostasState, setPropostasState] = useState(propostas);
+  const [porPagina, setPorPagina] = useState(10);
+  const [pagina, setPagina] = useState(1);
 
   const saudacao = (() => { const h = new Date().getHours(); return h<12?"Bom dia":h<18?"Boa tarde":"Boa noite"; })();
   const emAndamento = propostasState.filter(p => !["PAGA","CANCELADA"].includes(p.status));
@@ -300,9 +302,20 @@ export function MesaClient({ sessao, propostas, leadsHoje, ultimasPropostas=[], 
 
         {/* Últimas Propostas Digitadas */}
         <section className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6">
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
             <h2 className="text-lg font-bold flex items-center gap-2"><List className="h-5 w-5 text-sky-500"/>Últimas Propostas Digitadas</h2>
-            <span className="text-xs text-zinc-400">{ultimasPropostas.length} registros</span>
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 text-xs">
+                <span className="text-zinc-500">Exibir:</span>
+                {[5,10,20,50,100].map(n => (
+                  <button key={n} onClick={() => { setPorPagina(n); setPagina(1); }}
+                    className={`px-2.5 py-1 rounded-lg font-semibold transition ${porPagina===n ? "bg-sky-500 text-white" : "bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200"}`}>
+                    {n}
+                  </button>
+                ))}
+              </div>
+              <span className="text-xs text-zinc-400">{ultimasPropostas.length} total</span>
+            </div>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-[11px]">
@@ -323,7 +336,7 @@ export function MesaClient({ sessao, propostas, leadsHoje, ultimasPropostas=[], 
                 <th className="text-left px-3 py-2 font-medium text-zinc-500">Tel. Cliente</th>
               </tr></thead>
               <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
-                {ultimasPropostas.map((p, idx) => {
+                {ultimasPropostas.slice((pagina-1)*porPagina, pagina*porPagina).map((p, idx) => {
                   const statusColors: Record<string,string> = {
                     PAGA: "bg-emerald-100 text-emerald-700",
                     APROVADA: "bg-green-100 text-green-700",
@@ -341,7 +354,7 @@ export function MesaClient({ sessao, propostas, leadsHoje, ultimasPropostas=[], 
                   };
                   return (
                     <tr key={p.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/30 cursor-pointer" onClick={() => router.push(`/esteira?proposta=${p.id}`)}>
-                      <td className="px-3 py-2 text-zinc-400 tabular-nums">{idx + 1}</td>
+                      <td className="px-3 py-2 text-zinc-400 tabular-nums">{(pagina-1)*porPagina + idx + 1}</td>
                       <td className="px-3 py-2 font-semibold whitespace-nowrap max-w-[180px] truncate">{p.clienteNome}</td>
                       <td className="px-3 py-2 tabular-nums text-zinc-500 whitespace-nowrap">{p.clienteCpf || "—"}</td>
                       <td className="px-3 py-2 text-center tabular-nums whitespace-nowrap">{new Date(p.createdAt).toLocaleDateString("pt-BR")}</td>
@@ -371,6 +384,22 @@ export function MesaClient({ sessao, propostas, leadsHoje, ultimasPropostas=[], 
               </tbody>
             </table>
           </div>
+          {/* Paginação */}
+          {ultimasPropostas.length > porPagina && (
+            <div className="flex items-center justify-between mt-4 pt-4 border-t border-zinc-100 dark:border-zinc-800">
+              <button onClick={() => setPagina(p => Math.max(1, p-1))} disabled={pagina===1}
+                className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 transition disabled:opacity-30">
+                ← Anterior
+              </button>
+              <span className="text-xs text-zinc-500 tabular-nums">
+                Página {pagina} de {Math.ceil(ultimasPropostas.length / porPagina)} · Exibindo {(pagina-1)*porPagina+1}–{Math.min(pagina*porPagina, ultimasPropostas.length)} de {ultimasPropostas.length}
+              </span>
+              <button onClick={() => setPagina(p => Math.min(Math.ceil(ultimasPropostas.length / porPagina), p+1))} disabled={pagina >= Math.ceil(ultimasPropostas.length / porPagina)}
+                className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 transition disabled:opacity-30">
+                Próxima →
+              </button>
+            </div>
+          )}
         </section>
 
         {/* Ações Rápidas */}
