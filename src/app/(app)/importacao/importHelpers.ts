@@ -1,14 +1,14 @@
 // Helpers para o importador inteligente
 export const FIELD_MAP: Record<string, string[]> = {
-  nome: ["nome","cliente","name","nome_completo","nomecompleto","nomedocliente","nomebeneficiario","nomebeneficiario"],
-  cpf: ["cpf","documento","cpf_cnpj","doc","cpf/cnpj","nr_cpf","cpfcliente","cpf"],
-  telefone: ["telefone","celular","whatsapp","fone","phone","cel","tel","contato","nr_telefone","telefone"],
+  nome: ["nome","cliente","name","nome_completo","nomecompleto","nomedocliente","nomebeneficiario"],
+  cpf: ["cpf","documento","cpf_cnpj","doc","cpf/cnpj","nr_cpf","cpfcliente"],
+  telefone: ["telefone","celular","whatsapp","fone","phone","cel","tel","contato","nr_telefone"],
   email: ["email","e-mail","correio","mail"],
   uf: ["uf","estado","sigla_uf","sg_uf"],
   cidade: ["cidade","municipio","city","nm_municipio"],
-  numeroBeneficio: ["beneficio","nb","numero_beneficio","mat","matricula","nr_beneficio","numbeneficio","ade"],
+  numeroBeneficio: ["beneficio","nb","numero_beneficio","mat","matricula","nr_beneficio","numbeneficio"],
   especieBeneficio: ["especie","esp","cod_especie","especiebeneficio"],
-  margemLivre: ["margem","margem_livre","vlr_margem","margemlivre","margemlivre","vl_margem_livre","valorprincipal","valormargem"],
+  margemLivre: ["margem","margem_livre","vlr_margem","margemlivre","vl_margem_livre","valorprincipal"],
   margemRmc: ["margem_rmc","rmc","cartao_rmc","vl_margem_rmc"],
   margemRcc: ["margem_rcc","rcc","cartao_rcc","vl_margem_rcc"],
   bancoAtual: ["banco","banco_atual","inst_financeira","bancoorigem"],
@@ -16,6 +16,15 @@ export const FIELD_MAP: Record<string, string[]> = {
   saldoDevedor: ["saldo","saldo_devedor","vlr_saldo","vl_saldo","saldodevedor"],
   tipoOperacao: ["tipo","operacao","tipo_operacao","produto","tipodeoperacao","tipodeoperação"],
   origem: ["origem","canal","source","fonte"],
+  dataDigitacao: ["datadigitacao","datadigitação","data_digitacao","dtdigitacao","digitacao"],
+  codigoPropostaBanco: ["ade","contrato","proposta","nr_contrato","codigoproposta","numeroproposta"],
+  promotora: ["promotora","loja","correspondente","subestabelecida"],
+  convenioNome: ["convenio","convênio","conv","convenionome"],
+  valorLiberado: ["valorliberado","valor_liberado","vl_liberado","vlrliberado"],
+  statusImport: ["status","situacao","situação"],
+  retornoSaldo: ["retornosaldo","retorno_saldo","retorno"],
+  vendedorNome: ["vendedor","vendedornome","operador","digitador","logindigitador"],
+  tabela: ["tabela","tab","tabelacoeficiente"],
 };
 
 export const FIELD_LABELS: Record<string, string> = {
@@ -25,18 +34,25 @@ export const FIELD_LABELS: Record<string, string> = {
   margemRmc: "Margem RMC", margemRcc: "Margem RCC",
   bancoAtual: "Banco Atual", parcelaAtual: "Parcela Atual",
   saldoDevedor: "Saldo Devedor", tipoOperacao: "Tipo Operação",
-  origem: "Origem",
+  origem: "Origem", dataDigitacao: "Data Digitação",
+  codigoPropostaBanco: "ADE / Contrato", promotora: "Promotora",
+  convenioNome: "Convênio", valorLiberado: "Valor Liberado",
+  statusImport: "Status", retornoSaldo: "Retorno Saldo",
+  vendedorNome: "Vendedor", tabela: "Tabela",
 };
 
 export function autoMapColumns(headers: string[]): Record<string, string> {
   const mapping: Record<string, string> = {};
   const normalized = headers.map(h => h.toLowerCase().replace(/[\s_\-."']/g, ""));
+  const used = new Set<string>();
 
   for (const [field, aliases] of Object.entries(FIELD_MAP)) {
     for (let i = 0; i < normalized.length; i++) {
+      if (used.has(headers[i])) continue;
       const norm = normalized[i];
       if (aliases.some(a => a.replace(/[\s_\-]/g, "") === norm)) {
         mapping[headers[i]] = field;
+        used.add(headers[i]);
         break;
       }
     }
@@ -78,9 +94,19 @@ export type MappedLead = {
   saldoDevedor?: number;
   tipoOperacao?: string;
   origem?: string;
+  dataDigitacao?: string;
+  codigoPropostaBanco?: string;
+  promotora?: string;
+  convenioNome?: string;
+  valorLiberado?: number;
+  statusImport?: string;
+  retornoSaldo?: string;
+  vendedorNome?: string;
+  tabela?: string;
 };
 
-const NUM_FIELDS = ["especieBeneficio","margemLivre","margemRmc","margemRcc","parcelaAtual","saldoDevedor"];
+const NUM_FIELDS = ["especieBeneficio","margemLivre","margemRmc","margemRcc","parcelaAtual","saldoDevedor","valorLiberado"];
+const STR_FIELDS = ["telefone","email","uf","cidade","numeroBeneficio","bancoAtual","tipoOperacao","origem","dataDigitacao","codigoPropostaBanco","promotora","convenioNome","statusImport","retornoSaldo","vendedorNome","tabela"];
 
 export function applyMapping(rows: ImportRow[], mapping: Record<string,string>): MappedLead[] {
   const reverseMap: Record<string,string> = {};
@@ -103,12 +129,14 @@ export function applyMapping(rows: ImportRow[], mapping: Record<string,string>):
     };
 
     if (cpf) lead.cpf = cpf;
-    for (const f of ["telefone","email","uf","cidade","numeroBeneficio","bancoAtual","tipoOperacao","origem"]) {
+    for (const f of STR_FIELDS) {
       const v = row[reverseMap[f]]?.trim();
       if (v) (lead as any)[f] = v;
     }
     for (const f of NUM_FIELDS) {
-      const v = row[reverseMap[f]]?.replace(/[R$\s.]/g, "").replace(",", ".");
+      const raw = row[reverseMap[f]];
+      if (!raw) continue;
+      const v = String(raw).replace(/[R$\s.]/g, "").replace(",", ".");
       if (v && !isNaN(Number(v))) (lead as any)[f] = Number(v);
     }
 

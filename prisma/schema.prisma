@@ -695,6 +695,15 @@ model Lead {
   contaCliente    String?       @map("conta_cliente")
   tipoContaCliente String?     @map("tipo_conta_cliente")  // CC, CP
 
+  // Importação / Operação
+  dataDigitacao       DateTime?   @map("data_digitacao")
+  codigoPropostaBanco String?     @map("codigo_proposta_banco") // ADE
+  promotora           String?
+  parcelaAtual        Float?      @map("parcela_atual")
+  saldoDevedor        Float?      @map("saldo_devedor")
+  retornoSaldo        String?     @map("retorno_saldo")
+  tabela              String?
+
   observacoes     String?
   ultimoContato   DateTime?  @map("ultimo_contato")
   proximoContato  DateTime?  @map("proximo_contato")

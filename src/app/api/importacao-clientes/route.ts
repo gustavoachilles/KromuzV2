@@ -21,6 +21,15 @@ const LeadImportSchema = z.object({
   bancoAtual: z.string().optional(),
   parcelaAtual: z.number().optional(),
   saldoDevedor: z.number().optional(),
+  dataDigitacao: z.string().optional(),
+  codigoPropostaBanco: z.string().optional(),
+  promotora: z.string().optional(),
+  convenioNome: z.string().optional(),
+  valorLiberado: z.number().optional(),
+  statusImport: z.string().optional(),
+  retornoSaldo: z.string().optional(),
+  vendedorNome: z.string().optional(),
+  tabela: z.string().optional(),
 });
 
 const ImportSchema = z.object({
@@ -86,8 +95,18 @@ export async function POST(req: NextRequest) {
           tipoOperacao: (l.tipoOperacao as any) || null,
           origem: l.origem || "importacao",
           vendedorEmail: sessao.email,
-          vendedorNome: sessao.nomeUsuario,
-          status: "NOVO",
+          vendedorNome: l.vendedorNome || sessao.nomeUsuario,
+          status: l.statusImport || "NOVO",
+          codigoPropostaBanco: l.codigoPropostaBanco || null,
+          promotora: l.promotora || null,
+          convenioNome: l.convenioNome || null,
+          valorLiberado: l.valorLiberado || null,
+          parcelaAtual: l.parcelaAtual || null,
+          saldoDevedor: l.saldoDevedor || null,
+          retornoSaldo: l.retornoSaldo || null,
+          tabela: l.tabela || null,
+          bancoPreferido: l.bancoAtual || null,
+          dataDigitacao: l.dataDigitacao ? new Date(l.dataDigitacao) : null,
         });
       }
 
