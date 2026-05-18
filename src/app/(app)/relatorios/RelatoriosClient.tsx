@@ -18,7 +18,7 @@ type StatusGroup = {
 };
 
 type TipoGroup = {
-  tipoOperacao: string;
+  tipoOperacao: string | null;
   _count: number;
   _sum: { valorLiberado: number | null };
 };
@@ -151,13 +151,13 @@ export function RelatoriosClient({
                 {propostasPorTipo
                   .sort((a, b) => b._count - a._count)
                   .map((r) => (
-                    <div key={r.tipoOperacao} className="flex items-center gap-3">
+                    <div key={r.tipoOperacao || "null"} className="flex items-center gap-3">
                       <span className="text-xs text-zinc-600 dark:text-zinc-400 w-28 shrink-0 truncate">
-                        {tipoLabel[r.tipoOperacao] || r.tipoOperacao}
+                        {r.tipoOperacao ? (tipoLabel[r.tipoOperacao] || r.tipoOperacao) : "Outros"}
                       </span>
                       <div className="flex-1 h-7 bg-zinc-100 dark:bg-zinc-800 rounded-lg overflow-hidden relative">
                         <div
-                          className={`h-full rounded-lg ${tipoColor[r.tipoOperacao] || "bg-zinc-500"} transition-all duration-500`}
+                          className={`h-full rounded-lg ${(r.tipoOperacao && tipoColor[r.tipoOperacao]) || "bg-zinc-500"} transition-all duration-500`}
                           style={{ width: `${Math.max((r._count / maxTipo) * 100, 8)}%` }}
                         />
                         <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs font-bold tabular-nums text-zinc-700 dark:text-zinc-300">
