@@ -107,7 +107,7 @@ export async function POST(req: NextRequest) {
           margemLivre: l.margemLivre || null,
           margemRmc: l.margemRmc || null,
           margemRcc: l.margemRcc || null,
-          tipoOperacao: (l.tipoOperacao as any) || null,
+          tipoOperacao: l.tipoOperacao || null,
           origem: l.origem || "importacao",
           vendedorEmail: sessao.email,
           vendedorNome: l.vendedorNome || sessao.nomeUsuario,

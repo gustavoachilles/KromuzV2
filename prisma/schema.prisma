@@ -673,7 +673,7 @@ model Lead {
   campanha        CampanhaMarketing? @relation(fields: [campanhaId], references: [id], onDelete: SetNull)
 
   // Operação potencial
-  tipoOperacao    TipoOperacao? @map("tipo_operacao")
+  tipoOperacao    String?       @map("tipo_operacao")
   valorLiberado   Float?        @map("valor_liberado")
   bancoPreferido  String?       @map("banco_preferido")
   convenioNome    String?       @map("convenio_nome")

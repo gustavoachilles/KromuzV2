@@ -1,7 +1,7 @@
 "use client";
 import { useState, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Upload, FileSpreadsheet, CheckCircle2, AlertCircle, Loader2, Download, X, ArrowRight, ArrowLeft, Pencil, Trash2, Sparkles, Zap, Table2 } from "lucide-react";
+import { Upload, FileSpreadsheet, CheckCircle2, AlertCircle, AlertTriangle, Loader2, Download, X, ArrowRight, ArrowLeft, Pencil, Trash2, Sparkles, Zap, Table2 } from "lucide-react";
 import * as XLSX from "xlsx";
 import { autoMapColumns, applyMapping, FIELD_LABELS, type ImportRow, type MappedLead } from "./importHelpers";
 
@@ -145,6 +145,13 @@ export function ImportacaoClient() {
   }
   function confirmarEdicao(idx: number) {
     setEditIdx(null);
+  }
+  function irParaProximoErro() {
+    const idx = leads.findIndex(l => l._errors.length > 0);
+    if (idx === -1) return;
+    const pag = Math.floor(idx / porPagina) + 1;
+    setPagina(pag);
+    setTimeout(() => tableRef.current?.scrollTo(0, 0), 50);
   }
   function removerLead(idx: number) {
     setLeads(prev => prev.filter((_, i) => i !== idx));
@@ -290,6 +297,11 @@ João da Silva;123.456.789-00;(11) 99999-0000;joao@email.com;SP;São Paulo;12345
                 </div>
               ))}
             </div>
+            {totalErros > 0 && (
+              <button onClick={irParaProximoErro} className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-red-600 text-white text-sm font-semibold shadow-lg shadow-red-600/20 hover:bg-red-700 transition w-full justify-center">
+                <AlertTriangle className="h-4 w-4"/> Ir para próximo erro ({totalErros} restantes)
+              </button>
+            )}
             {totalDup > 0 && (
               <div className="flex items-center gap-4 p-4 rounded-xl border border-amber-200 dark:border-amber-800 bg-amber-50/50 dark:bg-amber-950/20">
                 <span className="text-sm">Duplicatas (CPF já existe):</span>
