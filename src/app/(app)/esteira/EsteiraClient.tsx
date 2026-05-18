@@ -82,7 +82,7 @@ export function EsteiraClient({
   contagens: Contagem[];
 }) {
   const router = useRouter();
-  const [propostas] = useState(propostasIniciais);
+  const [propostas, setPropostas] = useState(propostasIniciais);
   const [modal, setModal] = useState(false);
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
@@ -174,6 +174,7 @@ export function EsteiraClient({
     try {
       const res = await fetch(`/api/propostas/${editForm.id}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Erro");
+      setPropostas(prev => prev.filter(p => p.id !== editForm.id));
       toast.success("Proposta excluída.");
       setEditModal(false);
       router.refresh();
