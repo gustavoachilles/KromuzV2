@@ -107,8 +107,7 @@ export function ImportacaoClient() {
     const validos = leads.filter(l => l._errors.length === 0);
     if (validos.length === 0) { setErro("Nenhum lead válido"); return; }
     setImportando(true); setErro(null);
-    const payload = validos.map(({ _idx, _errors, _isDuplicate, ...rest }) => rest)
-      .map(l => ({ ...l, statusImport: undefined, status: (l as any).statusImport || undefined }));
+    const payload = validos.map(({ _idx, _errors, _isDuplicate, ...rest }) => rest);
     try {
       const res = await fetch("/api/importacao-clientes", {
         method: "POST", headers: { "Content-Type": "application/json" },
@@ -393,7 +392,7 @@ João da Silva;123.456.789-00;(11) 99999-0000;joao@email.com;SP;São Paulo;12345
               <button onClick={importar} disabled={importando || totalValidos === 0}
                 className="flex items-center gap-2 rounded-xl bg-brand px-6 py-2.5 text-sm font-semibold text-white shadow-lg shadow-brand/25 hover:opacity-95 disabled:opacity-40 transition">
                 {importando ? <Loader2 className="h-4 w-4 animate-spin"/> : <Upload className="h-4 w-4"/>}
-                {importando ? "Importando..." : `Importar ${totalValidos} Leads`}
+                {importando ? "Importando..." : `Importar ${totalValidos} Propostas`}
               </button>
             </div>
           </div>
@@ -409,10 +408,15 @@ João da Silva;123.456.789-00;(11) 99999-0000;joao@email.com;SP;São Paulo;12345
               </div>
             </div>
             <h2 className="text-2xl font-bold text-brand mb-2">Importação Concluída!</h2>
-            <div className="grid grid-cols-3 gap-4 max-w-md mx-auto mt-6">
+            <p className="text-zinc-500 text-sm mb-4">Carteira importada com sucesso — Propostas e Leads criados</p>
+            <div className="grid grid-cols-4 gap-3 max-w-xl mx-auto mt-6">
               <div className="bg-white dark:bg-zinc-900 rounded-xl p-4 border border-zinc-200 dark:border-zinc-800">
                 <p className="text-2xl font-bold text-emerald-600 tabular-nums">{resultado.importados}</p>
-                <p className="text-[10px] text-zinc-500 font-medium">Importados</p>
+                <p className="text-[10px] text-zinc-500 font-medium">Propostas</p>
+              </div>
+              <div className="bg-white dark:bg-zinc-900 rounded-xl p-4 border border-zinc-200 dark:border-zinc-800">
+                <p className="text-2xl font-bold text-blue-600 tabular-nums">{resultado.leadsImportados || 0}</p>
+                <p className="text-[10px] text-zinc-500 font-medium">Leads</p>
               </div>
               <div className="bg-white dark:bg-zinc-900 rounded-xl p-4 border border-zinc-200 dark:border-zinc-800">
                 <p className="text-2xl font-bold text-amber-600 tabular-nums">{resultado.atualizados || 0}</p>
@@ -424,8 +428,11 @@ João da Silva;123.456.789-00;(11) 99999-0000;joao@email.com;SP;São Paulo;12345
               </div>
             </div>
             <div className="flex items-center justify-center gap-4 mt-8">
-              <button onClick={() => router.push("/leads")} className="px-6 py-2.5 rounded-xl bg-brand text-white text-sm font-semibold hover:opacity-90 transition shadow-lg shadow-brand/25">
-                Ver Leads →
+              <button onClick={() => router.push("/esteira")} className="px-6 py-2.5 rounded-xl bg-brand text-white text-sm font-semibold hover:opacity-90 transition shadow-lg shadow-brand/25">
+                Ver Esteira →
+              </button>
+              <button onClick={() => router.push("/leads")} className="px-6 py-2.5 rounded-xl border border-brand text-brand text-sm font-semibold hover:bg-brand/5 transition">
+                Ver Leads
               </button>
               <button onClick={() => { setStep(1); setLeads([]); setRawRows([]); setRawHeaders([]); setResultado(null); setNomeArquivo(""); }}
                 className="px-6 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 text-sm font-medium hover:bg-zinc-50 dark:hover:bg-zinc-800 transition">

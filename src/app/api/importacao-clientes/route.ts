@@ -5,21 +5,33 @@ import { registrarAuditoria } from "@/lib/audit";
 import { z } from "zod";
 
 // Excel armazena datas como serial numbers (dias desde 1899-12-30)
-function parseDataDigitacao(val: string | null | undefined): Date | null {
+function parseDate(val: string | null | undefined): Date | null {
   if (!val) return null;
   const num = Number(val);
-  // Se é serial Excel (ex: 45810 = ~2025-06-10)
   if (!isNaN(num) && num > 30000 && num < 100000) {
-    const excelEpoch = new Date(1899, 11, 30); // Dec 30 1899
+    const excelEpoch = new Date(1899, 11, 30);
     return new Date(excelEpoch.getTime() + num * 86400000);
   }
-  // Se já é ISO ou data parseable
   const d = new Date(val);
   if (!isNaN(d.getTime()) && d.getFullYear() > 1900 && d.getFullYear() < 2100) return d;
   return null;
 }
 
-const LeadImportSchema = z.object({
+// Mapeia status livre da planilha → StatusProposta enum
+function mapStatus(raw: string | undefined): "RASCUNHO" | "DIGITADA" | "PENDENTE" | "APROVADA" | "REPROVADA" | "PAGA" | "CANCELADA" {
+  if (!raw) return "RASCUNHO";
+  const s = raw.toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  if (s.includes("pag")) return "PAGA";
+  if (s.includes("cancel")) return "CANCELADA";
+  if (s.includes("reprov")) return "REPROVADA";
+  if (s.includes("aprov")) return "APROVADA";
+  if (s.includes("pendent")) return "PENDENTE";
+  if (s.includes("digit")) return "DIGITADA";
+  if (s.includes("simul")) return "DIGITADA"; // simulada ≈ digitada
+  return "RASCUNHO";
+}
+
+const RecordImportSchema = z.object({
   nome: z.string().min(1),
   cpf: z.string().optional(),
   telefone: z.string().optional(),
@@ -48,109 +60,135 @@ const LeadImportSchema = z.object({
 });
 
 const ImportSchema = z.object({
-  leads: z.array(LeadImportSchema).min(1).max(10000),
+  leads: z.array(RecordImportSchema).min(1).max(10000),
   modo: z.enum(["pular", "atualizar"]).default("pular"),
 });
 
-// POST /api/importacao-clientes — importação em massa
+// POST /api/importacao-clientes — importação de carteira (Lead + Proposta)
 export async function POST(req: NextRequest) {
   const sessao = await getSessionEmpresaApi();
   if (!sessao) return Response.json({ error: "Não autorizado" }, { status: 401 });
 
   try {
     const body = ImportSchema.parse(await req.json());
-    const { leads, modo } = body;
+    const { leads: records, modo } = body;
 
-    // Buscar CPFs existentes para detectar duplicatas
-    const cpfsNovos = leads.map(l => l.cpf).filter(Boolean) as string[];
-    const cpfsExistentes = cpfsNovos.length > 0
+    // Buscar CPFs existentes (Leads)
+    const cpfsNovos = records.map(l => l.cpf).filter(Boolean) as string[];
+    const leadsExistentes = cpfsNovos.length > 0
       ? await prisma.lead.findMany({
           where: { empresaId: sessao.empresaId, cpf: { in: cpfsNovos } },
           select: { id: true, cpf: true },
         })
       : [];
-    const cpfMap = new Map(cpfsExistentes.map(l => [l.cpf, l.id]));
+    const cpfToLeadId = new Map(leadsExistentes.map(l => [l.cpf, l.id]));
 
-    let importados = 0;
+    let leadsImportados = 0;
+    let propostasImportadas = 0;
     let atualizados = 0;
     let pulados = 0;
 
-    // Processar em batches de 500
-    const batchSize = 500;
-    for (let i = 0; i < leads.length; i += batchSize) {
-      const batch = leads.slice(i, i + batchSize);
-      const novos = [];
-      const updates = [];
+    // Processar em batches de 200 (limite do Prisma createMany no Postgres)
+    const batchSize = 200;
+    for (let i = 0; i < records.length; i += batchSize) {
+      const batch = records.slice(i, i + batchSize);
+      const novosLeads: any[] = [];
+      const novasPropostas: any[] = [];
 
-      for (const l of batch) {
-        const existeId = l.cpf ? cpfMap.get(l.cpf) : null;
+      for (const r of batch) {
+        let leadId = r.cpf ? cpfToLeadId.get(r.cpf) : null;
 
-        if (existeId) {
-          if (modo === "atualizar") {
-            updates.push({ id: existeId, data: l });
-          } else {
-            pulados++;
-          }
-          continue;
+        // 1. Criar Lead se não existe
+        if (!leadId) {
+          const lead = await prisma.lead.create({
+            data: {
+              empresaId: sessao.empresaId,
+              nome: r.nome,
+              cpf: r.cpf || null,
+              telefone: r.telefone || null,
+              email: r.email || null,
+              uf: r.uf || null,
+              cidade: r.cidade || null,
+              numeroBeneficio: r.numeroBeneficio || null,
+              especieBeneficio: r.especieBeneficio || null,
+              margemLivre: r.margemLivre || null,
+              margemRmc: r.margemRmc || null,
+              margemRcc: r.margemRcc || null,
+              tipoOperacao: r.tipoOperacao || null,
+              origem: r.origem || "importacao",
+              vendedorEmail: sessao.email,
+              vendedorNome: r.vendedorNome || sessao.nomeUsuario,
+              status: "IMPORTADO",
+              codigoPropostaBanco: r.codigoPropostaBanco || null,
+              promotora: r.promotora || null,
+              convenioNome: r.convenioNome || null,
+              valorLiberado: r.valorLiberado || null,
+              parcelaAtual: r.parcelaAtual || null,
+              saldoDevedor: r.saldoDevedor || null,
+              retornoSaldo: r.retornoSaldo || null,
+              tabela: r.tabela || null,
+              bancoPreferido: r.bancoAtual || null,
+              dataDigitacao: parseDate(r.dataDigitacao),
+            },
+          });
+          leadId = lead.id;
+          if (r.cpf) cpfToLeadId.set(r.cpf, leadId);
+          leadsImportados++;
+        } else if (modo === "atualizar") {
+          await prisma.lead.update({
+            where: { id: leadId },
+            data: {
+              nome: r.nome,
+              telefone: r.telefone || undefined,
+              email: r.email || undefined,
+              margemLivre: r.margemLivre || undefined,
+              valorLiberado: r.valorLiberado || undefined,
+            },
+          });
+          atualizados++;
+        } else {
+          pulados++;
         }
 
-        novos.push({
+        // 2. Criar Proposta vinculada ao Lead
+        const statusProposta = mapStatus(r.statusImport);
+        const dataDig = parseDate(r.dataDigitacao);
+        const now = new Date();
+
+        novasPropostas.push({
           empresaId: sessao.empresaId,
-          nome: l.nome,
-          cpf: l.cpf || null,
-          telefone: l.telefone || null,
-          email: l.email || null,
-          uf: l.uf || null,
-          cidade: l.cidade || null,
-          numeroBeneficio: l.numeroBeneficio || null,
-          especieBeneficio: l.especieBeneficio || null,
-          margemLivre: l.margemLivre || null,
-          margemRmc: l.margemRmc || null,
-          margemRcc: l.margemRcc || null,
-          tipoOperacao: l.tipoOperacao || null,
-          origem: l.origem || "importacao",
+          leadId: leadId,
+          clienteNome: r.nome,
+          clienteCpf: r.cpf || null,
+          clienteTelefone: r.telefone || null,
+          numeroBeneficio: r.numeroBeneficio || null,
+          especieBeneficio: r.especieBeneficio || null,
+          tipoOperacao: r.tipoOperacao || null,
+          status: statusProposta,
+          codigoPropostaBanco: r.codigoPropostaBanco || null,
+          valorLiberado: r.valorLiberado || null,
+          valorParcela: r.parcelaAtual || null,
+          saldoDevedor: r.saldoDevedor || null,
+          bancoNome: r.bancoAtual || null,
+          convenioNome: r.convenioNome || null,
           vendedorEmail: sessao.email,
-          vendedorNome: l.vendedorNome || sessao.nomeUsuario,
-          status: l.statusImport || "NOVO",
-          codigoPropostaBanco: l.codigoPropostaBanco || null,
-          promotora: l.promotora || null,
-          convenioNome: l.convenioNome || null,
-          valorLiberado: l.valorLiberado || null,
-          parcelaAtual: l.parcelaAtual || null,
-          saldoDevedor: l.saldoDevedor || null,
-          retornoSaldo: l.retornoSaldo || null,
-          tabela: l.tabela || null,
-          bancoPreferido: l.bancoAtual || null,
-          dataDigitacao: parseDataDigitacao(l.dataDigitacao),
+          vendedorNome: r.vendedorNome || sessao.nomeUsuario,
+          observacoes: r.tabela ? `Tabela: ${r.tabela}` : null,
+          // Datas do funil baseadas no status
+          digitadaEm: dataDig || (statusProposta !== "RASCUNHO" ? now : null),
+          aprovadaEm: ["APROVADA", "PAGA"].includes(statusProposta) ? (dataDig || now) : null,
+          pagaEm: statusProposta === "PAGA" ? (dataDig || now) : null,
+          canceladaEm: statusProposta === "CANCELADA" ? (dataDig || now) : null,
         });
       }
 
-      // Criar novos
-      if (novos.length > 0) {
-        const result = await prisma.lead.createMany({
-          data: novos,
+      // Inserir propostas em batch
+      if (novasPropostas.length > 0) {
+        const result = await prisma.proposta.createMany({
+          data: novasPropostas,
           skipDuplicates: true,
         });
-        importados += result.count;
-      }
-
-      // Atualizar existentes
-      for (const u of updates) {
-        await prisma.lead.update({
-          where: { id: u.id },
-          data: {
-            nome: u.data.nome,
-            telefone: u.data.telefone || undefined,
-            email: u.data.email || undefined,
-            uf: u.data.uf || undefined,
-            cidade: u.data.cidade || undefined,
-            numeroBeneficio: u.data.numeroBeneficio || undefined,
-            margemLivre: u.data.margemLivre || undefined,
-            margemRmc: u.data.margemRmc || undefined,
-            margemRcc: u.data.margemRcc || undefined,
-          },
-        });
-        atualizados++;
+        propostasImportadas += result.count;
       }
     }
 
@@ -159,13 +197,25 @@ export async function POST(req: NextRequest) {
       empresaId: sessao.empresaId,
       usuarioEmail: sessao.email,
       usuarioNome: sessao.nomeUsuario,
-      acao: "IMPORTACAO_CLIENTES",
-      entidade: "lead",
-      entidadeNome: `Importação em massa`,
-      detalhes: { total: leads.length, importados, atualizados, pulados },
+      acao: "IMPORTACAO_CARTEIRA",
+      entidade: "proposta",
+      entidadeNome: `Importação de carteira`,
+      detalhes: {
+        total: records.length,
+        leadsImportados,
+        propostasImportadas,
+        atualizados,
+        pulados,
+      },
     });
 
-    return Response.json({ importados, atualizados, pulados, total: leads.length }, { status: 201 });
+    return Response.json({
+      importados: propostasImportadas,
+      leadsImportados,
+      atualizados,
+      pulados,
+      total: records.length,
+    }, { status: 201 });
   } catch (e: any) {
     console.error("[IMPORTACAO] Erro:", e);
     const msg = e.message?.includes("prisma")
@@ -175,7 +225,7 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// POST /api/importacao-clientes?check=duplicatas — checa CPFs existentes
+// PUT /api/importacao-clientes — checa CPFs existentes
 export async function PUT(req: NextRequest) {
   const sessao = await getSessionEmpresaApi();
   if (!sessao) return Response.json({ error: "Não autorizado" }, { status: 401 });

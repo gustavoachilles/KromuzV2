@@ -580,7 +580,7 @@ model Proposta {
   especieBeneficio Int?          @map("especie_beneficio")
 
   // Operação
-  tipoOperacao    TipoOperacao   @map("tipo_operacao")
+  tipoOperacao    String?        @map("tipo_operacao")
   status          StatusProposta @default(RASCUNHO)
   integradaBanco  Boolean        @default(false) @map("integrada_banco")
   codigoPropostaBanco String?    @map("codigo_proposta_banco")
