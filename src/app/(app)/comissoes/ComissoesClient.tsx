@@ -12,7 +12,7 @@ import {
 type Proposta = {
   id: string;
   clienteNome: string;
-  tipoOperacao: string;
+  tipoOperacao: string | null;
   status: string;
   bancoNome: string | null;
   vendedorNome: string | null;

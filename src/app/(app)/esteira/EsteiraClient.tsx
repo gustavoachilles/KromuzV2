@@ -32,7 +32,7 @@ type Proposta = {
   clienteNome: string;
   clienteCpf: string | null;
   clienteTelefone: string | null;
-  tipoOperacao: string;
+  tipoOperacao: string | null;
   status: string;
   bancoNome: string | null;
   produtoNome: string | null;
