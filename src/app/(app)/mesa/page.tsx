@@ -64,12 +64,19 @@ export default async function MesaPage() {
       _sum: { valorLiberado: true, valorComissao: true },
     }),
   ]);
+  // Últimas propostas digitadas (todas, incluindo pagas)
+  const ultimasPropostas = await prisma.proposta.findMany({
+    where: { empresaId: eid },
+    orderBy: { createdAt: "desc" },
+    take: 100,
+  });
 
   return (
     <MesaClient
       sessao={{ nomeUsuario: sessao.nomeUsuario, nomeEmpresa: sessao.nomeEmpresa }}
       propostas={propostas as any}
       leadsHoje={leadsHoje as any}
+      ultimasPropostas={ultimasPropostas as any}
       kpis={{
         totalPagas,
         volumeMes: volumeMes._sum.valorLiberado || 0,
