@@ -25,7 +25,7 @@ const AtualizarPropostaSchema = z.object({
   clienteNome: z.string().min(2).optional(),
   clienteCpf: z.string().optional(),
   clienteTelefone: z.string().optional(),
-  tipoOperacao: z.string().optional(),
+  tipoOperacao: z.enum(["EMPRESTIMO_CONSIGNADO", "REFINANCIAMENTO", "PORTABILIDADE", "PORTABILIDADE_REFIN", "CARTAO_CONSIGNADO", "CARTAO_BENEFICIO"]).optional(),
   valorParcela: z.number().optional(),
   valorLiberado: z.number().optional(),
   prazo: z.number().int().optional(),
