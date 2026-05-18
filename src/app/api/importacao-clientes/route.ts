@@ -4,6 +4,21 @@ import { getSessionEmpresaApi } from "@/lib/session";
 import { registrarAuditoria } from "@/lib/audit";
 import { z } from "zod";
 
+// Excel armazena datas como serial numbers (dias desde 1899-12-30)
+function parseDataDigitacao(val: string | null | undefined): Date | null {
+  if (!val) return null;
+  const num = Number(val);
+  // Se é serial Excel (ex: 45810 = ~2025-06-10)
+  if (!isNaN(num) && num > 30000 && num < 100000) {
+    const excelEpoch = new Date(1899, 11, 30); // Dec 30 1899
+    return new Date(excelEpoch.getTime() + num * 86400000);
+  }
+  // Se já é ISO ou data parseable
+  const d = new Date(val);
+  if (!isNaN(d.getTime()) && d.getFullYear() > 1900 && d.getFullYear() < 2100) return d;
+  return null;
+}
+
 const LeadImportSchema = z.object({
   nome: z.string().min(1),
   cpf: z.string().optional(),
@@ -106,7 +121,7 @@ export async function POST(req: NextRequest) {
           retornoSaldo: l.retornoSaldo || null,
           tabela: l.tabela || null,
           bancoPreferido: l.bancoAtual || null,
-          dataDigitacao: l.dataDigitacao ? new Date(l.dataDigitacao) : null,
+          dataDigitacao: parseDataDigitacao(l.dataDigitacao),
         });
       }
 
@@ -152,7 +167,11 @@ export async function POST(req: NextRequest) {
 
     return Response.json({ importados, atualizados, pulados, total: leads.length }, { status: 201 });
   } catch (e: any) {
-    return Response.json({ error: e.message }, { status: 400 });
+    console.error("[IMPORTACAO] Erro:", e);
+    const msg = e.message?.includes("prisma")
+      ? "Erro ao salvar no banco. Verifique se todos os campos estão corretos."
+      : (e.message || "Erro desconhecido ao importar");
+    return Response.json({ error: msg.substring(0, 300) }, { status: 400 });
   }
 }
 

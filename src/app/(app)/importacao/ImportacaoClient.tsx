@@ -10,6 +10,7 @@ type Step = 1|2|3|4;
 export function ImportacaoClient() {
   const router = useRouter();
   const fileRef = useRef<HTMLInputElement>(null);
+  const tableRef = useRef<HTMLDivElement>(null);
   const [step, setStep] = useState<Step>(1);
   const [nomeArquivo, setNomeArquivo] = useState("");
   const [rawHeaders, setRawHeaders] = useState<string[]>([]);
@@ -106,16 +107,20 @@ export function ImportacaoClient() {
     const validos = leads.filter(l => l._errors.length === 0);
     if (validos.length === 0) { setErro("Nenhum lead válido"); return; }
     setImportando(true); setErro(null);
-    const payload = validos.map(({ _idx, _errors, _isDuplicate, ...rest }) => rest);
+    const payload = validos.map(({ _idx, _errors, _isDuplicate, ...rest }) => rest)
+      .map(l => ({ ...l, statusImport: undefined, status: (l as any).statusImport || undefined }));
     try {
       const res = await fetch("/api/importacao-clientes", {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ leads: payload, modo }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
+      if (!res.ok) throw new Error(data.error || "Erro ao importar");
       setResultado(data); setStep(4);
-    } catch (e: any) { setErro(e.message); }
+    } catch (e: any) {
+      const msg = e.message || "Erro desconhecido";
+      setErro(msg.length > 200 ? msg.substring(0, 200) + "…" : msg);
+    }
     setImportando(false);
   }
 
@@ -125,11 +130,21 @@ export function ImportacaoClient() {
       const copy = [...prev];
       const lead = { ...copy[idx] };
       (lead as any)[field] = value;
+      // Revalidate
       lead._errors = [];
       if (!lead.nome.trim()) lead._errors.push("Nome vazio");
+      if (field === "cpf") {
+        let cpf = value.replace(/\D/g, "");
+        if (cpf && cpf.length < 11 && cpf.length >= 9) cpf = cpf.padStart(11, "0");
+        lead.cpf = cpf || undefined;
+        if (cpf && cpf.length !== 11) lead._errors.push(`CPF inválido (${cpf.length} dígitos: ${value})`);
+      }
       copy[idx] = lead;
       return copy;
     });
+  }
+  function confirmarEdicao(idx: number) {
+    setEditIdx(null);
   }
   function removerLead(idx: number) {
     setLeads(prev => prev.filter((_, i) => i !== idx));
@@ -298,7 +313,7 @@ João da Silva;123.456.789-00;(11) 99999-0000;joao@email.com;SP;São Paulo;12345
                   ))}
                 </div>
               </div>
-              <div className="overflow-x-auto max-h-[50vh]">
+              <div ref={tableRef} className="overflow-x-auto max-h-[50vh]">
                 <table className="w-full text-[11px]">
                   <thead className="bg-zinc-50 dark:bg-zinc-800/40 sticky top-0"><tr>
                     <th className="px-3 py-2 text-left text-zinc-500">#</th>
@@ -316,16 +331,16 @@ João da Silva;123.456.789-00;(11) 99999-0000;joao@email.com;SP;São Paulo;12345
                       const globalIdx = (pagina-1)*porPagina + i;
                       const isError = l._errors.length > 0;
                       const isDup = l._isDuplicate;
-                      const isEditing = editIdx === globalIdx || isError;
+                      const isEditing = editIdx === globalIdx;
                       return (
                         <tr key={globalIdx} className={`${isError ? "bg-red-50/50 dark:bg-red-950/10" : isDup ? "bg-amber-50/50 dark:bg-amber-950/10" : ""}`}>
                           <td className="px-3 py-2 text-zinc-400 tabular-nums">{globalIdx+1}</td>
                           <td className="px-3 py-2 text-center">
                             {isError ? <span className="cursor-help" title={l._errors.join(", ")}>❌</span> : isDup ? <span title="CPF duplicado">⚠️</span> : <span>✅</span>}
                           </td>
-                          <td className="px-3 py-2">{isEditing ? <input value={l.nome} onChange={e => editarLead(globalIdx,"nome",e.target.value)} className={`w-full px-2 py-1 border rounded text-xs ${l._errors.some(e => e.includes("Nome")) ? "border-red-400 bg-red-50" : ""}`} autoFocus/> : <span className="font-semibold">{l.nome || "—"}</span>}</td>
-                          <td className="px-3 py-2 tabular-nums">{isEditing ? <input value={l.cpf||""} onChange={e => editarLead(globalIdx,"cpf",e.target.value)} className={`w-28 px-2 py-1 border rounded text-xs ${l._errors.some(e => e.includes("CPF")) ? "border-red-400 bg-red-50" : ""}`}/> : (l.cpf || "—")}</td>
-                          <td className="px-3 py-2">{isEditing ? <input value={l.telefone||""} onChange={e => editarLead(globalIdx,"telefone",e.target.value)} className="w-28 px-2 py-1 border rounded text-xs"/> : (l.telefone || "—")}</td>
+                          <td className="px-3 py-2">{(isEditing || isError) ? <input value={l.nome} onChange={e => editarLead(globalIdx,"nome",e.target.value)} className={`w-full px-2 py-1 border rounded text-xs ${l._errors.some(e => e.includes("Nome")) ? "border-red-400 bg-red-50" : ""}`}/> : <span className="font-semibold">{l.nome || "—"}</span>}</td>
+                          <td className="px-3 py-2 tabular-nums">{(isEditing || isError) ? <input value={l.cpf||""} onChange={e => editarLead(globalIdx,"cpf",e.target.value)} className={`w-28 px-2 py-1 border rounded text-xs ${l._errors.some(e => e.includes("CPF")) ? "border-red-400 bg-red-50" : ""}`}/> : (l.cpf || "—")}</td>
+                          <td className="px-3 py-2">{(isEditing || isError) ? <input value={l.telefone||""} onChange={e => editarLead(globalIdx,"telefone",e.target.value)} className="w-28 px-2 py-1 border rounded text-xs"/> : (l.telefone || "—")}</td>
                           <td className="px-3 py-2">{l.uf || "—"}</td>
                           <td className="px-3 py-2 text-right tabular-nums">{l.margemLivre ? `R$ ${l.margemLivre.toFixed(2)}` : "—"}</td>
                           <td className="px-3 py-2">{l.numeroBeneficio || "—"}</td>
@@ -333,8 +348,8 @@ João da Silva;123.456.789-00;(11) 99999-0000;joao@email.com;SP;São Paulo;12345
                             <div className="flex items-center gap-1">
                               {isError && <span className="text-[9px] text-red-500 font-medium max-w-[120px] truncate" title={l._errors.join(", ")}>{l._errors[0]}</span>}
                               <div className="flex items-center justify-center gap-1 ml-auto">
-                                <button onClick={() => setEditIdx(isEditing && !isError ? null : globalIdx)} className="p-1 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded" title={isEditing ? "Concluir" : "Editar"}>
-                                  {isEditing && !isError ? <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500"/> : <Pencil className="h-3.5 w-3.5 text-zinc-400"/>}
+                                <button onClick={() => isEditing ? confirmarEdicao(globalIdx) : setEditIdx(globalIdx)} className="p-1 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded" title={isEditing ? "Concluir" : "Editar"}>
+                                  {isEditing ? <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500"/> : <Pencil className="h-3.5 w-3.5 text-zinc-400"/>}
                                 </button>
                                 <button onClick={() => removerLead(globalIdx)} className="p-1 hover:bg-red-50 dark:hover:bg-red-950/30 rounded" title="Remover">
                                   <Trash2 className="h-3.5 w-3.5 text-zinc-400 hover:text-red-500"/>
@@ -350,9 +365,9 @@ João da Silva;123.456.789-00;(11) 99999-0000;joao@email.com;SP;São Paulo;12345
               </div>
               {leads.length > porPagina && (
                 <div className="flex items-center justify-between px-6 py-3 border-t border-zinc-100 dark:border-zinc-800">
-                  <button onClick={() => setPagina(p => Math.max(1,p-1))} disabled={pagina===1} className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-zinc-100 dark:bg-zinc-800 disabled:opacity-30">← Anterior</button>
+                  <button onClick={() => { setPagina(p => Math.max(1,p-1)); tableRef.current?.scrollTo(0,0); }} disabled={pagina===1} className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-zinc-100 dark:bg-zinc-800 disabled:opacity-30">← Anterior</button>
                   <span className="text-xs text-zinc-500">Pág {pagina}/{Math.ceil(leads.length/porPagina)}</span>
-                  <button onClick={() => setPagina(p => Math.min(Math.ceil(leads.length/porPagina),p+1))} disabled={pagina >= Math.ceil(leads.length/porPagina)} className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-zinc-100 dark:bg-zinc-800 disabled:opacity-30">Próxima →</button>
+                  <button onClick={() => { setPagina(p => Math.min(Math.ceil(leads.length/porPagina),p+1)); tableRef.current?.scrollTo(0,0); }} disabled={pagina >= Math.ceil(leads.length/porPagina)} className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-zinc-100 dark:bg-zinc-800 disabled:opacity-30">Próxima →</button>
                 </div>
               )}
             </div>
