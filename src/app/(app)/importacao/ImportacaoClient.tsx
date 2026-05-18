@@ -69,7 +69,7 @@ export function ImportacaoClient() {
           setRawHeaders(headers); setRawRows(rows);
           setMapping(autoMapColumns(headers));
           setStep(2);
-        } catch { setErro("Erro ao ler planilha Excel"); }
+        } catch(err) { console.error("Erro XLSX:", err); setErro(`Erro ao ler planilha: ${err instanceof Error ? err.message : "formato não suportado"}`); }
       };
       reader.readAsArrayBuffer(file);
     }
@@ -186,12 +186,19 @@ export function ImportacaoClient() {
               <p className="text-lg font-semibold">Arraste sua planilha aqui</p>
               <p className="text-sm text-zinc-500 mt-1">ou clique para selecionar</p>
               <div className="flex items-center justify-center gap-3 mt-4">
-                {["CSV","XLSX","XLS","TXT"].map(f => (
+                {["CSV","XLSX","XLS","XLSM","TXT"].map(f => (
                   <span key={f} className="px-2.5 py-1 bg-zinc-100 dark:bg-zinc-800 rounded-lg text-[10px] font-bold text-zinc-500">.{f}</span>
                 ))}
               </div>
-              <input ref={fileRef} type="file" accept=".csv,.xlsx,.xls,.txt" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) parseFile(f); }} />
+              <input ref={fileRef} type="file" accept=".csv,.xlsx,.xls,.xlsm,.txt" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) parseFile(f); }} />
             </div>
+            {erro && (
+              <div className="rounded-xl bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900 px-5 py-4 flex items-center gap-3">
+                <AlertCircle className="h-5 w-5 text-red-500 shrink-0" />
+                <p className="text-sm text-red-700 dark:text-red-300">{erro}</p>
+                <button onClick={() => setErro(null)} className="ml-auto"><X className="h-4 w-4 text-red-400"/></button>
+              </div>
+            )}
             <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5">
               <h3 className="text-sm font-semibold mb-2 flex items-center gap-2"><Download className="h-4 w-4 text-zinc-400" /> Modelo CSV</h3>
               <pre className="text-xs text-zinc-500 bg-zinc-50 dark:bg-zinc-800 p-3 rounded-lg overflow-x-auto">
