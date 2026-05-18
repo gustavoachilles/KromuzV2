@@ -20,7 +20,10 @@ import {
   GripVertical,
   Building2,
   FileText,
-  List
+  List,
+  Pencil,
+  Trash2,
+  Save
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -97,6 +100,86 @@ export function EsteiraClient({
     valorLiberado: "",
     observacoes: "",
   });
+
+  // Estado do modal de edição
+  const [editModal, setEditModal] = useState(false);
+  const [editando, setEditando] = useState(false);
+  const [excluindo, setExcluindo] = useState(false);
+  const [editForm, setEditForm] = useState<{
+    id: string; clienteNome: string; clienteCpf: string; clienteTelefone: string;
+    tipoOperacao: string; bancoNome: string; valorLiberado: string; valorParcela: string;
+    prazo: string; taxaJuros: string; observacoes: string; convenioNome: string;
+    bancoOrigem: string; saldoDevedor: string;
+  }>({
+    id: "", clienteNome: "", clienteCpf: "", clienteTelefone: "",
+    tipoOperacao: "", bancoNome: "", valorLiberado: "", valorParcela: "",
+    prazo: "", taxaJuros: "", observacoes: "", convenioNome: "",
+    bancoOrigem: "", saldoDevedor: "",
+  });
+
+  function abrirEditModal(p: Proposta) {
+    setEditForm({
+      id: p.id,
+      clienteNome: p.clienteNome || "",
+      clienteCpf: p.clienteCpf || "",
+      clienteTelefone: p.clienteTelefone || "",
+      tipoOperacao: p.tipoOperacao || "",
+      bancoNome: p.bancoNome || "",
+      valorLiberado: p.valorLiberado?.toString() || "",
+      valorParcela: p.valorParcela?.toString() || "",
+      prazo: p.prazo?.toString() || "",
+      taxaJuros: p.taxaJuros?.toString() || "",
+      observacoes: p.observacoes || "",
+      convenioNome: p.convenioNome || "",
+      bancoOrigem: "",
+      saldoDevedor: "",
+    });
+    setEditModal(true);
+  }
+
+  async function salvarEdicao(e: React.FormEvent) {
+    e.preventDefault();
+    setEditando(true);
+    try {
+      const payload: any = { clienteNome: editForm.clienteNome };
+      if (editForm.clienteCpf) payload.clienteCpf = editForm.clienteCpf;
+      if (editForm.clienteTelefone) payload.clienteTelefone = editForm.clienteTelefone;
+      if (editForm.tipoOperacao) payload.tipoOperacao = editForm.tipoOperacao;
+      if (editForm.bancoNome) payload.bancoNome = editForm.bancoNome;
+      if (editForm.convenioNome) payload.convenioNome = editForm.convenioNome;
+      if (editForm.valorLiberado) payload.valorLiberado = Number(editForm.valorLiberado);
+      if (editForm.valorParcela) payload.valorParcela = Number(editForm.valorParcela);
+      if (editForm.prazo) payload.prazo = Number(editForm.prazo);
+      if (editForm.taxaJuros) payload.taxaJuros = Number(editForm.taxaJuros);
+      if (editForm.bancoOrigem) payload.bancoOrigem = editForm.bancoOrigem;
+      if (editForm.saldoDevedor) payload.saldoDevedor = Number(editForm.saldoDevedor);
+      payload.observacoes = editForm.observacoes || null;
+
+      const res = await fetch(`/api/propostas/${editForm.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) throw new Error("Erro");
+      toast.success("Proposta atualizada!");
+      setEditModal(false);
+      router.refresh();
+    } catch { toast.error("Erro ao salvar."); }
+    setEditando(false);
+  }
+
+  async function excluirProposta() {
+    if (!confirm(`Excluir proposta de ${editForm.clienteNome}? Esta ação será registrada no log.`)) return;
+    setExcluindo(true);
+    try {
+      const res = await fetch(`/api/propostas/${editForm.id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Erro");
+      toast.success("Proposta excluída.");
+      setEditModal(false);
+      router.refresh();
+    } catch { toast.error("Erro ao excluir."); }
+    setExcluindo(false);
+  }
 
   const filtrados = propostas.filter((p) => {
     if (filtroStatus && p.status !== filtroStatus) return false;
@@ -299,11 +382,16 @@ export function EsteiraClient({
                                 className={`bg-white dark:bg-zinc-950 rounded-xl p-4 border border-zinc-200 dark:border-zinc-800 shadow-sm flex flex-col gap-3 transition-shadow cursor-pointer ${snapshot.isDragging ? 'shadow-xl ring-2 ring-brand/50 opacity-90' : 'hover:shadow-md'}`}
                               >
                                 <div className="flex items-start justify-between gap-2">
-                                  <div className="flex-1">
+                                  <div className="flex-1 cursor-pointer" onClick={(e) => { e.stopPropagation(); abrirEditModal(p); }}>
                                     <p className="font-bold text-sm leading-tight text-zinc-900 dark:text-zinc-100 line-clamp-2">{p.clienteNome}</p>
                                     <p className="text-[10px] text-zinc-400 font-medium mt-0.5">{tipoLabel[p.tipoOperacao] || p.tipoOperacao}</p>
                                   </div>
-                                  <GripVertical className="h-4 w-4 text-zinc-300 shrink-0" />
+                                  <div className="flex items-center gap-1">
+                                    <button onClick={(e) => { e.stopPropagation(); abrirEditModal(p); }} className="p-1 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 transition" title="Editar">
+                                      <Pencil className="h-3.5 w-3.5 text-zinc-400 hover:text-sky-500"/>
+                                    </button>
+                                    <GripVertical className="h-4 w-4 text-zinc-300 shrink-0" />
+                                  </div>
                                 </div>
 
                                 <div className="flex flex-col gap-1.5 text-xs text-zinc-500 dark:text-zinc-400">
@@ -523,6 +611,107 @@ export function EsteiraClient({
                   {salvando ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
                   {salvando ? "Criando..." : "Criar Proposta"}
                 </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Edição */}
+      {editModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-2xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-6 border-b border-zinc-100 dark:border-zinc-800">
+              <h2 className="text-lg font-semibold flex items-center gap-2"><Pencil className="h-5 w-5 text-sky-500"/>Editar Proposta</h2>
+              <button onClick={() => setEditModal(false)} className="text-zinc-400 hover:text-zinc-600 transition">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <form onSubmit={salvarEdicao} className="p-6 space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2 col-span-2">
+                  <label className="text-sm font-medium">Nome do Cliente *</label>
+                  <input required value={editForm.clienteNome} onChange={(e) => setEditForm({ ...editForm, clienteNome: e.target.value })}
+                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-zinc-500">CPF</label>
+                  <input value={editForm.clienteCpf} onChange={(e) => setEditForm({ ...editForm, clienteCpf: e.target.value })} placeholder="000.000.000-00"
+                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-zinc-500">Telefone</label>
+                  <input value={editForm.clienteTelefone} onChange={(e) => setEditForm({ ...editForm, clienteTelefone: e.target.value })} placeholder="(11) 99999-0000"
+                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Tipo de Operação</label>
+                  <select value={editForm.tipoOperacao} onChange={(e) => setEditForm({ ...editForm, tipoOperacao: e.target.value })}
+                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand">
+                    {Object.entries(tipoLabel).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-zinc-500">Banco</label>
+                  <input value={editForm.bancoNome} onChange={(e) => setEditForm({ ...editForm, bancoNome: e.target.value })} placeholder="BMG, Pan..."
+                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-zinc-500">Convênio</label>
+                  <input value={editForm.convenioNome} onChange={(e) => setEditForm({ ...editForm, convenioNome: e.target.value })} placeholder="INSS, SIAPE..."
+                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-zinc-500">Banco Origem (Port)</label>
+                  <input value={editForm.bancoOrigem} onChange={(e) => setEditForm({ ...editForm, bancoOrigem: e.target.value })} placeholder="Banco de onde vem"
+                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-zinc-500">Valor Liberado</label>
+                  <input type="number" step="0.01" value={editForm.valorLiberado} onChange={(e) => setEditForm({ ...editForm, valorLiberado: e.target.value })} placeholder="5000.00"
+                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-zinc-500">Parcela</label>
+                  <input type="number" step="0.01" value={editForm.valorParcela} onChange={(e) => setEditForm({ ...editForm, valorParcela: e.target.value })} placeholder="150.00"
+                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-zinc-500">Prazo (meses)</label>
+                  <input type="number" value={editForm.prazo} onChange={(e) => setEditForm({ ...editForm, prazo: e.target.value })} placeholder="84"
+                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-zinc-500">Taxa (%)</label>
+                  <input type="number" step="0.01" value={editForm.taxaJuros} onChange={(e) => setEditForm({ ...editForm, taxaJuros: e.target.value })} placeholder="1.80"
+                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-zinc-500">Saldo Devedor</label>
+                  <input type="number" step="0.01" value={editForm.saldoDevedor} onChange={(e) => setEditForm({ ...editForm, saldoDevedor: e.target.value })} placeholder="25000.00"
+                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
+                </div>
+                <div className="space-y-2 col-span-2">
+                  <label className="text-sm font-medium text-zinc-500">Observações</label>
+                  <textarea value={editForm.observacoes} onChange={(e) => setEditForm({ ...editForm, observacoes: e.target.value })} rows={3} placeholder="Anotações..."
+                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between pt-2 border-t border-zinc-100 dark:border-zinc-800">
+                <button type="button" onClick={excluirProposta} disabled={excluindo}
+                  className="flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-lg transition disabled:opacity-50">
+                  {excluindo ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                  {excluindo ? "Excluindo..." : "Excluir"}
+                </button>
+                <div className="flex gap-3">
+                  <button type="button" onClick={() => setEditModal(false)} className="px-4 py-2 text-sm text-zinc-600 hover:text-zinc-900 transition">Cancelar</button>
+                  <button type="submit" disabled={editando}
+                    className="flex items-center gap-2 rounded-xl bg-brand px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-brand/25 hover:opacity-95 disabled:opacity-50 transition">
+                    {editando ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                    {editando ? "Salvando..." : "Salvar"}
+                  </button>
+                </div>
               </div>
             </form>
           </div>
