@@ -129,7 +129,7 @@ export function ComissoesClient({
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium truncate">{p.clienteNome}</p>
                       <p className="text-[11px] text-zinc-500">
-                        {tipoLabel[p.tipoOperacao] || p.tipoOperacao}
+                        {p.tipoOperacao ? (tipoLabel[p.tipoOperacao] || p.tipoOperacao) : "—"}
                         {p.bancoNome && ` · ${p.bancoNome}`}
                       </p>
                     </div>

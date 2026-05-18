@@ -1,29 +1,9 @@
-// Script para deletar leads importados erroneamente
 const { PrismaClient } = require("@prisma/client");
+require("dotenv").config();
 
-const prisma = new PrismaClient({
-  datasources: { db: { url: process.env.DATABASE_URL } },
-});
+const p = new PrismaClient();
 
-async function main() {
-  // Contar leads com origem 'importacao'
-  const count = await prisma.lead.count({
-    where: { origem: "importacao" },
-  });
-  console.log(`Encontrados ${count} leads com origem='importacao'`);
-
-  if (count > 0) {
-    const result = await prisma.lead.deleteMany({
-      where: { origem: "importacao" },
-    });
-    console.log(`Deletados: ${result.count} leads`);
-  }
-
-  // Também limpar qualquer proposta órfã (não deveria ter, mas por segurança)
-  const propostasCount = await prisma.proposta.count();
-  console.log(`Total de propostas no banco: ${propostasCount}`);
-}
-
-main()
+p.lead.deleteMany({ where: { origem: "importacao" } })
+  .then(function(r) { console.log("Deletados:", r.count, "leads"); })
   .catch(console.error)
-  .finally(() => prisma.$disconnect());
+  .finally(function() { p.$disconnect(); });
