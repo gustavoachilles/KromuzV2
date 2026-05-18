@@ -44,7 +44,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         clienteNome: lead.nome,
         clienteCpf: lead.cpf,
         clienteTelefone: lead.telefone,
-        tipoOperacao: lead.tipoOperacao || "EMPRESTIMO_CONSIGNADO",
+        tipoOperacao: (lead.tipoOperacao as any) || "EMPRESTIMO_CONSIGNADO",
         status: "PAGA",
         bancoNome: lead.bancoPreferido || tabela?.nome || "Banco Desconhecido",
         valorLiberado: valorLiberado,
