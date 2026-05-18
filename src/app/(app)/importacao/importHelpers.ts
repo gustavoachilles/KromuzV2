@@ -1,20 +1,20 @@
 // Helpers para o importador inteligente
 export const FIELD_MAP: Record<string, string[]> = {
-  nome: ["nome","cliente","name","nome_completo","nomecompleto","nome do cliente","nomebeneficiario","nome beneficiario"],
-  cpf: ["cpf","documento","cpf_cnpj","doc","cpf/cnpj","nr_cpf","cpfcliente"],
-  telefone: ["telefone","celular","whatsapp","fone","phone","cel","tel","contato","nr_telefone"],
+  nome: ["nome","cliente","name","nome_completo","nomecompleto","nomedocliente","nomebeneficiario","nomebeneficiario"],
+  cpf: ["cpf","documento","cpf_cnpj","doc","cpf/cnpj","nr_cpf","cpfcliente","cpf"],
+  telefone: ["telefone","celular","whatsapp","fone","phone","cel","tel","contato","nr_telefone","telefone"],
   email: ["email","e-mail","correio","mail"],
   uf: ["uf","estado","sigla_uf","sg_uf"],
   cidade: ["cidade","municipio","city","nm_municipio"],
-  numeroBeneficio: ["beneficio","nb","numero_beneficio","mat","matricula","nr_beneficio","numbeneficio"],
+  numeroBeneficio: ["beneficio","nb","numero_beneficio","mat","matricula","nr_beneficio","numbeneficio","ade"],
   especieBeneficio: ["especie","esp","cod_especie","especiebeneficio"],
-  margemLivre: ["margem","margem_livre","vlr_margem","margemlivre","margem livre","vl_margem_livre"],
+  margemLivre: ["margem","margem_livre","vlr_margem","margemlivre","margemlivre","vl_margem_livre","valorprincipal","valormargem"],
   margemRmc: ["margem_rmc","rmc","cartao_rmc","vl_margem_rmc"],
   margemRcc: ["margem_rcc","rcc","cartao_rcc","vl_margem_rcc"],
   bancoAtual: ["banco","banco_atual","inst_financeira","bancoorigem"],
   parcelaAtual: ["parcela","vlr_parcela","vl_parcela"],
-  saldoDevedor: ["saldo","saldo_devedor","vlr_saldo","vl_saldo"],
-  tipoOperacao: ["tipo","operacao","tipo_operacao","produto"],
+  saldoDevedor: ["saldo","saldo_devedor","vlr_saldo","vl_saldo","saldodevedor"],
+  tipoOperacao: ["tipo","operacao","tipo_operacao","produto","tipodeoperacao","tipodeoperação"],
   origem: ["origem","canal","source","fonte"],
 };
 

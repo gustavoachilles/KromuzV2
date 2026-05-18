@@ -57,9 +57,16 @@ export function ImportacaoClient() {
       reader.onload = (ev) => {
         try {
           const wb = XLSX.read(ev.target?.result, { type: "array" });
-          const ws = wb.Sheets[wb.SheetNames[0]];
+          // Auto-selecionar aba com mais dados
+          let bestSheet = wb.SheetNames[0];
+          let bestCount = 0;
+          for (const name of wb.SheetNames) {
+            const d = XLSX.utils.sheet_to_json(wb.Sheets[name], { defval: "" });
+            if (d.length > bestCount) { bestCount = d.length; bestSheet = name; }
+          }
+          const ws = wb.Sheets[bestSheet];
           const data = XLSX.utils.sheet_to_json<Record<string,any>>(ws, { defval: "" });
-          if (data.length === 0) { setErro("Planilha vazia"); return; }
+          if (data.length === 0) { setErro("Planilha vazia — nenhuma aba contém dados"); return; }
           const headers = Object.keys(data[0]);
           const rows = data.slice(0, 10000).map(r => {
             const obj: ImportRow = {};
