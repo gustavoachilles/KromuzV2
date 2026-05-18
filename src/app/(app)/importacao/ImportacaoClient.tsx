@@ -316,27 +316,30 @@ João da Silva;123.456.789-00;(11) 99999-0000;joao@email.com;SP;São Paulo;12345
                       const globalIdx = (pagina-1)*porPagina + i;
                       const isError = l._errors.length > 0;
                       const isDup = l._isDuplicate;
-                      const isEditing = editIdx === globalIdx;
+                      const isEditing = editIdx === globalIdx || isError;
                       return (
                         <tr key={globalIdx} className={`${isError ? "bg-red-50/50 dark:bg-red-950/10" : isDup ? "bg-amber-50/50 dark:bg-amber-950/10" : ""}`}>
                           <td className="px-3 py-2 text-zinc-400 tabular-nums">{globalIdx+1}</td>
                           <td className="px-3 py-2 text-center">
-                            {isError ? <span title={l._errors.join(", ")}>❌</span> : isDup ? <span title="CPF duplicado">⚠️</span> : <span>✅</span>}
+                            {isError ? <span className="cursor-help" title={l._errors.join(", ")}>❌</span> : isDup ? <span title="CPF duplicado">⚠️</span> : <span>✅</span>}
                           </td>
-                          <td className="px-3 py-2">{isEditing ? <input value={l.nome} onChange={e => editarLead(globalIdx,"nome",e.target.value)} className="w-full px-2 py-1 border rounded text-xs" autoFocus/> : <span className="font-semibold">{l.nome || "—"}</span>}</td>
-                          <td className="px-3 py-2 tabular-nums">{isEditing ? <input value={l.cpf||""} onChange={e => editarLead(globalIdx,"cpf",e.target.value)} className="w-24 px-2 py-1 border rounded text-xs"/> : (l.cpf || "—")}</td>
+                          <td className="px-3 py-2">{isEditing ? <input value={l.nome} onChange={e => editarLead(globalIdx,"nome",e.target.value)} className={`w-full px-2 py-1 border rounded text-xs ${l._errors.some(e => e.includes("Nome")) ? "border-red-400 bg-red-50" : ""}`} autoFocus/> : <span className="font-semibold">{l.nome || "—"}</span>}</td>
+                          <td className="px-3 py-2 tabular-nums">{isEditing ? <input value={l.cpf||""} onChange={e => editarLead(globalIdx,"cpf",e.target.value)} className={`w-28 px-2 py-1 border rounded text-xs ${l._errors.some(e => e.includes("CPF")) ? "border-red-400 bg-red-50" : ""}`}/> : (l.cpf || "—")}</td>
                           <td className="px-3 py-2">{isEditing ? <input value={l.telefone||""} onChange={e => editarLead(globalIdx,"telefone",e.target.value)} className="w-28 px-2 py-1 border rounded text-xs"/> : (l.telefone || "—")}</td>
                           <td className="px-3 py-2">{l.uf || "—"}</td>
                           <td className="px-3 py-2 text-right tabular-nums">{l.margemLivre ? `R$ ${l.margemLivre.toFixed(2)}` : "—"}</td>
                           <td className="px-3 py-2">{l.numeroBeneficio || "—"}</td>
-                          <td className="px-3 py-2 text-center">
-                            <div className="flex items-center justify-center gap-1">
-                              <button onClick={() => setEditIdx(isEditing ? null : globalIdx)} className="p-1 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded" title={isEditing ? "Concluir" : "Editar"}>
-                                {isEditing ? <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500"/> : <Pencil className="h-3.5 w-3.5 text-zinc-400"/>}
-                              </button>
-                              <button onClick={() => removerLead(globalIdx)} className="p-1 hover:bg-red-50 dark:hover:bg-red-950/30 rounded" title="Remover">
-                                <Trash2 className="h-3.5 w-3.5 text-zinc-400 hover:text-red-500"/>
-                              </button>
+                          <td className="px-3 py-2">
+                            <div className="flex items-center gap-1">
+                              {isError && <span className="text-[9px] text-red-500 font-medium max-w-[120px] truncate" title={l._errors.join(", ")}>{l._errors[0]}</span>}
+                              <div className="flex items-center justify-center gap-1 ml-auto">
+                                <button onClick={() => setEditIdx(isEditing && !isError ? null : globalIdx)} className="p-1 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded" title={isEditing ? "Concluir" : "Editar"}>
+                                  {isEditing && !isError ? <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500"/> : <Pencil className="h-3.5 w-3.5 text-zinc-400"/>}
+                                </button>
+                                <button onClick={() => removerLead(globalIdx)} className="p-1 hover:bg-red-50 dark:hover:bg-red-950/30 rounded" title="Remover">
+                                  <Trash2 className="h-3.5 w-3.5 text-zinc-400 hover:text-red-500"/>
+                                </button>
+                              </div>
                             </div>
                           </td>
                         </tr>

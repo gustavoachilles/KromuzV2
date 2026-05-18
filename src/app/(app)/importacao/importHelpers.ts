@@ -124,9 +124,11 @@ export function applyMapping(rows: ImportRow[], mapping: Record<string,string>):
     const nome = row[reverseMap["nome"]] || "";
     if (!nome.trim()) errors.push("Nome vazio");
 
-    const cpfRaw = row[reverseMap["cpf"]] || "";
-    const cpf = cpfRaw.replace(/\D/g, "");
-    if (cpf && cpf.length !== 11) errors.push("CPF inválido");
+    const cpfRaw = String(row[reverseMap["cpf"]] ?? "").trim();
+    // Pad com zeros à esquerda (Excel remove zeros de números)
+    let cpf = cpfRaw.replace(/\D/g, "");
+    if (cpf && cpf.length < 11 && cpf.length >= 9) cpf = cpf.padStart(11, "0");
+    if (cpf && cpf.length !== 11) errors.push(`CPF inválido (${cpf.length} dígitos: ${cpfRaw})`);
 
     const lead: MappedLead = {
       _idx: idx, _errors: errors, _isDuplicate: false,
