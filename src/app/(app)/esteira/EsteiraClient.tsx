@@ -19,7 +19,8 @@ import {
   Filter,
   GripVertical,
   Building2,
-  FileText
+  FileText,
+  List
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -85,6 +86,8 @@ export function EsteiraClient({
   const [filtroStatus, setFiltroStatus] = useState("");
   const [busca, setBusca] = useState("");
   const [atualizando, setAtualizando] = useState<string | null>(null);
+  const [porPagina, setPorPagina] = useState(10);
+  const [paginaLista, setPaginaLista] = useState(1);
   const [form, setForm] = useState({
     clienteNome: "",
     clienteCpf: "",
@@ -372,6 +375,95 @@ export function EsteiraClient({
             })}
           </DragDropContext>
         </div>
+
+        {/* Lista Sequencial */}
+        <section className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6">
+          <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
+            <h2 className="text-lg font-bold flex items-center gap-2"><List className="h-5 w-5 text-brand"/>Lista de Propostas</h2>
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 text-xs">
+                <span className="text-zinc-500">Exibir:</span>
+                {[5,10,20,50,100].map(n => (
+                  <button key={n} onClick={() => { setPorPagina(n); setPaginaLista(1); }}
+                    className={`px-2.5 py-1 rounded-lg font-semibold transition ${porPagina===n ? "bg-brand text-white" : "bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200"}`}>
+                    {n}
+                  </button>
+                ))}
+              </div>
+              <span className="text-xs text-zinc-400">{filtrados.length} total</span>
+            </div>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-[11px]">
+              <thead><tr className="bg-zinc-50 dark:bg-zinc-800/40">
+                <th className="text-left px-3 py-2 font-medium text-zinc-500">#</th>
+                <th className="text-left px-3 py-2 font-medium text-zinc-500">Nome</th>
+                <th className="text-left px-3 py-2 font-medium text-zinc-500">CPF</th>
+                <th className="text-center px-3 py-2 font-medium text-zinc-500">Data</th>
+                <th className="text-left px-3 py-2 font-medium text-zinc-500">Banco</th>
+                <th className="text-center px-3 py-2 font-medium text-zinc-500">Tipo</th>
+                <th className="text-left px-3 py-2 font-medium text-zinc-500">Convênio</th>
+                <th className="text-right px-3 py-2 font-medium text-zinc-500">Parcela</th>
+                <th className="text-right px-3 py-2 font-medium text-zinc-500">Liberado</th>
+                <th className="text-center px-3 py-2 font-medium text-zinc-500">Status</th>
+                <th className="text-left px-3 py-2 font-medium text-zinc-500">Vendedor</th>
+                <th className="text-left px-3 py-2 font-medium text-zinc-500">Telefone</th>
+              </tr></thead>
+              <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
+                {filtrados.slice((paginaLista-1)*porPagina, paginaLista*porPagina).map((p, idx) => {
+                  const sc: Record<string,string> = {
+                    PAGA:"bg-emerald-100 text-emerald-700", APROVADA:"bg-green-100 text-green-700",
+                    DIGITADA:"bg-sky-100 text-sky-700", PENDENTE:"bg-amber-100 text-amber-700",
+                    SIMULADA:"bg-blue-100 text-blue-700", RASCUNHO:"bg-zinc-100 text-zinc-600",
+                    REPROVADA:"bg-red-100 text-red-700", CANCELADA:"bg-zinc-100 text-zinc-400",
+                  };
+                  const tl: Record<string,string> = {
+                    PORTABILIDADE:"Port", PORTABILIDADE_REFIN:"P+R",
+                    REFINANCIAMENTO:"Refin", EMPRESTIMO_CONSIGNADO:"Novo",
+                    CARTAO_CONSIGNADO:"Cartão", CARTAO_BENEFICIO:"Benefício",
+                  };
+                  return (
+                    <tr key={p.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/30 cursor-pointer" onClick={() => router.push(`/esteira?proposta=${p.id}`)}>
+                      <td className="px-3 py-2 text-zinc-400 tabular-nums">{(paginaLista-1)*porPagina+idx+1}</td>
+                      <td className="px-3 py-2 font-semibold whitespace-nowrap max-w-[180px] truncate">{p.clienteNome}</td>
+                      <td className="px-3 py-2 tabular-nums text-zinc-500 whitespace-nowrap">{p.clienteCpf || "—"}</td>
+                      <td className="px-3 py-2 text-center tabular-nums whitespace-nowrap">{new Date(p.createdAt).toLocaleDateString("pt-BR")}</td>
+                      <td className="px-3 py-2 font-medium whitespace-nowrap">{p.bancoNome || "—"}</td>
+                      <td className="px-3 py-2 text-center"><span className={`px-1.5 py-0.5 rounded-full text-[9px] font-bold ${
+                        p.tipoOperacao==="PORTABILIDADE"?"bg-sky-100 text-sky-700":
+                        p.tipoOperacao==="PORTABILIDADE_REFIN"?"bg-violet-100 text-violet-700":
+                        p.tipoOperacao==="REFINANCIAMENTO"?"bg-amber-100 text-amber-700":
+                        p.tipoOperacao==="EMPRESTIMO_CONSIGNADO"?"bg-emerald-100 text-emerald-700":
+                        "bg-zinc-100 text-zinc-700"
+                      }`}>{tl[p.tipoOperacao] || p.tipoOperacao?.substring(0,6) || "—"}</span></td>
+                      <td className="px-3 py-2 whitespace-nowrap">{p.convenioNome || "—"}</td>
+                      <td className="px-3 py-2 text-right tabular-nums">{p.valorParcela ? `R$ ${p.valorParcela.toLocaleString("pt-BR",{minimumFractionDigits:2})}` : "—"}</td>
+                      <td className="px-3 py-2 text-right tabular-nums font-bold text-emerald-600">{p.valorLiberado ? `R$ ${p.valorLiberado.toLocaleString("pt-BR",{minimumFractionDigits:2})}` : "—"}</td>
+                      <td className="px-3 py-2 text-center"><span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${sc[p.status] || "bg-zinc-100 text-zinc-600"}`}>{statusConfig[p.status]?.label || p.status}</span></td>
+                      <td className="px-3 py-2 whitespace-nowrap">{p.vendedorNome || "—"}</td>
+                      <td className="px-3 py-2 whitespace-nowrap tabular-nums">{p.clienteTelefone || "—"}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+          {filtrados.length > porPagina && (
+            <div className="flex items-center justify-between mt-4 pt-4 border-t border-zinc-100 dark:border-zinc-800">
+              <button onClick={() => setPaginaLista(p => Math.max(1, p-1))} disabled={paginaLista===1}
+                className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 transition disabled:opacity-30">
+                ← Anterior
+              </button>
+              <span className="text-xs text-zinc-500 tabular-nums">
+                Página {paginaLista} de {Math.ceil(filtrados.length / porPagina)} · {(paginaLista-1)*porPagina+1}–{Math.min(paginaLista*porPagina, filtrados.length)} de {filtrados.length}
+              </span>
+              <button onClick={() => setPaginaLista(p => Math.min(Math.ceil(filtrados.length / porPagina), p+1))} disabled={paginaLista >= Math.ceil(filtrados.length / porPagina)}
+                className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 transition disabled:opacity-30">
+                Próxima →
+              </button>
+            </div>
+          )}
+        </section>
       </div>
 
       {/* Modal */}
