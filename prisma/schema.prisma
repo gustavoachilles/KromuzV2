@@ -600,6 +600,14 @@ model Proposta {
   // Rastreio de Gargalos
   historicoStatus Json?    @map("historico_status") @db.JsonB @default("[]")
 
+  // Portabilidade — Controle Operacional
+  bancoOrigem          String?   @map("banco_origem")
+  saldoDevedor         Float?    @map("saldo_devedor")
+  dataSolicitacaoSaldo DateTime? @map("data_solicitacao_saldo")
+  dataRetornoSaldo     DateTime? @map("data_retorno_saldo")
+  saldoRetornado       Boolean   @default(false) @map("saldo_retornado")
+  dataProximoRetorno   DateTime? @map("data_proximo_retorno")
+
   observacoes     String?
   
   // Datas do funil
