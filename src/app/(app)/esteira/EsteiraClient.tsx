@@ -385,7 +385,7 @@ export function EsteiraClient({
                                 <div className="flex items-start justify-between gap-2">
                                   <div className="flex-1 cursor-pointer" onClick={(e) => { e.stopPropagation(); abrirEditModal(p); }}>
                                     <p className="font-bold text-sm leading-tight text-zinc-900 dark:text-zinc-100 line-clamp-2">{p.clienteNome}</p>
-                                    <p className="text-[10px] text-zinc-400 font-medium mt-0.5">{tipoLabel[p.tipoOperacao] || p.tipoOperacao}</p>
+                                    <p className="text-[10px] text-zinc-400 font-medium mt-0.5">{p.tipoOperacao ? (tipoLabel[p.tipoOperacao] || p.tipoOperacao) : "—"}</p>
                                   </div>
                                   <div className="flex items-center gap-1">
                                     <button onClick={(e) => { e.stopPropagation(); abrirEditModal(p); }} className="p-1 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 transition" title="Editar">
