@@ -23,7 +23,9 @@ export const FIELD_MAP: Record<string, string[]> = {
   valorLiberado: ["valorliberado","valor_liberado","vl_liberado","vlrliberado"],
   statusImport: ["status","situacao","situação"],
   retornoSaldo: ["retornosaldo","retorno_saldo","retorno"],
-  vendedorNome: ["vendedor","vendedornome","operador","digitador","logindigitador"],
+  vendedorNome: ["vendedor","vendedornome","operador"],
+  loginDigitador: ["logindigitador","digitador","login_digitador","usuario"],
+  dataStatus: ["datadostatus","data_do_status","datastatus","data_status"],
   tabela: ["tabela","tab","tabelacoeficiente"],
 };
 
@@ -38,7 +40,8 @@ export const FIELD_LABELS: Record<string, string> = {
   codigoPropostaBanco: "ADE / Contrato", promotora: "Promotora",
   convenioNome: "Convênio", valorLiberado: "Valor Liberado",
   statusImport: "Status", retornoSaldo: "Retorno Saldo",
-  vendedorNome: "Vendedor", tabela: "Tabela",
+  vendedorNome: "Vendedor", loginDigitador: "Login Digitador",
+  dataStatus: "Data do Status", tabela: "Tabela",
 };
 
 export function autoMapColumns(headers: string[]): Record<string, string> {
@@ -102,11 +105,13 @@ export type MappedLead = {
   statusImport?: string;
   retornoSaldo?: string;
   vendedorNome?: string;
+  loginDigitador?: string;
+  dataStatus?: string;
   tabela?: string;
 };
 
 const NUM_FIELDS = ["especieBeneficio","margemLivre","margemRmc","margemRcc","parcelaAtual","saldoDevedor","valorLiberado"];
-const STR_FIELDS = ["telefone","email","uf","cidade","numeroBeneficio","bancoAtual","tipoOperacao","origem","dataDigitacao","codigoPropostaBanco","promotora","convenioNome","statusImport","retornoSaldo","vendedorNome","tabela"];
+const STR_FIELDS = ["telefone","email","uf","cidade","numeroBeneficio","bancoAtual","tipoOperacao","origem","dataDigitacao","codigoPropostaBanco","promotora","convenioNome","statusImport","retornoSaldo","vendedorNome","loginDigitador","dataStatus","tabela"];
 
 export function applyMapping(rows: ImportRow[], mapping: Record<string,string>): MappedLead[] {
   const reverseMap: Record<string,string> = {};
