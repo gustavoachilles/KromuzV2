@@ -92,14 +92,22 @@ export function EsteiraClient({
   const [porPagina, setPorPagina] = useState(10);
   const [paginaLista, setPaginaLista] = useState(1);
   const [form, setForm] = useState({
-    clienteNome: "",
-    clienteCpf: "",
-    clienteTelefone: "",
-    tipoOperacao: "EMPRESTIMO_CONSIGNADO",
-    bancoNome: "",
-    valorLiberado: "",
-    observacoes: "",
+    clienteNome: "", clienteCpf: "", clienteTelefone: "", email: "",
+    uf: "", cidade: "", numeroBeneficio: "", especieBeneficio: "",
+    margemLivre: "", margemRmc: "", margemRcc: "",
+    tipoOperacao: "Saque FGTS", bancoNome: "", convenioNome: "",
+    valorLiberado: "", valorParcela: "", prazo: "", taxaJuros: "",
+    codigoPropostaBanco: "", promotora: "", tabela: "",
+    bancoOrigem: "", saldoDevedor: "",
+    vendedorNome: "", dataDigitacao: "", observacoes: "",
   });
+  const emptyForm = { ...form };
+  const [formTab, setFormTab] = useState(0);
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [searchPropostas, setSearchPropostas] = useState<any[]>([]);
+  const [selectedLead, setSelectedLead] = useState<any>(null);
+  const [searching, setSearching] = useState(false);
+  const searchTimeout = useState<any>(null);
 
   // Estado do modal de edição
   const [editModal, setEditModal] = useState(false);
@@ -201,23 +209,72 @@ export function EsteiraClient({
   });
   const maxFunnel = Math.max(...funnelData.map((f) => f.count), 1);
 
+  async function searchCliente(q: string) {
+    if (q.length < 3) { setSearchResults([]); return; }
+    setSearching(true);
+    try {
+      const res = await fetch(`/api/leads/search?q=${encodeURIComponent(q)}`);
+      const data = await res.json();
+      setSearchResults(data.leads || []);
+      setSearchPropostas(data.propostas || []);
+    } catch { setSearchResults([]); }
+    setSearching(false);
+  }
+
+  function selecionarLead(lead: any) {
+    setForm(f => ({
+      ...f,
+      clienteNome: lead.nome || "",
+      clienteCpf: lead.cpf || "",
+      clienteTelefone: lead.telefone || "",
+      email: lead.email || "",
+      uf: lead.uf || "",
+      cidade: lead.cidade || "",
+      numeroBeneficio: lead.numeroBeneficio || "",
+      especieBeneficio: lead.especieBeneficio?.toString() || "",
+      margemLivre: lead.margemLivre?.toString() || "",
+      margemRmc: lead.margemRmc?.toString() || "",
+      margemRcc: lead.margemRcc?.toString() || "",
+      tipoOperacao: lead.tipoOperacao || "Saque FGTS",
+      bancoNome: lead.bancoPreferido || "",
+      convenioNome: lead.convenioNome || "",
+      valorLiberado: lead.valorLiberado?.toString() || "",
+      vendedorNome: lead.vendedorNome || "",
+    }));
+    setSelectedLead(lead);
+    setSearchResults([]);
+  }
+
   async function criarProposta(e: React.FormEvent) {
     e.preventDefault();
     setSalvando(true);
     setErro(null);
 
+    const payload: any = {
+      clienteNome: form.clienteNome,
+      tipoOperacao: form.tipoOperacao || undefined,
+    };
+    if (form.clienteCpf) payload.clienteCpf = form.clienteCpf;
+    if (form.clienteTelefone) payload.clienteTelefone = form.clienteTelefone;
+    if (form.numeroBeneficio) payload.numeroBeneficio = form.numeroBeneficio;
+    if (form.especieBeneficio) payload.especieBeneficio = Number(form.especieBeneficio);
+    if (form.bancoNome) payload.bancoNome = form.bancoNome;
+    if (form.convenioNome) payload.convenioNome = form.convenioNome;
+    if (form.valorLiberado) payload.valorLiberado = Number(form.valorLiberado);
+    if (form.valorParcela) payload.valorParcela = Number(form.valorParcela);
+    if (form.prazo) payload.prazo = Number(form.prazo);
+    if (form.taxaJuros) payload.taxaJuros = Number(form.taxaJuros);
+    if (form.codigoPropostaBanco) payload.codigoPropostaBanco = form.codigoPropostaBanco;
+    if (form.bancoOrigem) payload.bancoOrigem = form.bancoOrigem;
+    if (form.saldoDevedor) payload.saldoDevedor = Number(form.saldoDevedor);
+    if (form.vendedorNome) payload.vendedorNome = form.vendedorNome;
+    if (selectedLead) payload.leadId = selectedLead.id;
+    payload.observacoes = form.observacoes || undefined;
+
     const res = await fetch("/api/propostas", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        clienteNome: form.clienteNome,
-        clienteCpf: form.clienteCpf || undefined,
-        clienteTelefone: form.clienteTelefone || undefined,
-        tipoOperacao: form.tipoOperacao,
-        bancoNome: form.bancoNome || undefined,
-        valorLiberado: form.valorLiberado ? Number(form.valorLiberado) : undefined,
-        observacoes: form.observacoes || undefined,
-      }),
+      body: JSON.stringify(payload),
     });
 
     const data = await res.json();
@@ -225,7 +282,11 @@ export function EsteiraClient({
 
     setModal(false);
     setSalvando(false);
-    setForm({ clienteNome: "", clienteCpf: "", clienteTelefone: "", tipoOperacao: "EMPRESTIMO_CONSIGNADO", bancoNome: "", valorLiberado: "", observacoes: "" });
+    setForm(emptyForm);
+    setFormTab(0);
+    setSelectedLead(null);
+    setSearchResults([]);
+    setSearchPropostas([]);
     router.refresh();
   }
 
@@ -555,63 +616,208 @@ export function EsteiraClient({
         </section>
       </div>
 
-      {/* Modal */}
+      {/* Modal Nova Proposta — Formulário Completo */}
       {modal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-2xl w-full max-w-lg mx-4">
+          <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-2xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between p-6 border-b border-zinc-100 dark:border-zinc-800">
-              <h2 className="text-lg font-semibold">Nova Proposta</h2>
-              <button onClick={() => setModal(false)} className="text-zinc-400 hover:text-zinc-600 transition">
+              <h2 className="text-lg font-semibold flex items-center gap-2"><Plus className="h-5 w-5 text-brand"/>Nova Proposta</h2>
+              <button onClick={() => { setModal(false); setFormTab(0); setSelectedLead(null); setSearchResults([]); }} className="text-zinc-400 hover:text-zinc-600 transition">
                 <X className="h-5 w-5" />
               </button>
             </div>
+
+            {/* Tabs */}
+            <div className="flex border-b border-zinc-100 dark:border-zinc-800 px-6">
+              {["👤 Cliente","📋 Operação","💰 Financeiro"].map((t, i) => (
+                <button key={i} onClick={() => setFormTab(i)}
+                  className={`px-4 py-3 text-sm font-medium border-b-2 transition ${formTab === i ? "border-brand text-brand" : "border-transparent text-zinc-400 hover:text-zinc-600"}`}>{t}</button>
+              ))}
+            </div>
+
+            {/* Selected Lead Badge */}
+            {selectedLead && (
+              <div className="mx-6 mt-4 flex items-center gap-2 px-3 py-2 rounded-lg bg-brand/10 border border-brand/20">
+                <CheckCircle2 className="h-4 w-4 text-brand"/>
+                <span className="text-xs font-semibold text-brand">Cliente existente: {selectedLead.nome}</span>
+                <button onClick={() => { setSelectedLead(null); setForm(emptyForm); }} className="ml-auto text-xs text-zinc-400 hover:text-red-500">✕ Limpar</button>
+              </div>
+            )}
+
             <form onSubmit={criarProposta} className="p-6 space-y-4">
               {erro && (
                 <div className="rounded-lg bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900 px-4 py-3 text-sm text-red-700 dark:text-red-300">{erro}</div>
               )}
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2 col-span-2">
-                  <label className="text-sm font-medium">Nome do Cliente *</label>
-                  <input required value={form.clienteNome} onChange={(e) => setForm({ ...form, clienteNome: e.target.value })} placeholder="João da Silva"
-                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-zinc-500">CPF</label>
-                  <input value={form.clienteCpf} onChange={(e) => setForm({ ...form, clienteCpf: e.target.value })} placeholder="000.000.000-00"
-                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-zinc-500">Telefone</label>
-                  <input value={form.clienteTelefone} onChange={(e) => setForm({ ...form, clienteTelefone: e.target.value })} placeholder="(11) 99999-0000"
-                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Tipo *</label>
-                  <select value={form.tipoOperacao} onChange={(e) => setForm({ ...form, tipoOperacao: e.target.value })}
-                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand">
-                    {Object.entries(tipoLabel).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-                  </select>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-zinc-500">Banco</label>
-                  <input value={form.bancoNome} onChange={(e) => setForm({ ...form, bancoNome: e.target.value })} placeholder="BMG, Pan..."
-                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
-                </div>
-                <div className="space-y-2 col-span-2">
-                  <label className="text-sm font-medium text-zinc-500">Valor Liberado Estimado</label>
-                  <input type="number" step="0.01" value={form.valorLiberado} onChange={(e) => setForm({ ...form, valorLiberado: e.target.value })} placeholder="5000.00"
-                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
-                </div>
-              </div>
+              {/* TAB 0: Cliente */}
+              {formTab === 0 && (
+                <div className="space-y-4">
+                  <div className="space-y-2 relative">
+                    <label className="text-sm font-medium">Nome do Cliente *</label>
+                    <input required value={form.clienteNome} onChange={(e) => { setForm({ ...form, clienteNome: e.target.value }); searchCliente(e.target.value); }} placeholder="Digite para buscar cliente existente..."
+                      className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
+                    {searching && <p className="text-xs text-zinc-400 mt-1">Buscando...</p>}
+                    {searchResults.length > 0 && (
+                      <div className="absolute z-10 top-full left-0 right-0 mt-1 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl shadow-xl max-h-48 overflow-y-auto">
+                        {searchResults.map((l: any) => (
+                          <button type="button" key={l.id} onClick={() => selecionarLead(l)}
+                            className="w-full px-4 py-3 text-left hover:bg-brand/5 transition border-b border-zinc-50 dark:border-zinc-800 last:border-0">
+                            <p className="text-sm font-semibold">{l.nome}</p>
+                            <p className="text-[11px] text-zinc-400">{l.cpf || "Sem CPF"} · {l.telefone || "Sem tel"} · Score: {l.score}</p>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-zinc-500">CPF</label>
+                      <input value={form.clienteCpf} onChange={(e) => { setForm({ ...form, clienteCpf: e.target.value }); if (e.target.value.length >= 9) searchCliente(e.target.value.replace(/\D/g,"")); }} placeholder="000.000.000-00"
+                        className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-zinc-500">Telefone</label>
+                      <input value={form.clienteTelefone} onChange={(e) => setForm({ ...form, clienteTelefone: e.target.value })} placeholder="(67) 99999-0000"
+                        className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-zinc-500">Email</label>
+                      <input value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="email@exemplo.com"
+                        className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-zinc-500">UF</label>
+                      <input value={form.uf} onChange={(e) => setForm({ ...form, uf: e.target.value })} placeholder="MS" maxLength={2}
+                        className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
+                    </div>
+                  </div>
 
-              <div className="flex justify-end gap-3 pt-2">
-                <button type="button" onClick={() => setModal(false)} className="px-4 py-2 text-sm text-zinc-600 hover:text-zinc-900 transition">Cancelar</button>
-                <button type="submit" disabled={salvando}
-                  className="flex items-center gap-2 rounded-xl bg-brand px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-brand/25 hover:opacity-95 disabled:opacity-50 transition">
-                  {salvando ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-                  {salvando ? "Criando..." : "Criar Proposta"}
-                </button>
+                  {/* Histórico do Cliente */}
+                  {selectedLead && searchPropostas.length > 0 && (
+                    <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800/30 p-4 mt-2">
+                      <h3 className="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2">📜 Histórico ({searchPropostas.length} negócios)</h3>
+                      <div className="space-y-1.5 max-h-32 overflow-y-auto">
+                        {searchPropostas.map((p: any) => (
+                          <div key={p.id} className="flex items-center justify-between text-[11px]">
+                            <span className="font-medium truncate">{p.bancoNome || "—"} · {p.tipoOperacao || "—"}</span>
+                            <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${p.status==="PAGA"?"bg-emerald-100 text-emerald-700":p.status==="CANCELADA"?"bg-zinc-100 text-zinc-500":"bg-amber-100 text-amber-700"}`}>{p.status}</span>
+                            <span className="font-bold tabular-nums text-emerald-600">{p.valorLiberado ? `R$ ${p.valorLiberado.toLocaleString("pt-BR")}` : "—"}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* TAB 1: Operação */}
+              {formTab === 1 && (
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Nº Benefício</label>
+                    <input value={form.numeroBeneficio} onChange={(e) => setForm({ ...form, numeroBeneficio: e.target.value })} placeholder="1234567890"
+                      className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Espécie</label>
+                    <input type="number" value={form.especieBeneficio} onChange={(e) => setForm({ ...form, especieBeneficio: e.target.value })} placeholder="41"
+                      className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Tipo Operação</label>
+                    <input value={form.tipoOperacao} onChange={(e) => setForm({ ...form, tipoOperacao: e.target.value })} placeholder="Saque FGTS, Margem Nova..."
+                      className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Convênio</label>
+                    <input value={form.convenioNome} onChange={(e) => setForm({ ...form, convenioNome: e.target.value })} placeholder="INSS, FGTS, SIAPE..."
+                      className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-zinc-500">Margem Livre</label>
+                    <input type="number" step="0.01" value={form.margemLivre} onChange={(e) => setForm({ ...form, margemLivre: e.target.value })} placeholder="0.00"
+                      className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-zinc-500">Margem RMC</label>
+                    <input type="number" step="0.01" value={form.margemRmc} onChange={(e) => setForm({ ...form, margemRmc: e.target.value })} placeholder="0.00"
+                      className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
+                  </div>
+                  <div className="space-y-2 col-span-2">
+                    <label className="text-sm font-medium text-zinc-500">Margem RCC</label>
+                    <input type="number" step="0.01" value={form.margemRcc} onChange={(e) => setForm({ ...form, margemRcc: e.target.value })} placeholder="0.00"
+                      className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 2: Financeiro */}
+              {formTab === 2 && (
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Banco</label>
+                    <input value={form.bancoNome} onChange={(e) => setForm({ ...form, bancoNome: e.target.value })} placeholder="UNNO, Facta, BMG..."
+                      className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-zinc-500">Promotora</label>
+                    <input value={form.promotora} onChange={(e) => setForm({ ...form, promotora: e.target.value })} placeholder="BEVI, Novo Saque..."
+                      className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Valor Liberado</label>
+                    <input type="number" step="0.01" value={form.valorLiberado} onChange={(e) => setForm({ ...form, valorLiberado: e.target.value })} placeholder="5000.00"
+                      className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-zinc-500">Parcela</label>
+                    <input type="number" step="0.01" value={form.valorParcela} onChange={(e) => setForm({ ...form, valorParcela: e.target.value })} placeholder="150.00"
+                      className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-zinc-500">ADE / Contrato</label>
+                    <input value={form.codigoPropostaBanco} onChange={(e) => setForm({ ...form, codigoPropostaBanco: e.target.value })} placeholder="0207381481/ACD"
+                      className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-zinc-500">Vendedor</label>
+                    <input value={form.vendedorNome} onChange={(e) => setForm({ ...form, vendedorNome: e.target.value })} placeholder="Nome do vendedor"
+                      className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-zinc-500">Banco Origem (Port)</label>
+                    <input value={form.bancoOrigem} onChange={(e) => setForm({ ...form, bancoOrigem: e.target.value })} placeholder="Banco de onde vem"
+                      className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-zinc-500">Saldo Devedor</label>
+                    <input type="number" step="0.01" value={form.saldoDevedor} onChange={(e) => setForm({ ...form, saldoDevedor: e.target.value })} placeholder="0.00"
+                      className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
+                  </div>
+                  <div className="space-y-2 col-span-2">
+                    <label className="text-sm font-medium text-zinc-500">Observações</label>
+                    <textarea value={form.observacoes} onChange={(e) => setForm({ ...form, observacoes: e.target.value })} placeholder="Notas sobre a proposta..." rows={2}
+                      className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand resize-none" />
+                  </div>
+                </div>
+              )}
+
+              {/* Navigation + Submit */}
+              <div className="flex justify-between pt-2 border-t border-zinc-100 dark:border-zinc-800">
+                <button type="button" onClick={() => setFormTab(Math.max(0, formTab - 1))} disabled={formTab === 0}
+                  className="px-4 py-2 text-sm text-zinc-500 hover:text-zinc-900 disabled:opacity-30 transition">← Anterior</button>
+                <div className="flex gap-2">
+                  {formTab < 2 ? (
+                    <button type="button" onClick={() => setFormTab(formTab + 1)}
+                      className="px-5 py-2.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-sm font-semibold hover:bg-zinc-200 transition">Próximo →</button>
+                  ) : (
+                    <button type="submit" disabled={salvando}
+                      className="flex items-center gap-2 rounded-xl bg-brand px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-brand/25 hover:opacity-95 disabled:opacity-50 transition">
+                      {salvando ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+                      {salvando ? "Criando..." : "Criar Proposta"}
+                    </button>
+                  )}
+                </div>
               </div>
             </form>
           </div>
