@@ -524,7 +524,7 @@ export function EsteiraClient({
                         p.tipoOperacao==="REFINANCIAMENTO"?"bg-amber-100 text-amber-700":
                         p.tipoOperacao==="EMPRESTIMO_CONSIGNADO"?"bg-emerald-100 text-emerald-700":
                         "bg-zinc-100 text-zinc-700"
-                      }`}>{tl[p.tipoOperacao] || p.tipoOperacao?.substring(0,6) || "—"}</span></td>
+                      }`}>{p.tipoOperacao ? (tl[p.tipoOperacao] || p.tipoOperacao.substring(0,6)) : "—"}</span></td>
                       <td className="px-3 py-2 whitespace-nowrap">{p.convenioNome || "—"}</td>
                       <td className="px-3 py-2 text-right tabular-nums">{p.valorParcela ? `R$ ${p.valorParcela.toLocaleString("pt-BR",{minimumFractionDigits:2})}` : "—"}</td>
                       <td className="px-3 py-2 text-right tabular-nums font-bold text-emerald-600">{p.valorLiberado ? `R$ ${p.valorLiberado.toLocaleString("pt-BR",{minimumFractionDigits:2})}` : "—"}</td>
