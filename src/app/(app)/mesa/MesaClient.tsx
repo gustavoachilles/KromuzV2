@@ -10,6 +10,7 @@ import {
 type Proposta = {
   id: string; clienteNome: string; clienteCpf?: string|null; clienteTelefone?: string|null;
   bancoNome?: string|null; bancoOrigem?: string|null; status: string;
+  tipoOperacao?: string|null;
   valorLiberado?: number|null; valorParcela?: number|null; valorComissao?: number|null;
   taxaJuros?: number|null; prazo?: number|null;
   saldoDevedor?: number|null; saldoRetornado?: boolean;
@@ -119,7 +120,7 @@ export function MesaClient({ sessao, propostas, leadsHoje, kpis }: {
 
         {/* Pipeline Kanban */}
         <section>
-          <h2 className="text-lg font-bold mb-4 flex items-center gap-2"><Building2 className="h-5 w-5 text-sky-500"/>Pipeline de Portabilidade</h2>
+          <h2 className="text-lg font-bold mb-4 flex items-center gap-2"><Building2 className="h-5 w-5 text-sky-500"/>Pipeline de Operações</h2>
           <div className="flex gap-4 overflow-x-auto pb-4">
             {STATUS_COLS.map(col => {
               const items = emAndamento.filter(p => p.status === col);
@@ -140,7 +141,18 @@ export function MesaClient({ sessao, propostas, leadsHoje, kpis }: {
                         <div key={p.id} className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 hover:shadow-md hover:border-sky-300 transition cursor-pointer" onClick={() => router.push(`/esteira?proposta=${p.id}`)}>
                           <div className="flex items-start justify-between mb-2">
                             <p className="font-semibold text-sm truncate flex-1">{p.clienteNome}</p>
-                            {dias > 3 && <span className="text-[10px] bg-red-100 text-red-700 px-1.5 py-0.5 rounded-full font-bold">{dias}d</span>}
+                            <div className="flex items-center gap-1">
+                              {p.tipoOperacao && <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-bold ${
+                                p.tipoOperacao==="PORTABILIDADE"?"bg-sky-100 text-sky-700":
+                                p.tipoOperacao==="PORTABILIDADE_REFIN"?"bg-violet-100 text-violet-700":
+                                p.tipoOperacao==="REFINANCIAMENTO"?"bg-amber-100 text-amber-700":
+                                p.tipoOperacao==="EMPRESTIMO_CONSIGNADO"?"bg-emerald-100 text-emerald-700":
+                                p.tipoOperacao==="CARTAO_CONSIGNADO"?"bg-pink-100 text-pink-700":
+                                p.tipoOperacao==="CARTAO_BENEFICIO"?"bg-rose-100 text-rose-700":
+                                "bg-zinc-100 text-zinc-700"
+                              }`}>{p.tipoOperacao==="PORTABILIDADE"?"Port":p.tipoOperacao==="PORTABILIDADE_REFIN"?"P+R":p.tipoOperacao==="REFINANCIAMENTO"?"Refin":p.tipoOperacao==="EMPRESTIMO_CONSIGNADO"?"Novo":p.tipoOperacao==="CARTAO_CONSIGNADO"?"Cart":p.tipoOperacao==="CARTAO_BENEFICIO"?"Ben":p.tipoOperacao?.substring(0,4)}</span>}
+                              {dias > 3 && <span className="text-[10px] bg-red-100 text-red-700 px-1.5 py-0.5 rounded-full font-bold">{dias}d</span>}
+                            </div>
                           </div>
                           <div className="space-y-1 text-[11px] text-zinc-500">
                             <p>{p.bancoOrigem ? `${p.bancoOrigem} → ` : ""}<span className="font-medium text-zinc-700 dark:text-zinc-300">{p.bancoNome || "—"}</span></p>

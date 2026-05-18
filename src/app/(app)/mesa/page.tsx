@@ -18,11 +18,10 @@ export default async function MesaPage() {
   const amanha = new Date(hoje);
   amanha.setDate(amanha.getDate() + 1);
 
-  // Propostas de portabilidade ativas (não pagas/canceladas)
+  // Todas as propostas ativas (não pagas/canceladas)
   const propostas = await prisma.proposta.findMany({
     where: {
       empresaId: eid,
-      tipoOperacao: { in: ["PORTABILIDADE", "PORTABILIDADE_REFIN"] },
       status: { notIn: ["PAGA", "CANCELADA"] },
     },
     orderBy: { updatedAt: "desc" },
@@ -52,7 +51,6 @@ export default async function MesaPage() {
     prisma.proposta.count({
       where: {
         empresaId: eid,
-        tipoOperacao: { in: ["PORTABILIDADE", "PORTABILIDADE_REFIN"] },
         status: "PAGA",
         pagaEm: { gte: new Date(hoje.getFullYear(), hoje.getMonth(), 1) },
       },
@@ -60,7 +58,6 @@ export default async function MesaPage() {
     prisma.proposta.aggregate({
       where: {
         empresaId: eid,
-        tipoOperacao: { in: ["PORTABILIDADE", "PORTABILIDADE_REFIN"] },
         status: "PAGA",
         pagaEm: { gte: new Date(hoje.getFullYear(), hoje.getMonth(), 1) },
       },
