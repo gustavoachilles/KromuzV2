@@ -100,7 +100,7 @@ export function SidebarNav({ permissoes }: { permissoes: Permissoes }) {
         </>
       )}
       {p("importacao") && (
-        <NavLink href="/importacao" icon={<Upload className="h-4 w-4" />} active={pathname === "/importacao"}>Importar</NavLink>
+        <NavLink href="/importacao" icon={<Upload className="h-4 w-4" />} active={pathname === "/importacao"}>Importar Clientes</NavLink>
       )}
 
       {(p("relatorios") || p("auditoria") || p("configuracoes") || p("assinatura")) && (
