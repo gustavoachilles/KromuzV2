@@ -2,7 +2,8 @@
 import { useState } from "react";
 import {
   KeyRound, ExternalLink, Plus, X, Loader2, Eye, EyeOff,
-  Building2, Shield, Search, Copy, Check, Globe, User, Lock
+  Building2, Shield, Search, Copy, Check, Globe, User, Lock,
+  Pencil, Users
 } from "lucide-react";
 
 type Banco = {
@@ -23,6 +24,7 @@ type Credencial = {
   usuario: string;
   senha: string;
   observacoes: string;
+  funcionario: string;
 };
 
 // URLs de login conhecidos dos bancos
@@ -53,15 +55,33 @@ function guessLoginUrl(bancoNome: string): string {
   return "";
 }
 
+const DEFAULT_FUNCIONARIOS = ["Gustavo", "Wandeyr", "Walckiria"];
+
 export function CredenciaisClient({ bancos, empresaId }: { bancos: Banco[]; empresaId: string }) {
   // Carregar credenciais do localStorage (não vai para o banco por segurança)
   const [credenciais, setCredenciais] = useState<Credencial[]>(() => {
     if (typeof window === "undefined") return [];
     try {
-      return JSON.parse(localStorage.getItem(`kromuz_creds_${empresaId}`) || "[]");
+      const raw = JSON.parse(localStorage.getItem(`kromuz_creds_${empresaId}`) || "[]");
+      // Migrate old credentials that don't have funcionario field
+      return raw.map((c: any) => ({ ...c, funcionario: c.funcionario || "" }));
     } catch { return []; }
   });
 
+  // Carregar lista de funcionários do localStorage
+  const [funcionarios, setFuncionarios] = useState<string[]>(() => {
+    if (typeof window === "undefined") return DEFAULT_FUNCIONARIOS;
+    try {
+      const stored = localStorage.getItem(`kromuz_creds_funcionarios_${empresaId}`);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        return parsed.length > 0 ? parsed : DEFAULT_FUNCIONARIOS;
+      }
+      return DEFAULT_FUNCIONARIOS;
+    } catch { return DEFAULT_FUNCIONARIOS; }
+  });
+
+  const [funcionarioTab, setFuncionarioTab] = useState<string>("Todos");
   const [filtro, setFiltro] = useState("");
   const [tipoFiltro, setTipoFiltro] = useState<"todos" | "banco" | "promotora" | "sistema">("todos");
   const [modal, setModal] = useState(false);
@@ -69,6 +89,8 @@ export function CredenciaisClient({ bancos, empresaId }: { bancos: Banco[]; empr
   const [salvando, setSalvando] = useState(false);
   const [senhasVisiveis, setSenhasVisiveis] = useState<Set<string>>(new Set());
   const [copiadoId, setCopiadoId] = useState<string | null>(null);
+  const [novoFuncionarioInput, setNovoFuncionarioInput] = useState("");
+  const [showAddFuncionario, setShowAddFuncionario] = useState(false);
 
   const [form, setForm] = useState<Omit<Credencial, "id">>({
     tipo: "banco",
@@ -78,7 +100,27 @@ export function CredenciaisClient({ bancos, empresaId }: { bancos: Banco[]; empr
     usuario: "",
     senha: "",
     observacoes: "",
+    funcionario: "",
   });
+
+  function salvarFuncionarios(novaLista: string[]) {
+    setFuncionarios(novaLista);
+    localStorage.setItem(`kromuz_creds_funcionarios_${empresaId}`, JSON.stringify(novaLista));
+  }
+
+  function adicionarFuncionario() {
+    const nome = novoFuncionarioInput.trim();
+    if (!nome) return;
+    if (funcionarios.some(f => f.toLowerCase() === nome.toLowerCase())) {
+      setNovoFuncionarioInput("");
+      setShowAddFuncionario(false);
+      return;
+    }
+    const novaLista = [...funcionarios, nome];
+    salvarFuncionarios(novaLista);
+    setNovoFuncionarioInput("");
+    setShowAddFuncionario(false);
+  }
 
   function salvar() {
     const novoId = editando?.id || crypto.randomUUID();
@@ -106,17 +148,35 @@ export function CredenciaisClient({ bancos, empresaId }: { bancos: Banco[]; empr
   function fecharModal() {
     setModal(false);
     setEditando(null);
-    setForm({ tipo: "banco", nome: "", bancoId: "", urlLogin: "", usuario: "", senha: "", observacoes: "" });
+    setForm({ tipo: "banco", nome: "", bancoId: "", urlLogin: "", usuario: "", senha: "", observacoes: "", funcionario: "" });
   }
 
   function abrirEditar(cred: Credencial) {
     setEditando(cred);
-    setForm({ tipo: cred.tipo, nome: cred.nome, bancoId: cred.bancoId || "", urlLogin: cred.urlLogin, usuario: cred.usuario, senha: cred.senha, observacoes: cred.observacoes });
+    setForm({
+      tipo: cred.tipo,
+      nome: cred.nome,
+      bancoId: cred.bancoId || "",
+      urlLogin: cred.urlLogin,
+      usuario: cred.usuario,
+      senha: cred.senha,
+      observacoes: cred.observacoes,
+      funcionario: cred.funcionario || "",
+    });
     setModal(true);
   }
 
   function abrirNovo(tipo: "banco" | "promotora" | "sistema" = "banco") {
-    setForm({ tipo, nome: "", bancoId: "", urlLogin: "", usuario: "", senha: "", observacoes: "" });
+    setForm({
+      tipo,
+      nome: "",
+      bancoId: "",
+      urlLogin: "",
+      usuario: "",
+      senha: "",
+      observacoes: "",
+      funcionario: funcionarioTab !== "Todos" ? funcionarioTab : "",
+    });
     setEditando(null);
     setModal(true);
   }
@@ -144,7 +204,12 @@ export function CredenciaisClient({ bancos, empresaId }: { bancos: Banco[]; empr
     }));
   }
 
-  const filtrados = credenciais.filter(c => {
+  // Filter by employee tab first, then by tipo and search
+  const credenciaisByEmployee = funcionarioTab === "Todos"
+    ? credenciais
+    : credenciais.filter(c => c.funcionario === funcionarioTab);
+
+  const filtrados = credenciaisByEmployee.filter(c => {
     if (tipoFiltro !== "todos" && c.tipo !== tipoFiltro) return false;
     if (filtro) {
       const q = filtro.toLowerCase();
@@ -152,6 +217,9 @@ export function CredenciaisClient({ bancos, empresaId }: { bancos: Banco[]; empr
     }
     return true;
   });
+
+  // KPIs based on the selected employee tab
+  const kpiBase = credenciaisByEmployee;
 
   const tipoIcon = (tipo: string) => {
     switch (tipo) {
@@ -183,13 +251,80 @@ export function CredenciaisClient({ bancos, empresaId }: { bancos: Banco[]; empr
           <p className="text-sm text-zinc-500 mt-1">Gerencie seus logins de bancos, promotoras e sistemas em um só lugar.</p>
         </div>
 
+        {/* Funcionário Tabs */}
+        <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-1.5 bg-zinc-100 dark:bg-zinc-800/80 rounded-xl p-1 flex-wrap">
+            <button
+              onClick={() => setFuncionarioTab("Todos")}
+              className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-medium transition ${
+                funcionarioTab === "Todos"
+                  ? "bg-white dark:bg-zinc-900 shadow-sm text-zinc-900 dark:text-zinc-100"
+                  : "text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"
+              }`}
+            >
+              <Users className="h-3.5 w-3.5" />
+              Todos
+            </button>
+            {funcionarios.map(f => (
+              <button
+                key={f}
+                onClick={() => setFuncionarioTab(f)}
+                className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-medium transition ${
+                  funcionarioTab === f
+                    ? "bg-white dark:bg-zinc-900 shadow-sm text-zinc-900 dark:text-zinc-100"
+                    : "text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"
+                }`}
+              >
+                <User className="h-3.5 w-3.5" />
+                {f}
+              </button>
+            ))}
+          </div>
+
+          {/* Add Funcionario */}
+          {showAddFuncionario ? (
+            <div className="flex items-center gap-1.5">
+              <input
+                type="text"
+                value={novoFuncionarioInput}
+                onChange={e => setNovoFuncionarioInput(e.target.value)}
+                onKeyDown={e => { if (e.key === "Enter") adicionarFuncionario(); if (e.key === "Escape") { setShowAddFuncionario(false); setNovoFuncionarioInput(""); } }}
+                placeholder="Nome do funcionário..."
+                autoFocus
+                className="rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-brand/50 w-40"
+              />
+              <button
+                onClick={adicionarFuncionario}
+                disabled={!novoFuncionarioInput.trim()}
+                className="rounded-lg bg-brand px-2.5 py-1.5 text-xs font-medium text-white hover:opacity-90 disabled:opacity-50 transition"
+              >
+                <Check className="h-3.5 w-3.5" />
+              </button>
+              <button
+                onClick={() => { setShowAddFuncionario(false); setNovoFuncionarioInput(""); }}
+                className="rounded-lg border border-zinc-300 dark:border-zinc-600 px-2.5 py-1.5 text-xs text-zinc-500 hover:text-zinc-700 transition"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => setShowAddFuncionario(true)}
+              className="flex items-center gap-1 rounded-lg border border-dashed border-zinc-300 dark:border-zinc-600 px-3 py-2 text-xs text-zinc-500 hover:border-brand hover:text-brand transition"
+              title="Adicionar funcionário"
+            >
+              <Plus className="h-3.5 w-3.5" />
+            </button>
+          )}
+        </div>
+
         {/* KPIs */}
         <div className="grid grid-cols-4 gap-4">
           {[
-            { label: "Total", count: credenciais.length, color: "bg-zinc-100 dark:bg-zinc-800" },
-            { label: "Bancos", count: credenciais.filter(c => c.tipo === "banco").length, color: "bg-blue-50 dark:bg-blue-950/30" },
-            { label: "Promotoras", count: credenciais.filter(c => c.tipo === "promotora").length, color: "bg-purple-50 dark:bg-purple-950/30" },
-            { label: "Sistemas", count: credenciais.filter(c => c.tipo === "sistema").length, color: "bg-emerald-50 dark:bg-emerald-950/30" },
+            { label: "Total", count: kpiBase.length, color: "bg-zinc-100 dark:bg-zinc-800" },
+            { label: "Bancos", count: kpiBase.filter(c => c.tipo === "banco").length, color: "bg-blue-50 dark:bg-blue-950/30" },
+            { label: "Promotoras", count: kpiBase.filter(c => c.tipo === "promotora").length, color: "bg-purple-50 dark:bg-purple-950/30" },
+            { label: "Sistemas", count: kpiBase.filter(c => c.tipo === "sistema").length, color: "bg-emerald-50 dark:bg-emerald-950/30" },
           ].map((k, i) => (
             <div key={i} className={`rounded-xl ${k.color} p-4 text-center`}>
               <p className="text-2xl font-bold tabular-nums">{k.count}</p>
@@ -250,17 +385,25 @@ export function CredenciaisClient({ bancos, empresaId }: { bancos: Banco[]; empr
                     </div>
                     <div>
                       <h3 className="font-semibold text-sm">{cred.nome}</h3>
-                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium uppercase tracking-wider ${tipoColor(cred.tipo)}`}>
-                        {cred.tipo}
-                      </span>
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium uppercase tracking-wider ${tipoColor(cred.tipo)}`}>
+                          {cred.tipo}
+                        </span>
+                        {cred.funcionario && (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium uppercase tracking-wider bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400">
+                            <User className="h-2.5 w-2.5" />
+                            {cred.funcionario}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
                   <button
                     onClick={() => abrirEditar(cred)}
-                    className="opacity-0 group-hover:opacity-100 text-zinc-400 hover:text-zinc-600 transition"
+                    className="flex items-center justify-center h-8 w-8 rounded-lg border border-zinc-200 dark:border-zinc-700 text-zinc-400 hover:text-brand hover:border-brand/50 transition"
                     title="Editar"
                   >
-                    <KeyRound className="h-4 w-4" />
+                    <Pencil className="h-3.5 w-3.5" />
                   </button>
                 </div>
 
@@ -346,6 +489,7 @@ export function CredenciaisClient({ bancos, empresaId }: { bancos: Banco[]; empr
                       usuario: "",
                       senha: "",
                       observacoes: "",
+                      funcionario: funcionarioTab !== "Todos" ? funcionarioTab : "",
                     });
                     setEditando(null);
                     setModal(true);
@@ -363,7 +507,7 @@ export function CredenciaisClient({ bancos, empresaId }: { bancos: Banco[]; empr
       {/* Modal */}
       {modal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-2xl w-full max-w-lg mx-4">
+          <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-2xl w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between p-6 border-b border-zinc-100 dark:border-zinc-800">
               <h2 className="text-lg font-semibold flex items-center gap-2">
                 <KeyRound className="h-5 w-5 text-brand" />
@@ -393,6 +537,24 @@ export function CredenciaisClient({ bancos, empresaId }: { bancos: Banco[]; empr
                       {t.charAt(0).toUpperCase() + t.slice(1)}
                     </button>
                   ))}
+                </div>
+              </div>
+
+              {/* Funcionário select */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Funcionário</label>
+                <div className="relative">
+                  <Users className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
+                  <select
+                    value={form.funcionario}
+                    onChange={e => setForm(prev => ({ ...prev, funcionario: e.target.value }))}
+                    className={`${inputCls} pl-10 appearance-none cursor-pointer`}
+                  >
+                    <option value="">— Nenhum —</option>
+                    {funcionarios.map(f => (
+                      <option key={f} value={f}>{f}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
 
