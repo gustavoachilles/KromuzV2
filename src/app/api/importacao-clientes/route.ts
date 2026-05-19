@@ -122,30 +122,63 @@ export async function POST(req: NextRequest) {
     }
 
     // Função para calcular comissão
-    function calcularComissao(bancoNome: string | null | undefined, valorLiberado: number | null | undefined): number | null {
+    function calcularComissao(
+      bancoNome: string | null | undefined,
+      valorLiberado: number | null | undefined,
+      tabelaNome: string | null | undefined
+    ): number | null {
       if (!bancoNome || !valorLiberado || valorLiberado <= 0) return null;
       const tabelas = tabelasPorBanco.get(bancoNome.toLowerCase().trim());
       if (!tabelas || tabelas.length === 0) return null;
 
-      // Buscar tabela que mais se encaixa pelo nome (que contém faixa de valor)
-      // As tabelas UNNO têm nomes como "UNNO Ametista (R$0-R$20.000)"
-      let melhorTabela = null;
-      let melhorPct = 0;
+      const tabelaLower = (tabelaNome || "").toLowerCase().trim();
 
+      // 1. Tentar match por nome da tabela + faixa de valor
       for (const t of tabelas) {
+        if (!t.comissaoFlatPct) continue;
+
+        // Verificar se o nome da tabela contém o nome importado (ex: "Tsunami" em "UNNO Tsunami (R$50-R$350)")
+        const nomeMatch = tabelaLower && t.nome.toLowerCase().includes(tabelaLower);
+
         // Extrair faixa do nome: (R$X-R$Y)
-        const faixaMatch = t.nome.match(/R\$\s*([\d.,]+)\s*[-–a]\s*R\$\s*([\d.,]+)/i);
+        const faixaMatch = t.nome.match(/R\$\s*([\d.,]+)\s*[-–]\s*R\$\s*([\d.,]+)/i);
+        
         if (faixaMatch) {
           const min = Number(faixaMatch[1].replace(/\./g, "").replace(",", "."));
           const max = Number(faixaMatch[2].replace(/\./g, "").replace(",", "."));
-          if (valorLiberado >= min && valorLiberado <= max && t.comissaoFlatPct) {
-            melhorTabela = t;
+          const valorNaFaixa = valorLiberado >= min && valorLiberado <= max;
+
+          // Match perfeito: nome da tabela + valor na faixa
+          if (nomeMatch && valorNaFaixa) {
+            return Math.round(valorLiberado * (t.comissaoFlatPct / 100) * 100) / 100;
+          }
+        } else if (nomeMatch) {
+          // Match por nome sem faixa
+          return Math.round(valorLiberado * (t.comissaoFlatPct / 100) * 100) / 100;
+        }
+      }
+
+      // 2. Fallback: match por nome da tabela sem faixa (pegar a primeira)
+      if (tabelaLower) {
+        for (const t of tabelas) {
+          if (!t.comissaoFlatPct) continue;
+          if (t.nome.toLowerCase().includes(tabelaLower)) {
+            return Math.round(valorLiberado * (t.comissaoFlatPct / 100) * 100) / 100;
+          }
+        }
+      }
+
+      // 3. Último fallback: match só por faixa de valor (pegar a maior comissão)
+      let melhorPct = 0;
+      for (const t of tabelas) {
+        if (!t.comissaoFlatPct) continue;
+        const faixaMatch = t.nome.match(/R\$\s*([\d.,]+)\s*[-–]\s*R\$\s*([\d.,]+)/i);
+        if (faixaMatch) {
+          const min = Number(faixaMatch[1].replace(/\./g, "").replace(",", "."));
+          const max = Number(faixaMatch[2].replace(/\./g, "").replace(",", "."));
+          if (valorLiberado >= min && valorLiberado <= max && t.comissaoFlatPct > melhorPct) {
             melhorPct = t.comissaoFlatPct;
           }
-        } else if (t.comissaoFlatPct && !melhorTabela) {
-          // Fallback: usar a primeira tabela com comissão
-          melhorTabela = t;
-          melhorPct = t.comissaoFlatPct;
         }
       }
 
@@ -228,8 +261,8 @@ export async function POST(req: NextRequest) {
         const dataDig = parseDate(r.dataDigitacao);
         const now = new Date();
 
-        // 3. Calcular comissão automaticamente
-        const comissao = calcularComissao(r.bancoAtual, r.valorLiberado);
+        // 3. Calcular comissão automaticamente (usando campo tabela da planilha)
+        const comissao = calcularComissao(r.bancoAtual, r.valorLiberado, r.tabela);
         if (comissao) comissoesCalculadas++;
 
         novasPropostas.push({
