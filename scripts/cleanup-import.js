@@ -1,9 +1,14 @@
 const { PrismaClient } = require("@prisma/client");
-require("dotenv").config();
+const prisma = new PrismaClient();
 
-const p = new PrismaClient();
+async function main() {
+  const empresaId = "d0acf869-35f9-476b-ace3-31cd17797325";
+  
+  const delP = await prisma.proposta.deleteMany({ where: { empresaId } });
+  console.log(`Propostas deletadas: ${delP.count}`);
+  
+  const delL = await prisma.lead.deleteMany({ where: { empresaId } });
+  console.log(`Leads deletados: ${delL.count}`);
+}
 
-p.lead.deleteMany({ where: { origem: "importacao" } })
-  .then(function(r) { console.log("Deletados:", r.count, "leads"); })
-  .catch(console.error)
-  .finally(function() { p.$disconnect(); });
+main().catch(console.error).finally(() => prisma.$disconnect());

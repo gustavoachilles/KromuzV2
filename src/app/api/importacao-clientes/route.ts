@@ -21,13 +21,37 @@ function parseDate(val: string | null | undefined): Date | null {
 function mapStatus(raw: string | undefined): "RASCUNHO" | "DIGITADA" | "PENDENTE" | "APROVADA" | "REPROVADA" | "PAGA" | "CANCELADA" {
   if (!raw) return "RASCUNHO";
   const s = raw.toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  // PAGA
   if (s.includes("pag")) return "PAGA";
+  if (s.includes("liquid")) return "PAGA";          // liquidado/liquidada
+  if (s.includes("finaliz")) return "PAGA";         // finalizado/finalizada
+  if (s.includes("conclu")) return "PAGA";          // concluído/concluída
+  if (s.includes("efetiv")) return "PAGA";          // efetivado/efetivada
+  if (s.includes("credit")) return "PAGA";          // creditado
+  if (s.includes("liber")) return "PAGA";           // liberado
+  // CANCELADA
   if (s.includes("cancel")) return "CANCELADA";
+  if (s.includes("recus")) return "CANCELADA";      // recusado/recusada
+  if (s.includes("devol")) return "CANCELADA";      // devolvido
+  if (s.includes("estorn")) return "CANCELADA";     // estornado
+  if (s.includes("exclui")) return "CANCELADA";     // excluído
+  // REPROVADA
   if (s.includes("reprov")) return "REPROVADA";
+  if (s.includes("negad")) return "REPROVADA";      // negado
+  if (s.includes("indeferid")) return "REPROVADA";  // indeferido
+  // APROVADA
   if (s.includes("aprov")) return "APROVADA";
+  if (s.includes("averb")) return "APROVADA";       // averbado/averbada
+  // PENDENTE
   if (s.includes("pendent")) return "PENDENTE";
+  if (s.includes("analis")) return "PENDENTE";      // em análise
+  if (s.includes("aguard")) return "PENDENTE";      // aguardando
+  if (s.includes("proces")) return "PENDENTE";      // processando
+  // DIGITADA
   if (s.includes("digit")) return "DIGITADA";
-  if (s.includes("simul")) return "DIGITADA"; // simulada ≈ digitada
+  if (s.includes("simul")) return "DIGITADA";
+  if (s.includes("integr")) return "DIGITADA";      // integrado
+  if (s.includes("novo")) return "DIGITADA";        // novo saque
   return "RASCUNHO";
 }
 
@@ -83,10 +107,59 @@ export async function POST(req: NextRequest) {
       : [];
     const cpfToLeadId = new Map(leadsExistentes.map(l => [l.cpf, l.id]));
 
+    // Carregar tabelas de comissão para cálculo automático
+    const tabelasComissao = await prisma.tabelaCoeficiente.findMany({
+      where: { empresaId: sessao.empresaId, ativo: true },
+      include: { banco: { select: { nome: true } } },
+    });
+
+    // Indexar tabelas por nome do banco (lowercase)
+    const tabelasPorBanco = new Map<string, typeof tabelasComissao>();
+    for (const t of tabelasComissao) {
+      const key = t.banco.nome.toLowerCase().trim();
+      if (!tabelasPorBanco.has(key)) tabelasPorBanco.set(key, []);
+      tabelasPorBanco.get(key)!.push(t);
+    }
+
+    // Função para calcular comissão
+    function calcularComissao(bancoNome: string | null | undefined, valorLiberado: number | null | undefined): number | null {
+      if (!bancoNome || !valorLiberado || valorLiberado <= 0) return null;
+      const tabelas = tabelasPorBanco.get(bancoNome.toLowerCase().trim());
+      if (!tabelas || tabelas.length === 0) return null;
+
+      // Buscar tabela que mais se encaixa pelo nome (que contém faixa de valor)
+      // As tabelas UNNO têm nomes como "UNNO Ametista (R$0-R$20.000)"
+      let melhorTabela = null;
+      let melhorPct = 0;
+
+      for (const t of tabelas) {
+        // Extrair faixa do nome: (R$X-R$Y)
+        const faixaMatch = t.nome.match(/R\$\s*([\d.,]+)\s*[-–a]\s*R\$\s*([\d.,]+)/i);
+        if (faixaMatch) {
+          const min = Number(faixaMatch[1].replace(/\./g, "").replace(",", "."));
+          const max = Number(faixaMatch[2].replace(/\./g, "").replace(",", "."));
+          if (valorLiberado >= min && valorLiberado <= max && t.comissaoFlatPct) {
+            melhorTabela = t;
+            melhorPct = t.comissaoFlatPct;
+          }
+        } else if (t.comissaoFlatPct && !melhorTabela) {
+          // Fallback: usar a primeira tabela com comissão
+          melhorTabela = t;
+          melhorPct = t.comissaoFlatPct;
+        }
+      }
+
+      if (melhorPct > 0) {
+        return Math.round(valorLiberado * (melhorPct / 100) * 100) / 100;
+      }
+      return null;
+    }
+
     let leadsImportados = 0;
     let propostasImportadas = 0;
     let atualizados = 0;
     let pulados = 0;
+    let comissoesCalculadas = 0;
 
     // Processar em batches de 200 (limite do Prisma createMany no Postgres)
     const batchSize = 200;
@@ -155,6 +228,10 @@ export async function POST(req: NextRequest) {
         const dataDig = parseDate(r.dataDigitacao);
         const now = new Date();
 
+        // 3. Calcular comissão automaticamente
+        const comissao = calcularComissao(r.bancoAtual, r.valorLiberado);
+        if (comissao) comissoesCalculadas++;
+
         novasPropostas.push({
           empresaId: sessao.empresaId,
           leadId: leadId,
@@ -175,6 +252,7 @@ export async function POST(req: NextRequest) {
           vendedorNome: r.vendedorNome || sessao.nomeUsuario,
           promotora: r.promotora || null,
           tabela: r.tabela || null,
+          valorComissao: comissao,
           observacoes: null,
           // Datas do funil baseadas no status
           digitadaEm: dataDig || (statusProposta !== "RASCUNHO" ? now : null),
@@ -216,6 +294,7 @@ export async function POST(req: NextRequest) {
       leadsImportados,
       atualizados,
       pulados,
+      comissoesCalculadas,
       total: records.length,
     }, { status: 201 });
   } catch (e: any) {
