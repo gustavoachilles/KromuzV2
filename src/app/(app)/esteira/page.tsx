@@ -15,7 +15,7 @@ export default async function EsteiraPage() {
   const propostas = await prisma.proposta.findMany({
     where: { empresaId: sessao.empresaId },
     orderBy: { createdAt: "desc" },
-    take: 200,
+    take: 5000,
   });
 
   // Contagens por status para o funil
@@ -26,5 +26,15 @@ export default async function EsteiraPage() {
     _sum: { valorLiberado: true },
   });
 
-  return <EsteiraClient propostas={propostas} contagens={contagens} />;
+  // Tipos de operação distintos para filtro
+  const tiposRaw = await prisma.proposta.groupBy({
+    by: ["tipoOperacao"],
+    where: { empresaId: sessao.empresaId },
+    _count: true,
+  });
+  const tiposOperacao = tiposRaw
+    .map(t => t.tipoOperacao)
+    .filter(Boolean) as string[];
+
+  return <EsteiraClient propostas={propostas} contagens={contagens} tiposOperacao={tiposOperacao} />;
 }

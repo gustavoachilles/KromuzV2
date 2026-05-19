@@ -77,9 +77,11 @@ const funnelOrder = ["RASCUNHO", "SIMULADA", "DIGITADA", "PENDENTE", "APROVADA",
 export function EsteiraClient({
   propostas: propostasIniciais,
   contagens,
+  tiposOperacao = [],
 }: {
   propostas: Proposta[];
   contagens: Contagem[];
+  tiposOperacao?: string[];
 }) {
   const router = useRouter();
   const [propostas, setPropostas] = useState(propostasIniciais);
@@ -87,6 +89,8 @@ export function EsteiraClient({
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [filtroStatus, setFiltroStatus] = useState("");
+  const [filtroTipo, setFiltroTipo] = useState("");
+  const [filtroPeriodo, setFiltroPeriodo] = useState("");
   const [busca, setBusca] = useState("");
   const [atualizando, setAtualizando] = useState<string | null>(null);
   const [porPagina, setPorPagina] = useState(10);
@@ -192,7 +196,17 @@ export function EsteiraClient({
 
   const filtrados = propostas.filter((p) => {
     if (filtroStatus && p.status !== filtroStatus) return false;
+    if (filtroTipo && (p.tipoOperacao || "") !== filtroTipo) return false;
     if (busca && !p.clienteNome.toLowerCase().includes(busca.toLowerCase())) return false;
+    if (filtroPeriodo) {
+      const d = new Date(p.createdAt);
+      const now = new Date();
+      const dias = Math.floor((now.getTime() - d.getTime()) / 86400000);
+      if (filtroPeriodo === "7d" && dias > 7) return false;
+      if (filtroPeriodo === "30d" && dias > 30) return false;
+      if (filtroPeriodo === "90d" && dias > 90) return false;
+      if (filtroPeriodo === "ano" && d.getFullYear() !== now.getFullYear()) return false;
+    }
     return true;
   });
 
@@ -385,6 +399,19 @@ export function EsteiraClient({
               className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-sm focus:outline-none focus:ring-2 focus:ring-brand/50"
             />
           </div>
+          <select value={filtroTipo} onChange={(e) => { setFiltroTipo(e.target.value); setPaginaLista(1); }}
+            className="rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/50">
+            <option value="">Todos os Tipos</option>
+            {tiposOperacao.map(t => <option key={t} value={t}>{t}</option>)}
+          </select>
+          <select value={filtroPeriodo} onChange={(e) => { setFiltroPeriodo(e.target.value); setPaginaLista(1); }}
+            className="rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/50">
+            <option value="">Todo Período</option>
+            <option value="7d">Últimos 7 dias</option>
+            <option value="30d">Últimos 30 dias</option>
+            <option value="90d">Últimos 90 dias</option>
+            <option value="ano">Este ano</option>
+          </select>
           {filtroStatus && (
             <button
               onClick={() => setFiltroStatus("")}
@@ -394,6 +421,10 @@ export function EsteiraClient({
               {statusConfig[filtroStatus]?.label}
               <X className="h-3 w-3" />
             </button>
+          )}
+          {(filtroTipo || filtroPeriodo) && (
+            <button onClick={() => { setFiltroTipo(""); setFiltroPeriodo(""); }}
+              className="text-xs text-zinc-400 hover:text-red-500 transition px-2">✕ Limpar filtros</button>
           )}
         </div>
 
