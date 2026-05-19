@@ -143,7 +143,12 @@ export function applyMapping(rows: ImportRow[], mapping: Record<string,string>):
     for (const f of NUM_FIELDS) {
       const raw = row[reverseMap[f]];
       if (!raw) continue;
-      const v = String(raw).replace(/[R$\s.]/g, "").replace(",", ".");
+      // Brazilian format: 10.044,90 → remove R$, spaces, then handle dots/comma
+      let v = String(raw).replace(/[R$\s]/g, "").trim();
+      // If has comma (Brazilian decimal), remove dots (thousands) then replace comma with dot
+      if (v.includes(",")) {
+        v = v.replace(/\./g, "").replace(",", ".");
+      }
       if (v && !isNaN(Number(v))) (lead as any)[f] = Number(v);
     }
 
