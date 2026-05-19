@@ -173,7 +173,9 @@ export async function POST(req: NextRequest) {
           convenioNome: r.convenioNome || null,
           vendedorEmail: sessao.email,
           vendedorNome: r.vendedorNome || sessao.nomeUsuario,
-          observacoes: r.tabela ? `Tabela: ${r.tabela}` : null,
+          promotora: r.promotora || null,
+          tabela: r.tabela || null,
+          observacoes: null,
           // Datas do funil baseadas no status
           digitadaEm: dataDig || (statusProposta !== "RASCUNHO" ? now : null),
           aprovadaEm: ["APROVADA", "PAGA"].includes(statusProposta) ? (dataDig || now) : null,

@@ -609,6 +609,8 @@ model Proposta {
   dataProximoRetorno   DateTime? @map("data_proximo_retorno")
 
   observacoes     String?
+  promotora       String?
+  tabela          String?
   
   // Datas do funil
   digitadaEm      DateTime?      @map("digitada_em")
