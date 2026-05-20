@@ -75,31 +75,31 @@ export function SidebarNav({ permissoes }: { permissoes: Permissoes }) {
           onToggle={() => toggleSection("crm")}
         >
           {p("leads") && (
-            <NavLink href="/leads" icon={<Users className="h-4 w-4" />} active={pathname === "/leads"}>Leads</NavLink>
+            <NavLink isSubItem href="/leads" icon={<Users className="h-4 w-4" />} active={pathname === "/leads"}>Leads</NavLink>
           )}
           {p("esteira") && (
-            <NavLink href="/esteira" icon={<Kanban className="h-4 w-4" />} active={pathname === "/esteira"}>Esteira</NavLink>
+            <NavLink isSubItem href="/esteira" icon={<Kanban className="h-4 w-4" />} active={pathname === "/esteira"}>Esteira</NavLink>
           )}
           {p("comissoes") && (
-            <NavLink href="/comissoes" icon={<DollarSign className="h-4 w-4" />} active={pathname === "/comissoes"}>Comissões</NavLink>
+            <NavLink isSubItem href="/comissoes" icon={<DollarSign className="h-4 w-4" />} active={pathname === "/comissoes"}>Comissões</NavLink>
           )}
           {p("metas") && (
-            <NavLink href="/metas" icon={<Target className="h-4 w-4" />} active={pathname === "/metas"}>Metas</NavLink>
+            <NavLink isSubItem href="/metas" icon={<Target className="h-4 w-4" />} active={pathname === "/metas"}>Metas</NavLink>
           )}
           {p("ranking") && (
-            <NavLink href="/ranking" icon={<Trophy className="h-4 w-4" />} active={pathname === "/ranking"}>Ranking</NavLink>
+            <NavLink isSubItem href="/ranking" icon={<Trophy className="h-4 w-4" />} active={pathname === "/ranking"}>Ranking</NavLink>
           )}
           {p("leads") && (
-            <NavLink href="/inbox" icon={<Inbox className="h-4 w-4" />} active={pathname === "/inbox"}>Inbox</NavLink>
+            <NavLink isSubItem href="/inbox" icon={<Inbox className="h-4 w-4" />} active={pathname === "/inbox"}>Inbox</NavLink>
           )}
           {p("leads") && (
-            <NavLink href="/recuperacao" icon={<RefreshCcw className="h-4 w-4" />} active={pathname === "/recuperacao"}>Recuperação</NavLink>
+            <NavLink isSubItem href="/recuperacao" icon={<RefreshCcw className="h-4 w-4" />} active={pathname === "/recuperacao"}>Recuperação</NavLink>
           )}
           {p("leads") && (
-            <NavLink href="/marketing" icon={<Megaphone className="h-4 w-4" />} active={pathname === "/marketing"}>Marketing</NavLink>
+            <NavLink isSubItem href="/marketing" icon={<Megaphone className="h-4 w-4" />} active={pathname === "/marketing"}>Marketing</NavLink>
           )}
           {p("leads") && (
-            <NavLink href="/canais" icon={<MessageSquare className="h-4 w-4" />} active={pathname.startsWith("/canais")}>Canais</NavLink>
+            <NavLink isSubItem href="/canais" icon={<MessageSquare className="h-4 w-4" />} active={pathname.startsWith("/canais")}>Canais</NavLink>
           )}
         </CollapsibleSection>
       )}
@@ -112,19 +112,19 @@ export function SidebarNav({ permissoes }: { permissoes: Permissoes }) {
           onToggle={() => toggleSection("inteligencia")}
         >
           {p("simulador") && (
-            <NavLink href="/simulador" icon={<Calculator className="h-4 w-4" />} active={pathname === "/simulador"}>Simulador</NavLink>
+            <NavLink isSubItem href="/simulador" icon={<Calculator className="h-4 w-4" />} active={pathname === "/simulador"}>Simulador</NavLink>
           )}
           {p("motor_regras") && (
-            <NavLink href="/motor-regras" icon={<Brain className="h-4 w-4" />} active={pathname === "/motor-regras"}>Motor de Regras</NavLink>
+            <NavLink isSubItem href="/motor-regras" icon={<Brain className="h-4 w-4" />} active={pathname === "/motor-regras"}>Motor de Regras</NavLink>
           )}
           {p("roteiros") && (
-            <NavLink href="/roteiros" icon={<FileText className="h-4 w-4" />} active={pathname === "/roteiros"}>Roteiros</NavLink>
+            <NavLink isSubItem href="/roteiros" icon={<FileText className="h-4 w-4" />} active={pathname === "/roteiros"}>Roteiros</NavLink>
           )}
           {p("mapa_port") && (
-            <NavLink href="/mapa-portabilidade" icon={<ArrowRightLeft className="h-4 w-4" />} active={pathname === "/mapa-portabilidade"}>Mapa Port.</NavLink>
+            <NavLink isSubItem href="/mapa-portabilidade" icon={<ArrowRightLeft className="h-4 w-4" />} active={pathname === "/mapa-portabilidade"}>Mapa Port.</NavLink>
           )}
           {p("roteiros") && (
-            <NavLink href="/conhecimento" icon={<GraduationCap className="h-4 w-4" />} active={pathname === "/conhecimento"}>Base Conhecimento</NavLink>
+            <NavLink isSubItem href="/conhecimento" icon={<GraduationCap className="h-4 w-4" />} active={pathname === "/conhecimento"}>Base Conhecimento</NavLink>
           )}
         </CollapsibleSection>
       )}
@@ -138,15 +138,15 @@ export function SidebarNav({ permissoes }: { permissoes: Permissoes }) {
         >
           {p("cadastro") && (
             <>
-              <NavLink href="/regras" icon={<BookOpen className="h-4 w-4" />} active={pathname.startsWith("/regras")}>Regras</NavLink>
-              <NavLink href="/bancos" icon={<Layers className="h-4 w-4" />} active={pathname.startsWith("/bancos")}>Bancos</NavLink>
-              <NavLink href="/produtos" icon={<Package className="h-4 w-4" />} active={pathname.startsWith("/produtos")}>Produtos</NavLink>
-              <NavLink href="/convenios" icon={<Shield className="h-4 w-4" />} active={pathname.startsWith("/convenios")}>Convênios</NavLink>
-              <NavLink href="/credenciais" icon={<KeyRound className="h-4 w-4" />} active={pathname === "/credenciais"}>Credenciais</NavLink>
+              <NavLink isSubItem href="/regras" icon={<BookOpen className="h-4 w-4" />} active={pathname.startsWith("/regras")}>Regras</NavLink>
+              <NavLink isSubItem href="/bancos" icon={<Layers className="h-4 w-4" />} active={pathname.startsWith("/bancos")}>Bancos</NavLink>
+              <NavLink isSubItem href="/produtos" icon={<Package className="h-4 w-4" />} active={pathname.startsWith("/produtos")}>Produtos</NavLink>
+              <NavLink isSubItem href="/convenios" icon={<Shield className="h-4 w-4" />} active={pathname.startsWith("/convenios")}>Convênios</NavLink>
+              <NavLink isSubItem href="/credenciais" icon={<KeyRound className="h-4 w-4" />} active={pathname === "/credenciais"}>Credenciais</NavLink>
             </>
           )}
           {p("importacao") && (
-            <NavLink href="/importacao" icon={<Upload className="h-4 w-4" />} active={pathname === "/importacao"}>Importar Clientes</NavLink>
+            <NavLink isSubItem href="/importacao" icon={<Upload className="h-4 w-4" />} active={pathname === "/importacao"}>Importar Clientes</NavLink>
           )}
         </CollapsibleSection>
       )}
@@ -159,19 +159,19 @@ export function SidebarNav({ permissoes }: { permissoes: Permissoes }) {
           onToggle={() => toggleSection("sistema")}
         >
           {p("relatorios") && (
-            <NavLink href="/relatorios" icon={<BarChart3 className="h-4 w-4" />} active={pathname === "/relatorios"}>Relatórios</NavLink>
+            <NavLink isSubItem href="/relatorios" icon={<BarChart3 className="h-4 w-4" />} active={pathname === "/relatorios"}>Relatórios</NavLink>
           )}
           {p("auditoria") && (
-            <NavLink href="/auditoria" icon={<ScrollText className="h-4 w-4" />} active={pathname === "/auditoria"}>Auditoria</NavLink>
+            <NavLink isSubItem href="/auditoria" icon={<ScrollText className="h-4 w-4" />} active={pathname === "/auditoria"}>Auditoria</NavLink>
           )}
           {p("auditoria") && (
-            <NavLink href="/sla" icon={<Clock className="h-4 w-4" />} active={pathname === "/sla"}>SLA</NavLink>
+            <NavLink isSubItem href="/sla" icon={<Clock className="h-4 w-4" />} active={pathname === "/sla"}>SLA</NavLink>
           )}
           {p("configuracoes") && (
-            <NavLink href="/configuracoes" icon={<Settings className="h-4 w-4" />} active={pathname === "/configuracoes"}>Configurações</NavLink>
+            <NavLink isSubItem href="/configuracoes" icon={<Settings className="h-4 w-4" />} active={pathname === "/configuracoes"}>Configurações</NavLink>
           )}
           {p("assinatura") && (
-            <NavLink href="/assinatura" icon={<CreditCard className="h-4 w-4" />} active={pathname === "/assinatura"}>Minha Assinatura</NavLink>
+            <NavLink isSubItem href="/assinatura" icon={<CreditCard className="h-4 w-4" />} active={pathname === "/assinatura"}>Minha Assinatura</NavLink>
           )}
         </CollapsibleSection>
       )}
@@ -183,16 +183,16 @@ export function SidebarNav({ permissoes }: { permissoes: Permissoes }) {
           isOpen={openSections.rh}
           onToggle={() => toggleSection("rh")}
         >
-          <NavLink href="/rh" icon={<BarChart3 className="h-4 w-4" />} active={pathname === "/rh"}>Dashboard RH</NavLink>
-          <NavLink href="/rh/funcionarios" icon={<UserCheck className="h-4 w-4" />} active={pathname.startsWith("/rh/funcionarios")}>Funcionários</NavLink>
-          <NavLink href="/rh/ponto" icon={<Clock className="h-4 w-4" />} active={pathname.startsWith("/rh/ponto")}>Controle de Ponto</NavLink>
-          <NavLink href="/rh/espelho" icon={<CalendarDays className="h-4 w-4" />} active={pathname.startsWith("/rh/espelho")}>Espelho de Ponto</NavLink>
-          <NavLink href="/rh/ferias" icon={<Palmtree className="h-4 w-4" />} active={pathname.startsWith("/rh/ferias")}>Férias</NavLink>
-          <NavLink href="/rh/passivo" icon={<AlertTriangle className="h-4 w-4" />} active={pathname.startsWith("/rh/passivo")}>Passivo Trabalhista</NavLink>
-          <NavLink href="/rh/folha" icon={<Receipt className="h-4 w-4" />} active={pathname.startsWith("/rh/folha")}>Folha & Holerites</NavLink>
-          <NavLink href="/rh/rescisao" icon={<Gavel className="h-4 w-4" />} active={pathname.startsWith("/rh/rescisao")}>Simulador Rescisão</NavLink>
-          <NavLink href="/rh/documentos" icon={<FolderOpen className="h-4 w-4" />} active={pathname.startsWith("/rh/documentos")}>Documentos</NavLink>
-          <NavLink href="/rh/auditoria" icon={<Eye className="h-4 w-4" />} active={pathname.startsWith("/rh/auditoria")}>Auditoria</NavLink>
+          <NavLink isSubItem href="/rh" icon={<BarChart3 className="h-4 w-4" />} active={pathname === "/rh"}>Dashboard RH</NavLink>
+          <NavLink isSubItem href="/rh/funcionarios" icon={<UserCheck className="h-4 w-4" />} active={pathname.startsWith("/rh/funcionarios")}>Funcionários</NavLink>
+          <NavLink isSubItem href="/rh/ponto" icon={<Clock className="h-4 w-4" />} active={pathname.startsWith("/rh/ponto")}>Controle de Ponto</NavLink>
+          <NavLink isSubItem href="/rh/espelho" icon={<CalendarDays className="h-4 w-4" />} active={pathname.startsWith("/rh/espelho")}>Espelho de Ponto</NavLink>
+          <NavLink isSubItem href="/rh/ferias" icon={<Palmtree className="h-4 w-4" />} active={pathname.startsWith("/rh/ferias")}>Férias</NavLink>
+          <NavLink isSubItem href="/rh/passivo" icon={<AlertTriangle className="h-4 w-4" />} active={pathname.startsWith("/rh/passivo")}>Passivo Trabalhista</NavLink>
+          <NavLink isSubItem href="/rh/folha" icon={<Receipt className="h-4 w-4" />} active={pathname.startsWith("/rh/folha")}>Folha & Holerites</NavLink>
+          <NavLink isSubItem href="/rh/rescisao" icon={<Gavel className="h-4 w-4" />} active={pathname.startsWith("/rh/rescisao")}>Simulador Rescisão</NavLink>
+          <NavLink isSubItem href="/rh/documentos" icon={<FolderOpen className="h-4 w-4" />} active={pathname.startsWith("/rh/documentos")}>Documentos</NavLink>
+          <NavLink isSubItem href="/rh/auditoria" icon={<Eye className="h-4 w-4" />} active={pathname.startsWith("/rh/auditoria")}>Auditoria</NavLink>
         </CollapsibleSection>
       )}
     </nav>
@@ -212,10 +212,10 @@ function CollapsibleSection({
   children: React.ReactNode;
 }) {
   return (
-    <div className="pt-3 pb-1">
+    <div className="pt-4 pb-1">
       <button
         onClick={onToggle}
-        className="w-full flex items-center justify-between px-3 py-1.5 group cursor-pointer"
+        className="w-full flex items-center justify-between px-3 py-1.5 group cursor-pointer outline-none"
       >
         <span className="text-[11px] uppercase tracking-[0.2em] font-bold text-zinc-500 group-hover:text-white transition-colors duration-300">
           {label}
@@ -236,7 +236,8 @@ function CollapsibleSection({
             transition={{ duration: 0.3, ease: [0.04, 0.62, 0.23, 0.98] }}
             className="overflow-hidden"
           >
-            <div className="space-y-0.5 pt-1">
+            {/* Adicionado uma borda guia à esquerda para agrupar visualmente o submenu */}
+            <div className="space-y-0.5 pt-2 mt-1 relative before:absolute before:left-[21px] before:top-0 before:bottom-2 before:w-px before:bg-white/10">
               {children}
             </div>
           </motion.div>
@@ -252,18 +253,20 @@ function NavLink({
   children,
   disabled,
   active,
+  isSubItem = false,
 }: {
   href: string;
   icon: React.ReactNode;
   children: React.ReactNode;
   disabled?: boolean;
   active?: boolean;
+  isSubItem?: boolean;
 }) {
   if (disabled) {
     return (
-      <span className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-zinc-600 cursor-not-allowed opacity-60">
+      <span className={`flex items-center gap-3 py-2.5 rounded-xl text-zinc-600 cursor-not-allowed opacity-60 ${isSubItem ? 'pl-11 pr-3' : 'px-3'}`}>
         {icon}
-        <span className="font-medium text-[13px]">{children}</span>
+        <span className={`font-medium ${isSubItem ? 'text-[12px]' : 'text-[14px]'}`}>{children}</span>
         <span className="ml-auto text-[9px] uppercase tracking-wider bg-zinc-900 px-1.5 py-0.5 rounded-md">soon</span>
       </span>
     );
@@ -272,15 +275,19 @@ function NavLink({
   return (
     <Link href={href} className="relative flex w-full outline-none group">
       <motion.div
-        className={`relative flex items-center gap-3 px-3 py-2.5 w-full rounded-xl transition-all duration-300 ${
+        className={`relative flex items-center gap-3 py-2.5 w-full rounded-xl transition-all duration-300 ${
+          isSubItem ? 'pl-[44px] pr-3' : 'px-3'
+        } ${
           active
             ? "text-white font-semibold"
-            : "text-zinc-400 hover:text-white hover:bg-white/5 font-medium"
+            : isSubItem 
+              ? "text-zinc-500 hover:text-white hover:bg-white/5 font-medium"
+              : "text-zinc-300 hover:text-white hover:bg-white/5 font-medium"
         }`}
         whileHover={{ x: active ? 0 : 4 }}
         whileTap={{ scale: 0.98 }}
       >
-        {/* Background Ativo Animado (Efeito Magic Hover/Active) */}
+        {/* Background Ativo Animado */}
         {active && (
           <motion.div
             layoutId="sidebar-active-indicator"
@@ -301,14 +308,14 @@ function NavLink({
         {/* Conteúdo do Link */}
         <span className="relative z-10 flex items-center gap-3 w-full">
           <motion.div
-            className={`flex items-center justify-center ${active ? "text-white" : "text-zinc-500 group-hover:text-white"}`}
+            className={`flex items-center justify-center ${active ? "text-white" : isSubItem ? "text-zinc-600 group-hover:text-zinc-400" : "text-zinc-400 group-hover:text-white"}`}
             style={active ? { color: 'var(--brand-primary)' } : {}}
             whileHover={{ scale: 1.1, rotate: active ? 0 : [0, -5, 5, 0] }}
             transition={{ duration: 0.3 }}
           >
             {icon}
           </motion.div>
-          <span className="text-[13px] tracking-wide relative top-[1px]">
+          <span className={`${isSubItem ? 'text-[13px]' : 'text-[14px]'} tracking-wide relative top-[1px]`}>
             {children}
           </span>
         </span>
