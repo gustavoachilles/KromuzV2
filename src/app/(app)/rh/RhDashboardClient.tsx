@@ -4,7 +4,8 @@ import Link from "next/link";
 import {
   Users, AlertTriangle, CheckCircle2, Shield, TrendingUp, DollarSign,
   UserCheck, Clock, ArrowRight, XCircle, AlertCircle, BarChart3,
-  Building2, FileText, Receipt, Palmtree, FolderOpen, CalendarDays
+  Building2, FileText, Receipt, Palmtree, FolderOpen, CalendarDays,
+  Gavel, Eye, Bell, Target
 } from "lucide-react";
 import { formatarMoeda, calcularCustoTotalEmpresa, calcularPassivoTrabalhista } from "@/lib/rh/calculos-trabalhistas";
 
@@ -25,7 +26,12 @@ type Func = {
   valeTransporte: boolean;
   valeAlimentacao?: number | null;
   planoSaude: boolean;
+  dataFimEstagio?: string | null;
+  email?: string | null;
 };
+
+type Ferias = { funcionarioId: string; dataInicio: string; dataFim: string; status: string; periodoConcessivoFim: string };
+type Proposta = { vendedorEmail: string; _sum: { valorComissao: number | null; valorLiberado: number | null }; _count: number };
 
 const RISCO_COLORS: Record<string, string> = {
   BAIXO: "text-emerald-500",
@@ -36,10 +42,14 @@ const RISCO_COLORS: Record<string, string> = {
 
 export function RhDashboardClient({
   funcionarios,
+  ferias,
+  propostas,
   regimeTributario,
   nomeEmpresa,
 }: {
   funcionarios: Func[];
+  ferias: Ferias[];
+  propostas: Proposta[];
   regimeTributario: string;
   nomeEmpresa: string;
 }) {
@@ -98,6 +108,41 @@ export function RhDashboardClient({
         alertas.push({
           tipo: "PEJOTIZACAO",
           msg: `${f.nome}: PJ com jornada controlada — risco de reconhecimento de vínculo CLT`,
+          nivel: "ALTO",
+        });
+      }
+    }
+
+    // ALERTAS PROATIVOS — Férias vencendo em 30 dias
+    const hoje = new Date();
+    const em30dias = new Date(); em30dias.setDate(em30dias.getDate() + 30);
+    for (const f of ativos.filter(ff => ff.regimeContratacao === "CLT" && ff.dataAdmissao)) {
+      const admissao = new Date(f.dataAdmissao!);
+      const meses = Math.floor((hoje.getTime() - admissao.getTime()) / (1000*60*60*24*30));
+      if (meses >= 12) {
+        const temFerias = ferias.some(fer => fer.funcionarioId === f.id);
+        if (!temFerias) {
+          const anosCompletos = Math.floor(meses / 12);
+          const concessivoFim = new Date(admissao);
+          concessivoFim.setFullYear(concessivoFim.getFullYear() + anosCompletos + 1);
+          if (concessivoFim <= em30dias) {
+            alertas.push({
+              tipo: "FÉRIAS_VENCENDO",
+              msg: `${f.nome}: férias vencem em ${concessivoFim.toLocaleDateString("pt-BR")} — agendar urgente (risco de pagamento em dobro)`,
+              nivel: concessivoFim <= hoje ? "EXTREMO" : "ALTO",
+            });
+          }
+        }
+      }
+    }
+
+    // Estágio terminando em 30 dias
+    for (const f of ativos.filter(ff => ff.regimeContratacao === "ESTAGIARIO" && ff.dataFimEstagio)) {
+      const fimEstagio = new Date(f.dataFimEstagio!);
+      if (fimEstagio <= em30dias && fimEstagio >= hoje) {
+        alertas.push({
+          tipo: "ESTÁGIO_TERMINANDO",
+          msg: `${f.nome}: estágio termina em ${fimEstagio.toLocaleDateString("pt-BR")} — renovar ou efetivar`,
           nivel: "ALTO",
         });
       }
@@ -262,8 +307,54 @@ export function RhDashboardClient({
           </div>
         )}
 
+        {/* ROI por Funcionário — Custo vs Receita */}
+        {propostas.length > 0 && (
+          <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6">
+            <h3 className="text-sm font-semibold mb-4 flex items-center gap-2"><Target className="h-4 w-4 text-blue-500" /> ROI por Vendedor — Custo vs. Receita Gerada (últimos 3 meses)</h3>
+            <div className="space-y-2">
+              {propostas.sort((a, b) => (b._sum.valorLiberado || 0) - (a._sum.valorLiberado || 0)).slice(0, 10).map((p, i) => {
+                const func = funcionarios.find(f => f.email === p.vendedorEmail);
+                const custoMensal = func?.salarioBase ? func.salarioBase * 1.7 : func?.valorMensalPj || 0; // 1.7x = encargos
+                const custoTrimestral = custoMensal * 3;
+                const receitaGerada = p._sum.valorComissao || 0;
+                const volumeGerado = p._sum.valorLiberado || 0;
+                const roi = custoTrimestral > 0 ? Math.round((receitaGerada / custoTrimestral) * 100) : 0;
+                const roiColor = roi >= 200 ? "text-emerald-500" : roi >= 100 ? "text-blue-500" : roi >= 50 ? "text-amber-500" : "text-red-500";
+                const roiBg = roi >= 200 ? "bg-emerald-50 dark:bg-emerald-950/30" : roi >= 100 ? "bg-blue-50 dark:bg-blue-950/30" : roi >= 50 ? "bg-amber-50 dark:bg-amber-950/30" : "bg-red-50 dark:bg-red-950/30";
+
+                return (
+                  <div key={p.vendedorEmail} className="flex items-center gap-4 p-3 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-800/30 transition">
+                    <span className="text-lg font-black text-zinc-300 w-6 text-center">{i + 1}</span>
+                    <div className="h-9 w-9 rounded-lg bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-xs font-bold text-zinc-500">
+                      {(func?.nome || p.vendedorEmail).substring(0, 2).toUpperCase()}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm truncate">{func?.nome || p.vendedorEmail}</p>
+                      <p className="text-xs text-zinc-500">{p._count} proposta(s) pagas · Volume: {formatarMoeda(volumeGerado)}</p>
+                    </div>
+                    <div className="hidden md:flex items-center gap-4 text-xs tabular-nums">
+                      <div className="text-center">
+                        <p className="text-zinc-400">Custo 3m</p>
+                        <p className="font-semibold text-red-500">{formatarMoeda(custoTrimestral)}</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-zinc-400">Comissão 3m</p>
+                        <p className="font-semibold text-emerald-500">{formatarMoeda(receitaGerada)}</p>
+                      </div>
+                    </div>
+                    <div className={`px-2.5 py-1 rounded-lg text-xs font-bold ${roiBg} ${roiColor}`}>
+                      {roi}% ROI
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            <p className="text-[10px] text-zinc-400 mt-3 text-center">ROI = Comissão gerada ÷ Custo do funcionário × 100. Acima de 200% = excelente.</p>
+          </div>
+        )}
+
         {/* Atalhos */}
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
           {[
             { href: "/rh/funcionarios", icon: <UserCheck className="h-5 w-5" />, label: "Funcionários", desc: "Cadastrar e gerenciar" },
             { href: "/rh/ponto", icon: <Clock className="h-5 w-5" />, label: "Controle de Ponto", desc: "Batidas e jornada" },
@@ -271,7 +362,9 @@ export function RhDashboardClient({
             { href: "/rh/ferias", icon: <Palmtree className="h-5 w-5" />, label: "Férias", desc: "Períodos e agendamento" },
             { href: "/rh/passivo", icon: <AlertTriangle className="h-5 w-5" />, label: "Passivo Trabalhista", desc: "Simulador de risco" },
             { href: "/rh/folha", icon: <Receipt className="h-5 w-5" />, label: "Folha & Holerites", desc: "Projeção mensal" },
+            { href: "/rh/rescisao", icon: <Gavel className="h-5 w-5" />, label: "Simulador Rescisão", desc: "Custos de demissão" },
             { href: "/rh/documentos", icon: <FolderOpen className="h-5 w-5" />, label: "Documentos", desc: "Dossiê e compliance" },
+            { href: "/rh/auditoria", icon: <Eye className="h-5 w-5" />, label: "Auditoria", desc: "Log de alterações" },
           ].map(a => (
             <Link key={a.href} href={a.href} className="group flex items-center gap-4 p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-zinc-400 dark:hover:border-zinc-600 transition">
               <div className="h-10 w-10 rounded-xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-zinc-500 group-hover:text-brand transition" style={{ "--tw-text-opacity": 1 } as React.CSSProperties}>
