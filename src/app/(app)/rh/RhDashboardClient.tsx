@@ -4,7 +4,7 @@ import Link from "next/link";
 import {
   Users, AlertTriangle, CheckCircle2, Shield, TrendingUp, DollarSign,
   UserCheck, Clock, ArrowRight, XCircle, AlertCircle, BarChart3,
-  Building2, FileText, Receipt
+  Building2, FileText, Receipt, Palmtree, FolderOpen, CalendarDays
 } from "lucide-react";
 import { formatarMoeda, calcularCustoTotalEmpresa, calcularPassivoTrabalhista } from "@/lib/rh/calculos-trabalhistas";
 
@@ -263,12 +263,15 @@ export function RhDashboardClient({
         )}
 
         {/* Atalhos */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {[
             { href: "/rh/funcionarios", icon: <UserCheck className="h-5 w-5" />, label: "Funcionários", desc: "Cadastrar e gerenciar" },
             { href: "/rh/ponto", icon: <Clock className="h-5 w-5" />, label: "Controle de Ponto", desc: "Batidas e jornada" },
+            { href: "/rh/espelho", icon: <CalendarDays className="h-5 w-5" />, label: "Espelho de Ponto", desc: "Relatório mensal" },
+            { href: "/rh/ferias", icon: <Palmtree className="h-5 w-5" />, label: "Férias", desc: "Períodos e agendamento" },
             { href: "/rh/passivo", icon: <AlertTriangle className="h-5 w-5" />, label: "Passivo Trabalhista", desc: "Simulador de risco" },
             { href: "/rh/folha", icon: <Receipt className="h-5 w-5" />, label: "Folha & Holerites", desc: "Projeção mensal" },
+            { href: "/rh/documentos", icon: <FolderOpen className="h-5 w-5" />, label: "Documentos", desc: "Dossiê e compliance" },
           ].map(a => (
             <Link key={a.href} href={a.href} className="group flex items-center gap-4 p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-zinc-400 dark:hover:border-zinc-600 transition">
               <div className="h-10 w-10 rounded-xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-zinc-500 group-hover:text-brand transition" style={{ "--tw-text-opacity": 1 } as React.CSSProperties}>
