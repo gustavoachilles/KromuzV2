@@ -1,14 +1,39 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Brain, FileText, Layers, Settings, Calculator, BookOpen, BarChart3, Shield, Package, ScrollText, Kanban, Users, DollarSign, Target, Trophy, Upload, ArrowRightLeft, PieChart, CreditCard, Inbox, Megaphone, RefreshCcw, MessageSquare, GraduationCap, Clock, Activity, LayoutDashboard, KeyRound } from "lucide-react";
+import { Brain, FileText, Layers, Settings, Calculator, BookOpen, BarChart3, Shield, Package, ScrollText, Kanban, Users, DollarSign, Target, Trophy, Upload, ArrowRightLeft, PieChart, CreditCard, Inbox, Megaphone, RefreshCcw, MessageSquare, GraduationCap, Clock, Activity, LayoutDashboard, KeyRound, ChevronDown } from "lucide-react";
 import type { Permissoes } from "@/lib/permissions";
 
 export function SidebarNav({ permissoes }: { permissoes: Permissoes }) {
   const pathname = usePathname() ?? "";
 
   const p = (mod: string) => permissoes[mod] === true;
+
+  // Detect which section has active route to auto-open it
+  const crmPaths = ["/leads", "/esteira", "/comissoes", "/metas", "/ranking", "/inbox", "/recuperacao", "/marketing", "/canais"];
+  const inteligenciaPaths = ["/simulador", "/motor-regras", "/roteiros", "/mapa-portabilidade", "/conhecimento"];
+  const cadastroPaths = ["/regras", "/bancos", "/produtos", "/convenios", "/credenciais", "/importacao"];
+  const sistemaPaths = ["/relatorios", "/auditoria", "/sla", "/configuracoes", "/assinatura"];
+
+  const isInSection = (paths: string[]) => paths.some(p => pathname === p || pathname.startsWith(p + "/"));
+
+  const [openSections, setOpenSections] = useState<Record<string, boolean>>(() => ({
+    crm: isInSection(crmPaths),
+    inteligencia: isInSection(inteligenciaPaths),
+    cadastro: isInSection(cadastroPaths),
+    sistema: isInSection(sistemaPaths),
+  }));
+
+  const toggleSection = (key: string) => {
+    setOpenSections(prev => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  const hasCrm = p("leads") || p("esteira") || p("comissoes") || p("metas") || p("ranking");
+  const hasInteligencia = p("simulador") || p("motor_regras") || p("roteiros") || p("mapa_port");
+  const hasCadastro = p("cadastro") || p("importacao");
+  const hasSistema = p("relatorios") || p("auditoria") || p("configuracoes") || p("assinatura");
 
   return (
     <nav className="flex-1 px-3 py-2 space-y-0.5 text-sm overflow-y-auto">
@@ -38,94 +63,157 @@ export function SidebarNav({ permissoes }: { permissoes: Permissoes }) {
         </NavLink>
       )}
 
-      {(p("leads") || p("esteira") || p("comissoes") || p("metas") || p("ranking")) && (
-        <SectionLabel>CRM</SectionLabel>
-      )}
-      {p("leads") && (
-        <NavLink href="/leads" icon={<Users className="h-4 w-4" />} active={pathname === "/leads"}>Leads</NavLink>
-      )}
-      {p("esteira") && (
-        <NavLink href="/esteira" icon={<Kanban className="h-4 w-4" />} active={pathname === "/esteira"}>Esteira</NavLink>
-      )}
-      {p("comissoes") && (
-        <NavLink href="/comissoes" icon={<DollarSign className="h-4 w-4" />} active={pathname === "/comissoes"}>Comissões</NavLink>
-      )}
-      {p("metas") && (
-        <NavLink href="/metas" icon={<Target className="h-4 w-4" />} active={pathname === "/metas"}>Metas</NavLink>
-      )}
-      {p("ranking") && (
-        <NavLink href="/ranking" icon={<Trophy className="h-4 w-4" />} active={pathname === "/ranking"}>Ranking</NavLink>
-      )}
-      {p("leads") && (
-        <NavLink href="/inbox" icon={<Inbox className="h-4 w-4" />} active={pathname === "/inbox"}>Inbox</NavLink>
-      )}
-      {p("leads") && (
-        <NavLink href="/recuperacao" icon={<RefreshCcw className="h-4 w-4" />} active={pathname === "/recuperacao"}>Recuperação</NavLink>
-      )}
-      {p("leads") && (
-        <NavLink href="/marketing" icon={<Megaphone className="h-4 w-4" />} active={pathname === "/marketing"}>Marketing</NavLink>
-      )}
-      {p("leads") && (
-        <NavLink href="/canais" icon={<MessageSquare className="h-4 w-4" />} active={pathname.startsWith("/canais")}>Canais</NavLink>
-      )}
-
-      {(p("simulador") || p("motor_regras") || p("roteiros") || p("mapa_port")) && (
-        <SectionLabel>Inteligência</SectionLabel>
-      )}
-      {p("simulador") && (
-        <NavLink href="/simulador" icon={<Calculator className="h-4 w-4" />} active={pathname === "/simulador"}>Simulador</NavLink>
-      )}
-      {p("motor_regras") && (
-        <NavLink href="/motor-regras" icon={<Brain className="h-4 w-4" />} active={pathname === "/motor-regras"}>Motor de Regras</NavLink>
-      )}
-      {p("roteiros") && (
-        <NavLink href="/roteiros" icon={<FileText className="h-4 w-4" />} active={pathname === "/roteiros"}>Roteiros</NavLink>
-      )}
-      {p("mapa_port") && (
-        <NavLink href="/mapa-portabilidade" icon={<ArrowRightLeft className="h-4 w-4" />} active={pathname === "/mapa-portabilidade"}>Mapa Port.</NavLink>
-      )}
-      {p("roteiros") && (
-        <NavLink href="/conhecimento" icon={<GraduationCap className="h-4 w-4" />} active={pathname === "/conhecimento"}>Base Conhecimento</NavLink>
+      {/* CRM */}
+      {hasCrm && (
+        <CollapsibleSection
+          label="CRM"
+          isOpen={openSections.crm}
+          onToggle={() => toggleSection("crm")}
+        >
+          {p("leads") && (
+            <NavLink href="/leads" icon={<Users className="h-4 w-4" />} active={pathname === "/leads"}>Leads</NavLink>
+          )}
+          {p("esteira") && (
+            <NavLink href="/esteira" icon={<Kanban className="h-4 w-4" />} active={pathname === "/esteira"}>Esteira</NavLink>
+          )}
+          {p("comissoes") && (
+            <NavLink href="/comissoes" icon={<DollarSign className="h-4 w-4" />} active={pathname === "/comissoes"}>Comissões</NavLink>
+          )}
+          {p("metas") && (
+            <NavLink href="/metas" icon={<Target className="h-4 w-4" />} active={pathname === "/metas"}>Metas</NavLink>
+          )}
+          {p("ranking") && (
+            <NavLink href="/ranking" icon={<Trophy className="h-4 w-4" />} active={pathname === "/ranking"}>Ranking</NavLink>
+          )}
+          {p("leads") && (
+            <NavLink href="/inbox" icon={<Inbox className="h-4 w-4" />} active={pathname === "/inbox"}>Inbox</NavLink>
+          )}
+          {p("leads") && (
+            <NavLink href="/recuperacao" icon={<RefreshCcw className="h-4 w-4" />} active={pathname === "/recuperacao"}>Recuperação</NavLink>
+          )}
+          {p("leads") && (
+            <NavLink href="/marketing" icon={<Megaphone className="h-4 w-4" />} active={pathname === "/marketing"}>Marketing</NavLink>
+          )}
+          {p("leads") && (
+            <NavLink href="/canais" icon={<MessageSquare className="h-4 w-4" />} active={pathname.startsWith("/canais")}>Canais</NavLink>
+          )}
+        </CollapsibleSection>
       )}
 
-      {(p("cadastro") || p("importacao")) && (
-        <SectionLabel>Cadastro</SectionLabel>
-      )}
-      {p("cadastro") && (
-        <>
-          <NavLink href="/regras" icon={<BookOpen className="h-4 w-4" />} active={pathname.startsWith("/regras")}>Regras</NavLink>
-          <NavLink href="/bancos" icon={<Layers className="h-4 w-4" />} active={pathname.startsWith("/bancos")}>Bancos</NavLink>
-          <NavLink href="/produtos" icon={<Package className="h-4 w-4" />} active={pathname.startsWith("/produtos")}>Produtos</NavLink>
-          <NavLink href="/convenios" icon={<Shield className="h-4 w-4" />} active={pathname.startsWith("/convenios")}>Convênios</NavLink>
-          <NavLink href="/credenciais" icon={<KeyRound className="h-4 w-4" />} active={pathname === "/credenciais"}>Credenciais</NavLink>
-        </>
-      )}
-      {p("importacao") && (
-        <NavLink href="/importacao" icon={<Upload className="h-4 w-4" />} active={pathname === "/importacao"}>Importar Clientes</NavLink>
+      {/* Inteligência */}
+      {hasInteligencia && (
+        <CollapsibleSection
+          label="Inteligência"
+          isOpen={openSections.inteligencia}
+          onToggle={() => toggleSection("inteligencia")}
+        >
+          {p("simulador") && (
+            <NavLink href="/simulador" icon={<Calculator className="h-4 w-4" />} active={pathname === "/simulador"}>Simulador</NavLink>
+          )}
+          {p("motor_regras") && (
+            <NavLink href="/motor-regras" icon={<Brain className="h-4 w-4" />} active={pathname === "/motor-regras"}>Motor de Regras</NavLink>
+          )}
+          {p("roteiros") && (
+            <NavLink href="/roteiros" icon={<FileText className="h-4 w-4" />} active={pathname === "/roteiros"}>Roteiros</NavLink>
+          )}
+          {p("mapa_port") && (
+            <NavLink href="/mapa-portabilidade" icon={<ArrowRightLeft className="h-4 w-4" />} active={pathname === "/mapa-portabilidade"}>Mapa Port.</NavLink>
+          )}
+          {p("roteiros") && (
+            <NavLink href="/conhecimento" icon={<GraduationCap className="h-4 w-4" />} active={pathname === "/conhecimento"}>Base Conhecimento</NavLink>
+          )}
+        </CollapsibleSection>
       )}
 
-      {(p("relatorios") || p("auditoria") || p("configuracoes") || p("assinatura")) && (
-        <SectionLabel>Sistema</SectionLabel>
+      {/* Cadastro */}
+      {hasCadastro && (
+        <CollapsibleSection
+          label="Cadastro"
+          isOpen={openSections.cadastro}
+          onToggle={() => toggleSection("cadastro")}
+        >
+          {p("cadastro") && (
+            <>
+              <NavLink href="/regras" icon={<BookOpen className="h-4 w-4" />} active={pathname.startsWith("/regras")}>Regras</NavLink>
+              <NavLink href="/bancos" icon={<Layers className="h-4 w-4" />} active={pathname.startsWith("/bancos")}>Bancos</NavLink>
+              <NavLink href="/produtos" icon={<Package className="h-4 w-4" />} active={pathname.startsWith("/produtos")}>Produtos</NavLink>
+              <NavLink href="/convenios" icon={<Shield className="h-4 w-4" />} active={pathname.startsWith("/convenios")}>Convênios</NavLink>
+              <NavLink href="/credenciais" icon={<KeyRound className="h-4 w-4" />} active={pathname === "/credenciais"}>Credenciais</NavLink>
+            </>
+          )}
+          {p("importacao") && (
+            <NavLink href="/importacao" icon={<Upload className="h-4 w-4" />} active={pathname === "/importacao"}>Importar Clientes</NavLink>
+          )}
+        </CollapsibleSection>
       )}
-      {p("relatorios") && (
-        <NavLink href="/relatorios" icon={<BarChart3 className="h-4 w-4" />} active={pathname === "/relatorios"}>Relatórios</NavLink>
-      )}
-      {p("auditoria") && (
-        <NavLink href="/auditoria" icon={<ScrollText className="h-4 w-4" />} active={pathname === "/auditoria"}>Auditoria</NavLink>
-      )}
-      {p("auditoria") && (
-        <NavLink href="/sla" icon={<Clock className="h-4 w-4" />} active={pathname === "/sla"}>SLA</NavLink>
-      )}
-      {p("configuracoes") && (
-        <NavLink href="/configuracoes" icon={<Settings className="h-4 w-4" />} active={pathname === "/configuracoes"}>Configurações</NavLink>
-      )}
-      {p("assinatura") && (
-        <NavLink href="/assinatura" icon={<CreditCard className="h-4 w-4" />} active={pathname === "/assinatura"}>Minha Assinatura</NavLink>
+
+      {/* Sistema */}
+      {hasSistema && (
+        <CollapsibleSection
+          label="Sistema"
+          isOpen={openSections.sistema}
+          onToggle={() => toggleSection("sistema")}
+        >
+          {p("relatorios") && (
+            <NavLink href="/relatorios" icon={<BarChart3 className="h-4 w-4" />} active={pathname === "/relatorios"}>Relatórios</NavLink>
+          )}
+          {p("auditoria") && (
+            <NavLink href="/auditoria" icon={<ScrollText className="h-4 w-4" />} active={pathname === "/auditoria"}>Auditoria</NavLink>
+          )}
+          {p("auditoria") && (
+            <NavLink href="/sla" icon={<Clock className="h-4 w-4" />} active={pathname === "/sla"}>SLA</NavLink>
+          )}
+          {p("configuracoes") && (
+            <NavLink href="/configuracoes" icon={<Settings className="h-4 w-4" />} active={pathname === "/configuracoes"}>Configurações</NavLink>
+          )}
+          {p("assinatura") && (
+            <NavLink href="/assinatura" icon={<CreditCard className="h-4 w-4" />} active={pathname === "/assinatura"}>Minha Assinatura</NavLink>
+          )}
+        </CollapsibleSection>
       )}
     </nav>
   );
 }
 
+
+function CollapsibleSection({
+  label,
+  isOpen,
+  onToggle,
+  children,
+}: {
+  label: string;
+  isOpen: boolean;
+  onToggle: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="pt-2">
+      <button
+        onClick={onToggle}
+        className="w-full flex items-center justify-between px-3 py-1.5 group cursor-pointer"
+      >
+        <span className="text-[10px] uppercase tracking-widest font-semibold text-zinc-400 dark:text-zinc-600 group-hover:text-zinc-600 dark:group-hover:text-zinc-400 transition">
+          {label}
+        </span>
+        <ChevronDown
+          className={`h-3 w-3 text-zinc-400 dark:text-zinc-600 transition-transform duration-200 ${
+            isOpen ? "rotate-0" : "-rotate-90"
+          }`}
+        />
+      </button>
+      <div
+        className={`overflow-hidden transition-all duration-200 ease-in-out ${
+          isOpen ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"
+        }`}
+      >
+        <div className="space-y-0.5 pt-0.5">
+          {children}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function NavLink({
   href,
@@ -162,15 +250,5 @@ function NavLink({
       {icon}
       {children}
     </Link>
-  );
-}
-
-function SectionLabel({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="pt-4 pb-1 px-3">
-      <span className="text-[10px] uppercase tracking-widest font-semibold text-zinc-400 dark:text-zinc-600">
-        {children}
-      </span>
-    </div>
   );
 }

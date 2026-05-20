@@ -39,7 +39,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     <div className="min-h-screen flex" style={{ "--brand-primary": corBrand } as any}>
       <aside className="hidden md:flex h-screen sticky top-0 w-60 flex-col border-r border-zinc-200/80 dark:border-zinc-800/80 bg-white/60 dark:bg-zinc-950/60 backdrop-blur">
         <div className="px-5 py-6">
-          <Link href="/" className="flex items-center gap-2">
+          <Link href="/mesa" className="flex items-center gap-2">
             {empresa?.logoUrl ? (
               <img src={empresa.logoUrl} alt="Logo" className="h-8 w-auto object-contain" />
             ) : (
