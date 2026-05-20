@@ -217,14 +217,14 @@ function CollapsibleSection({
         onClick={onToggle}
         className="w-full flex items-center justify-between px-3 py-1.5 group cursor-pointer"
       >
-        <span className="text-[11px] uppercase tracking-[0.2em] font-bold text-zinc-400 dark:text-zinc-500 group-hover:text-brand dark:group-hover:text-brand transition-colors duration-300">
+        <span className="text-[11px] uppercase tracking-[0.2em] font-bold text-zinc-500 group-hover:text-white transition-colors duration-300">
           {label}
         </span>
         <motion.div
           animate={{ rotate: isOpen ? 0 : -90 }}
           transition={{ duration: 0.2, ease: "easeOut" }}
         >
-          <ChevronDown className="h-3.5 w-3.5 text-zinc-400 group-hover:text-brand transition-colors duration-300" />
+          <ChevronDown className="h-3.5 w-3.5 text-zinc-500 group-hover:text-white transition-colors duration-300" />
         </motion.div>
       </button>
       <AnimatePresence initial={false}>
@@ -261,10 +261,10 @@ function NavLink({
 }) {
   if (disabled) {
     return (
-      <span className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-zinc-400 cursor-not-allowed opacity-60">
+      <span className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-zinc-600 cursor-not-allowed opacity-60">
         {icon}
         <span className="font-medium text-[13px]">{children}</span>
-        <span className="ml-auto text-[9px] uppercase tracking-wider bg-zinc-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded-md">soon</span>
+        <span className="ml-auto text-[9px] uppercase tracking-wider bg-zinc-900 px-1.5 py-0.5 rounded-md">soon</span>
       </span>
     );
   }
@@ -274,8 +274,8 @@ function NavLink({
       <motion.div
         className={`relative flex items-center gap-3 px-3 py-2.5 w-full rounded-xl transition-all duration-300 ${
           active
-            ? "text-brand font-semibold"
-            : "text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 font-medium"
+            ? "text-white font-semibold"
+            : "text-zinc-400 hover:text-white hover:bg-white/5 font-medium"
         }`}
         whileHover={{ x: active ? 0 : 4 }}
         whileTap={{ scale: 0.98 }}
@@ -284,9 +284,10 @@ function NavLink({
         {active && (
           <motion.div
             layoutId="sidebar-active-indicator"
-            className="absolute inset-0 bg-brand/10 dark:bg-brand/20 rounded-xl border-l-[3px] border-brand"
+            className="absolute inset-0 bg-white/10 rounded-xl border-l-[3px]"
             style={{
-              boxShadow: 'inset 0px 0px 12px color-mix(in srgb, var(--brand-primary) 15%, transparent)'
+              borderColor: 'var(--brand-primary)',
+              boxShadow: 'inset 0px 0px 12px color-mix(in srgb, var(--brand-primary) 20%, transparent)'
             }}
             initial={false}
             transition={{
@@ -300,7 +301,8 @@ function NavLink({
         {/* Conteúdo do Link */}
         <span className="relative z-10 flex items-center gap-3 w-full">
           <motion.div
-            className={`flex items-center justify-center ${active ? "text-brand" : "text-zinc-500 group-hover:text-zinc-800 dark:group-hover:text-zinc-200"}`}
+            className={`flex items-center justify-center ${active ? "text-white" : "text-zinc-500 group-hover:text-white"}`}
+            style={active ? { color: 'var(--brand-primary)' } : {}}
             whileHover={{ scale: 1.1, rotate: active ? 0 : [0, -5, 5, 0] }}
             transition={{ duration: 0.3 }}
           >
