@@ -297,6 +297,118 @@ export function calcularCustoTotalEmpresa(params: {
   };
 }
 
+// ─── SIMULADOR DE RESCISÃO TRABALHISTA ───
+export interface CalculoRescisao {
+  tipoRescisao: string;
+  saldoSalario: number;
+  avisoPrevio: number;
+  avisoPrevioDias: number;
+  feriasVencidas: number;
+  feriasProporcionais: number;
+  tercoFerias: number;
+  decimoTerceiroProporcional: number;
+  multaFgts: number;
+  saldoFgts: number;
+  totalBruto: number;
+  descontoINSS: number;
+  descontoIRRF: number;
+  descontoAvisoPrevio: number;
+  totalDescontos: number;
+  totalLiquido: number;
+}
+
+export function calcularRescisao(params: {
+  salarioBase: number;
+  dataAdmissao: Date;
+  dataRescisao: Date;
+  tipoRescisao: "SEM_JUSTA_CAUSA" | "PEDIDO_DEMISSAO" | "JUSTA_CAUSA" | "ACORDO_MUTUO";
+  diasTrabalhadosMes: number;
+  feriasVencidasPeriodos: number;
+  avisoPrevioCumprido: boolean;
+}): CalculoRescisao {
+  const { salarioBase, dataAdmissao, dataRescisao, tipoRescisao, diasTrabalhadosMes, feriasVencidasPeriodos, avisoPrevioCumprido } = params;
+
+  const mesesTrabalhados = Math.max(1, Math.round((dataRescisao.getTime() - dataAdmissao.getTime()) / (1000 * 60 * 60 * 24 * 30)));
+  const anosTrabalhados = mesesTrabalhados / 12;
+  const mesesNoAno = ((dataRescisao.getMonth() - dataAdmissao.getMonth() + 12) % 12) || 12;
+  const mesesFerias = mesesTrabalhados % 12;
+
+  // Saldo de salário
+  const saldoSalario = Math.round((salarioBase / 30) * diasTrabalhadosMes * 100) / 100;
+
+  // Aviso prévio (30 dias + 3 por ano, máx 90)
+  const avisoPrevioDias = Math.min(90, 30 + Math.floor(anosTrabalhados) * 3);
+  let avisoPrevio = 0;
+  let descontoAvisoPrevio = 0;
+
+  if (tipoRescisao === "SEM_JUSTA_CAUSA" && !avisoPrevioCumprido) {
+    avisoPrevio = Math.round((salarioBase / 30) * avisoPrevioDias * 100) / 100;
+  } else if (tipoRescisao === "PEDIDO_DEMISSAO" && !avisoPrevioCumprido) {
+    descontoAvisoPrevio = Math.round(salarioBase * 100) / 100; // desconta 30 dias
+  } else if (tipoRescisao === "ACORDO_MUTUO" && !avisoPrevioCumprido) {
+    avisoPrevio = Math.round((salarioBase / 30) * avisoPrevioDias * 0.5 * 100) / 100; // 50% (reforma)
+  }
+
+  // Férias vencidas (em dobro se houver períodos vencidos)
+  const feriasVencidas = Math.round(salarioBase * feriasVencidasPeriodos * 100) / 100;
+
+  // Férias proporcionais
+  let feriasProporcionais = 0;
+  if (tipoRescisao !== "JUSTA_CAUSA") {
+    feriasProporcionais = Math.round((salarioBase / 12) * mesesFerias * 100) / 100;
+  }
+
+  // 1/3 constitucional
+  const tercoFerias = Math.round((feriasVencidas + feriasProporcionais) / 3 * 100) / 100;
+
+  // 13º proporcional
+  let decimoTerceiroProporcional = 0;
+  if (tipoRescisao !== "JUSTA_CAUSA") {
+    const meses13 = dataRescisao.getMonth() + 1; // meses no ano corrente
+    decimoTerceiroProporcional = Math.round((salarioBase / 12) * meses13 * 100) / 100;
+  }
+
+  // FGTS
+  const saldoFgts = Math.round(salarioBase * 0.08 * mesesTrabalhados * 100) / 100;
+  let multaFgts = 0;
+  if (tipoRescisao === "SEM_JUSTA_CAUSA") {
+    multaFgts = Math.round(saldoFgts * 0.40 * 100) / 100;
+  } else if (tipoRescisao === "ACORDO_MUTUO") {
+    multaFgts = Math.round(saldoFgts * 0.20 * 100) / 100; // 20% (reforma)
+  }
+
+  // Totais brutos
+  const totalBruto = Math.round((saldoSalario + avisoPrevio + feriasVencidas + feriasProporcionais + tercoFerias + decimoTerceiroProporcional + multaFgts) * 100) / 100;
+
+  // Descontos
+  const inssCalc = calcularINSS(saldoSalario);
+  const descontoINSS = inssCalc.valor;
+  const irrfCalc = calcularIRRF(saldoSalario, descontoINSS);
+  const descontoIRRF = irrfCalc.valor;
+
+  const totalDescontos = Math.round((descontoINSS + descontoIRRF + descontoAvisoPrevio) * 100) / 100;
+  const totalLiquido = Math.round((totalBruto - totalDescontos) * 100) / 100;
+
+  return {
+    tipoRescisao,
+    saldoSalario,
+    avisoPrevio,
+    avisoPrevioDias,
+    feriasVencidas,
+    feriasProporcionais,
+    tercoFerias,
+    decimoTerceiroProporcional,
+    multaFgts,
+    saldoFgts,
+    totalBruto,
+    descontoINSS,
+    descontoIRRF,
+    descontoAvisoPrevio,
+    totalDescontos,
+    totalLiquido,
+  };
+}
+
 // ─── MULTA POR FALTA DE REGISTRO (ART. 47 CLT) ───
 export function multaFaltaRegistro(isMicroEmpresa: boolean): number {
   return isMicroEmpresa ? 800 : 3000;
@@ -313,3 +425,4 @@ export function formatarMoeda(valor: number): string {
 export function formatarPercentual(valor: number): string {
   return `${valor.toFixed(2)}%`;
 }
+

@@ -78,6 +78,7 @@ model Empresa {
   regrasComissao       RegraComissao[]
   cargos               Cargo[]
   funcionarios         Funcionario[]
+  auditLogsRh          AuditLogRH[]
   
   planoSaaS            PlanoSaaS? @relation(fields: [planoSaasId], references: [id])
   faturasSaaS          FaturaSaaS[]
@@ -1375,5 +1376,35 @@ model PassivoTrabalhista {
 
   @@index([funcionarioId, dataCalculo])
   @@map("passivo_trabalhista")
+  @@schema("public")
+}
+
+model AuditLogRH {
+  id              String    @id @default(uuid()) @db.Uuid
+  empresaId       String    @map("empresa_id") @db.Uuid
+  usuarioId       String    @map("usuario_id") // auth user id
+  usuarioEmail    String    @map("usuario_email")
+  
+  // O que aconteceu
+  acao            String    // CRIAR, EDITAR, EXCLUIR, BATER_PONTO, AGENDAR_FERIAS, etc.
+  entidade        String    // Funcionario, RegistroPonto, FeriasFuncionario, etc.
+  entidadeId      String?   @map("entidade_id")
+  
+  // Detalhes
+  descricao       String    @db.Text
+  dadosAntes      Json?     @map("dados_antes") @db.JsonB   // snapshot antes da mudança
+  dadosDepois     Json?     @map("dados_depois") @db.JsonB  // snapshot depois
+  
+  // Metadados
+  ipAddress       String?   @map("ip_address")
+  userAgent       String?   @map("user_agent")
+  
+  createdAt       DateTime  @default(now()) @map("created_at")
+
+  empresa         Empresa   @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+
+  @@index([empresaId, createdAt])
+  @@index([entidade, entidadeId])
+  @@map("audit_log_rh")
   @@schema("public")
 }

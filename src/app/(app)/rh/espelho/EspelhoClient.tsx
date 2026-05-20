@@ -1,6 +1,7 @@
 "use client";
 import { useState, useMemo } from "react";
-import { Calendar, Clock, AlertTriangle, CheckCircle2, FileText, ChevronDown, Coffee } from "lucide-react";
+import { Calendar, Clock, AlertTriangle, CheckCircle2, FileText, ChevronDown, Coffee, Download, Printer } from "lucide-react";
+import { exportarCSV, imprimirRelatorio, gerarEspelhoPontoHTML } from "@/lib/rh/exportacao";
 
 type FuncResumo = { id: string; nome: string; cargoFuncao?: string | null; tipoJornada: string; horasDiarias: number; horasSemanais: number; salarioBase?: number | null };
 type Pausa = { id: string; tipoPausa: string; cumprida: boolean };
@@ -37,7 +38,7 @@ export function EspelhoClient({ funcionarios, registros, mesAtual, anoAtual }: {
         </div>
 
         {/* Seletor de funcionário */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
           <label className="text-sm font-medium">Funcionário:</label>
           <div className="relative">
             <select value={selFunc} onChange={e => setSelFunc(e.target.value)} className="appearance-none rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-4 py-2.5 pr-10 text-sm font-medium min-w-[280px]">
@@ -45,6 +46,20 @@ export function EspelhoClient({ funcionarios, registros, mesAtual, anoAtual }: {
             </select>
             <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400 pointer-events-none" />
           </div>
+          {func && regs.length > 0 && (
+            <div className="flex gap-2 ml-auto">
+              <button onClick={() => {
+                const linhas: (string|number)[][] = [["Data","Entrada","Almoço","Retorno","Saída","Horas","Extras","Falta"]];
+                regs.forEach(r => linhas.push([fmtData(r.data), fmtHora(r.entrada), fmtHora(r.saidaAlmoco), fmtHora(r.retornoAlmoco), fmtHora(r.saida), r.horasTrabalhadas?.toFixed(1) || "—", r.horasExtras?.toFixed(1) || "—", r.falta ? "SIM" : ""]));
+                linhas.push(["TOTAL","","","","", resumo.totalHoras.toFixed(1), resumo.totalExtras.toFixed(1), String(resumo.faltas)]);
+                exportarCSV(`espelho_${func.nome.replace(/\s/g,"_")}_${meses[mesAtual-1]}_${anoAtual}`, linhas);
+              }} className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-xs font-semibold hover:bg-zinc-200 transition"><Download className="h-3.5 w-3.5" /> CSV</button>
+              <button onClick={() => {
+                const html = gerarEspelhoPontoHTML(func, `${meses[mesAtual-1]} ${anoAtual}`, regs, resumo);
+                imprimirRelatorio(`Espelho de Ponto — ${func.nome}`, html);
+              }} className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-xs font-semibold hover:bg-zinc-200 transition"><Printer className="h-3.5 w-3.5" /> Imprimir</button>
+            </div>
+          )}
         </div>
 
         {func && (

@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSessionEmpresaApi } from "@/lib/session";
-import { GoogleGenerativeAI } from "@google/generative-ai";
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
+export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
   try {
@@ -20,6 +19,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "API do Gemini não configurada." }, { status: 500 });
     }
 
+    const { GoogleGenerativeAI } = await import("@google/generative-ai");
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
     const prompt = `Você é um assistente de vendas de alto nível especialista em crédito consignado. 

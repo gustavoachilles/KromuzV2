@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Brain, FileText, Layers, Settings, Calculator, BookOpen, BarChart3, Shield, Package, ScrollText, Kanban, Users, DollarSign, Target, Trophy, Upload, ArrowRightLeft, PieChart, CreditCard, Inbox, Megaphone, RefreshCcw, MessageSquare, GraduationCap, Clock, Activity, LayoutDashboard, KeyRound, ChevronDown, AlertTriangle, UserCheck, ClipboardList, Receipt, Palmtree, FolderOpen, CalendarDays } from "lucide-react";
+import { Brain, FileText, Layers, Settings, Calculator, BookOpen, BarChart3, Shield, Package, ScrollText, Kanban, Users, DollarSign, Target, Trophy, Upload, ArrowRightLeft, PieChart, CreditCard, Inbox, Megaphone, RefreshCcw, MessageSquare, GraduationCap, Clock, Activity, LayoutDashboard, KeyRound, ChevronDown, AlertTriangle, UserCheck, ClipboardList, Receipt, Palmtree, FolderOpen, CalendarDays, Gavel, Eye } from "lucide-react";
 import type { Permissoes } from "@/lib/permissions";
 
 export function SidebarNav({ permissoes }: { permissoes: Permissoes }) {
@@ -189,7 +189,9 @@ export function SidebarNav({ permissoes }: { permissoes: Permissoes }) {
           <NavLink href="/rh/ferias" icon={<Palmtree className="h-4 w-4" />} active={pathname.startsWith("/rh/ferias")}>Férias</NavLink>
           <NavLink href="/rh/passivo" icon={<AlertTriangle className="h-4 w-4" />} active={pathname.startsWith("/rh/passivo")}>Passivo Trabalhista</NavLink>
           <NavLink href="/rh/folha" icon={<Receipt className="h-4 w-4" />} active={pathname.startsWith("/rh/folha")}>Folha & Holerites</NavLink>
+          <NavLink href="/rh/rescisao" icon={<Gavel className="h-4 w-4" />} active={pathname.startsWith("/rh/rescisao")}>Simulador Rescisão</NavLink>
           <NavLink href="/rh/documentos" icon={<FolderOpen className="h-4 w-4" />} active={pathname.startsWith("/rh/documentos")}>Documentos</NavLink>
+          <NavLink href="/rh/auditoria" icon={<Eye className="h-4 w-4" />} active={pathname.startsWith("/rh/auditoria")}>Auditoria</NavLink>
         </CollapsibleSection>
       )}
     </nav>

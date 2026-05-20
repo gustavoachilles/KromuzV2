@@ -2,8 +2,9 @@
 import { useState, useMemo } from "react";
 import {
   Receipt, DollarSign, TrendingUp, ChevronDown, ChevronUp,
-  Users, Building2, Info, Percent, ArrowDown, ArrowUp
+  Users, Building2, Info, Percent, ArrowDown, ArrowUp, Download, Printer
 } from "lucide-react";
+import { exportarCSV, imprimirRelatorio, gerarHoleriteHTML } from "@/lib/rh/exportacao";
 import {
   calcularINSS, calcularIRRF, calcularFGTS, calcularINSSPatronal,
   calcularDescontoVT, calcularCustoTotalEmpresa, formatarMoeda, formatarPercentual
@@ -12,6 +13,7 @@ import {
 type Func = {
   id: string;
   nome: string;
+  cpf: string;
   cargoFuncao?: string | null;
   salarioBase?: number | null;
   valeTransporte: boolean;
@@ -97,10 +99,31 @@ export function FolhaClient({
     <div className="min-h-screen bg-gradient-to-b from-zinc-50 to-white dark:from-zinc-950 dark:to-black">
       <div className="max-w-7xl mx-auto px-6 py-10 space-y-8">
         {/* Header */}
-        <div>
-          <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: "var(--brand-primary)" }}>📄 FOLHA DE PAGAMENTO</p>
-          <h1 className="text-3xl font-bold tracking-tight">Folha & Holerites Projetados</h1>
-          <p className="text-sm text-zinc-500 mt-1 capitalize">Projeção para {mesAtual} — {holerites.length} funcionário(s) CLT</p>
+        <div className="flex items-center justify-between flex-wrap gap-3">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: "var(--brand-primary)" }}>📄 FOLHA DE PAGAMENTO</p>
+            <h1 className="text-3xl font-bold tracking-tight">Folha & Holerites Projetados</h1>
+            <p className="text-sm text-zinc-500 mt-1 capitalize">Projeção para {mesAtual} — {holerites.length} funcionário(s) CLT</p>
+          </div>
+          {holerites.length > 0 && (
+            <div className="flex gap-2">
+              <button onClick={() => {
+                const linhas: (string|number)[][] = [["Nome","Cargo","Bruto","INSS","IRRF","VT","Líquido","FGTS","Custo Empresa"]];
+                holerites.forEach(h => linhas.push([h.func.nome, h.func.cargoFuncao || "", h.salarioBruto, h.inss.valor, h.irrf.valor, h.descontoVT, h.salarioLiquido, h.fgts, h.custoTotal.custoTotal]));
+                linhas.push(["TOTAL","", totais.bruto, totais.inss, totais.irrf, 0, totais.liquido, totais.fgts, totais.custoTotal]);
+                exportarCSV(`folha_${mesAtual.replace(/\s/g,"_")}`, linhas);
+              }} className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-xs font-semibold hover:bg-zinc-200 transition"><Download className="h-3.5 w-3.5" /> CSV</button>
+              <button onClick={() => {
+                const htmlParts = holerites.map(h => gerarHoleriteHTML(
+                  h.func, mesAtual,
+                  [{ label: "Salário Base", valor: h.salarioBruto }],
+                  [{ label: `INSS (${formatarPercentual(h.inss.aliquotaEfetiva)})`, valor: h.inss.valor }, { label: "IRRF", valor: h.irrf.valor }, { label: "Vale Transporte", valor: h.descontoVT }],
+                  h.salarioBruto, h.totalDescontos, h.salarioLiquido
+                ));
+                imprimirRelatorio("Folha de Pagamento", htmlParts.join('<hr style="margin:24px 0">'));
+              }} className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-xs font-semibold hover:bg-zinc-200 transition"><Printer className="h-3.5 w-3.5" /> Imprimir</button>
+            </div>
+          )}
         </div>
 
         {/* Totais */}

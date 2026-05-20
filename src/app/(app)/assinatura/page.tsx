@@ -36,7 +36,7 @@ export default async function AssinaturaPage() {
   };
 
   const isOverdue = empresa.statusAssinatura === "OVERDUE";
-  const faturaAberta = empresa.faturasSaaS.find(f => f.status === "PENDING" || f.status === "OVERDUE");
+  const faturaAberta = empresa.faturasSaaS.find((f: { status: string; vencimento: Date; linkPagamento: string | null }) => f.status === "PENDING" || f.status === "OVERDUE");
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
@@ -120,7 +120,7 @@ export default async function AssinaturaPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
-                {empresa.faturasSaaS.map(fatura => (
+                {empresa.faturasSaaS.map((fatura: any) => (
                   <tr key={fatura.id}>
                     <td className="px-6 py-4 text-zinc-700 dark:text-zinc-300">
                       {new Date(fatura.vencimento).toLocaleDateString()}

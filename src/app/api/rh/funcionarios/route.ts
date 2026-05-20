@@ -3,6 +3,7 @@ import { getSessionEmpresaApi } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 import { temPermissao } from "@/lib/permissions";
 import { calcularPassivoTrabalhista } from "@/lib/rh/calculos-trabalhistas";
+import { registrarAudit, getIPFromRequest } from "@/lib/rh/audit";
 
 // B2: Validador de CPF brasileiro
 function validarCPF(cpf: string): boolean {
@@ -157,6 +158,19 @@ export async function POST(req: NextRequest) {
         passivoEstimado: passivo.passivoTotal,
         observacoes: body.observacoes || null,
       },
+    });
+
+    // Audit log
+    registrarAudit({
+      empresaId: sessao.empresaId,
+      usuarioId: sessao.userId,
+      usuarioEmail: sessao.email,
+      acao: "CRIAR_FUNCIONARIO",
+      entidade: "Funcionario",
+      entidadeId: funcionario.id,
+      descricao: `Criou funcionário ${body.nome} (${body.regimeContratacao})`,
+      dadosDepois: { nome: body.nome, cpf: body.cpf, regime: body.regimeContratacao },
+      ipAddress: getIPFromRequest(req),
     });
 
     return NextResponse.json(funcionario, { status: 201 });

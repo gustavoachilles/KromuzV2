@@ -3,6 +3,7 @@ import { getSessionEmpresaApi } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 import { temPermissao } from "@/lib/permissions";
 import { calcularPassivoTrabalhista } from "@/lib/rh/calculos-trabalhistas";
+import { registrarAudit, getIPFromRequest } from "@/lib/rh/audit";
 
 // PUT /api/rh/funcionarios/[id]
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -108,6 +109,15 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       },
     });
 
+    registrarAudit({
+      empresaId: sessao.empresaId, usuarioId: sessao.userId, usuarioEmail: sessao.email,
+      acao: "EDITAR_FUNCIONARIO", entidade: "Funcionario", entidadeId: id,
+      descricao: `Editou funcionário ${body.nome}`,
+      dadosAntes: { nome: existente.nome, regime: existente.regimeContratacao },
+      dadosDepois: { nome: body.nome, regime: body.regimeContratacao },
+      ipAddress: getIPFromRequest(req),
+    });
+
     return NextResponse.json(funcionario);
   } catch (error) {
     console.error("[RH/funcionarios/PUT] Erro:", error);
@@ -138,6 +148,14 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
     await prisma.funcionario.update({
       where: { id },
       data: { status: "DESLIGADO", dataDemissao: new Date() },
+    });
+
+    registrarAudit({
+      empresaId: sessao.empresaId, usuarioId: sessao.userId, usuarioEmail: sessao.email,
+      acao: "EXCLUIR_FUNCIONARIO", entidade: "Funcionario", entidadeId: id,
+      descricao: `Desligou funcionário ${func.nome}`,
+      dadosAntes: { nome: func.nome, status: func.status },
+      dadosDepois: { status: "DESLIGADO" },
     });
 
     return NextResponse.json({ ok: true });
