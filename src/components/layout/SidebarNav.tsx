@@ -217,14 +217,14 @@ function CollapsibleSection({
         onClick={onToggle}
         className="w-full flex items-center justify-between px-3 py-1.5 group cursor-pointer outline-none"
       >
-        <span className="text-[11px] uppercase tracking-[0.2em] font-bold text-zinc-500 group-hover:text-white transition-colors duration-300">
+        <span className="text-[12px] uppercase tracking-[0.15em] font-bold text-zinc-400 group-hover:text-white transition-colors duration-300">
           {label}
         </span>
         <motion.div
           animate={{ rotate: isOpen ? 0 : -90 }}
           transition={{ duration: 0.2, ease: "easeOut" }}
         >
-          <ChevronDown className="h-3.5 w-3.5 text-zinc-500 group-hover:text-white transition-colors duration-300" />
+          <ChevronDown className="h-4 w-4 text-zinc-400 group-hover:text-white transition-colors duration-300" />
         </motion.div>
       </button>
       <AnimatePresence initial={false}>
@@ -236,7 +236,6 @@ function CollapsibleSection({
             transition={{ duration: 0.3, ease: [0.04, 0.62, 0.23, 0.98] }}
             className="overflow-hidden"
           >
-            {/* Adicionado uma borda guia à esquerda para agrupar visualmente o submenu */}
             <div className="space-y-0.5 pt-2 mt-1 relative before:absolute before:left-[21px] before:top-0 before:bottom-2 before:w-px before:bg-white/10">
               {children}
             </div>
@@ -266,7 +265,7 @@ function NavLink({
     return (
       <span className={`flex items-center gap-3 py-2.5 rounded-xl text-zinc-600 cursor-not-allowed opacity-60 ${isSubItem ? 'pl-11 pr-3' : 'px-3'}`}>
         {icon}
-        <span className={`font-medium ${isSubItem ? 'text-[12px]' : 'text-[14px]'}`}>{children}</span>
+        <span className={`font-semibold ${isSubItem ? 'text-[14px]' : 'text-[15px]'}`}>{children}</span>
         <span className="ml-auto text-[9px] uppercase tracking-wider bg-zinc-900 px-1.5 py-0.5 rounded-md">soon</span>
       </span>
     );
@@ -279,10 +278,10 @@ function NavLink({
           isSubItem ? 'pl-[44px] pr-3' : 'px-3'
         } ${
           active
-            ? "text-white font-semibold"
+            ? "text-white font-bold"
             : isSubItem 
-              ? "text-zinc-500 hover:text-white hover:bg-white/5 font-medium"
-              : "text-zinc-300 hover:text-white hover:bg-white/5 font-medium"
+              ? "text-zinc-400 hover:text-white hover:bg-white/5 font-semibold"
+              : "text-zinc-200 hover:text-white hover:bg-white/5 font-bold"
         }`}
         whileHover={{ x: active ? 0 : 4 }}
         whileTap={{ scale: 0.98 }}
@@ -308,14 +307,14 @@ function NavLink({
         {/* Conteúdo do Link */}
         <span className="relative z-10 flex items-center gap-3 w-full">
           <motion.div
-            className={`flex items-center justify-center ${active ? "text-white" : isSubItem ? "text-zinc-600 group-hover:text-zinc-400" : "text-zinc-400 group-hover:text-white"}`}
+            className={`flex items-center justify-center ${active ? "text-white" : isSubItem ? "text-zinc-500 group-hover:text-zinc-300" : "text-zinc-400 group-hover:text-white"}`}
             style={active ? { color: 'var(--brand-primary)' } : {}}
             whileHover={{ scale: 1.1, rotate: active ? 0 : [0, -5, 5, 0] }}
             transition={{ duration: 0.3 }}
           >
             {icon}
           </motion.div>
-          <span className={`${isSubItem ? 'text-[13px]' : 'text-[14px]'} tracking-wide relative top-[1px]`}>
+          <span className={`${isSubItem ? 'text-[14px]' : 'text-[15px]'} tracking-wide relative top-[1px]`}>
             {children}
           </span>
         </span>
