@@ -36,5 +36,11 @@ export default async function EsteiraPage() {
     .map(t => t.tipoOperacao)
     .filter(Boolean) as string[];
 
-  return <EsteiraClient propostas={propostas} contagens={contagens} tiposOperacao={tiposOperacao} />;
+  const convenios = await prisma.convenio.findMany({
+    where: { empresaId: sessao.empresaId },
+    select: { id: true, nome: true },
+    orderBy: { nome: "asc" }
+  });
+
+  return <EsteiraClient propostas={propostas} contagens={contagens} tiposOperacao={tiposOperacao} convenios={convenios} />;
 }

@@ -78,10 +78,12 @@ export function EsteiraClient({
   propostas: propostasIniciais,
   contagens,
   tiposOperacao = [],
+  convenios = [],
 }: {
   propostas: Proposta[];
   contagens: Contagem[];
   tiposOperacao?: string[];
+  convenios?: { id: string; nome: string }[];
 }) {
   const router = useRouter();
   const [propostas, setPropostas] = useState(propostasIniciais);
@@ -91,6 +93,7 @@ export function EsteiraClient({
   const [filtroStatus, setFiltroStatus] = useState("");
   const [filtroTipo, setFiltroTipo] = useState("");
   const [filtroPeriodo, setFiltroPeriodo] = useState("");
+  const [filtroConvenio, setFiltroConvenio] = useState("");
   const [busca, setBusca] = useState("");
   const [atualizando, setAtualizando] = useState<string | null>(null);
   const [porPagina, setPorPagina] = useState(10);
@@ -197,6 +200,7 @@ export function EsteiraClient({
   const filtrados = propostas.filter((p) => {
     if (filtroStatus && p.status !== filtroStatus) return false;
     if (filtroTipo && (p.tipoOperacao || "") !== filtroTipo) return false;
+    if (filtroConvenio && (p.convenioNome || "") !== filtroConvenio) return false;
     if (busca && !p.clienteNome.toLowerCase().includes(busca.toLowerCase())) return false;
     if (filtroPeriodo) {
       const d = new Date(p.createdAt);
@@ -348,15 +352,57 @@ export function EsteiraClient({
             </div>
             <h1 className="text-3xl md:text-4xl font-bold tracking-tight">Propostas</h1>
             <p className="text-zinc-600 dark:text-zinc-400 mt-1">
-              {propostas.length} proposta{propostas.length !== 1 ? "s" : ""}
+              {propostas.length} proposta{propostas.length !== 1 ? "s" : ""} {busca ? "encontradas" : ""}
             </p>
           </div>
-          <button
-            onClick={() => setModal(true)}
-            className="flex items-center gap-2 rounded-xl bg-brand px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-brand/25 hover:opacity-95 transition"
-          >
-            <Plus className="h-4 w-4" /> Nova Proposta
-          </button>
+          <div className="flex items-center gap-3 flex-wrap justify-end">
+            {filtroStatus && (
+              <button
+                onClick={() => setFiltroStatus("")}
+                className="flex items-center gap-1 text-xs font-semibold text-brand border border-brand/20 bg-brand/5 rounded-xl px-3 py-2.5 hover:bg-brand/10 transition"
+              >
+                <Filter className="h-3.5 w-3.5" />
+                {statusConfig[filtroStatus]?.label}
+                <X className="h-3 w-3" />
+              </button>
+            )}
+            <select value={filtroPeriodo} onChange={(e) => { setFiltroPeriodo(e.target.value); setPaginaLista(1); }} className="text-sm text-zinc-600 dark:text-zinc-300 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl px-3 py-2.5 outline-none focus:ring-2 focus:ring-brand cursor-pointer">
+              <option value="">Qualquer Período</option>
+              <option value="7d">Últimos 7 dias</option>
+              <option value="30d">Últimos 30 dias</option>
+              <option value="90d">Últimos 90 dias</option>
+              <option value="ano">Este ano</option>
+            </select>
+            <select value={filtroTipo} onChange={(e) => { setFiltroTipo(e.target.value); setPaginaLista(1); }} className="text-sm text-zinc-600 dark:text-zinc-300 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl px-3 py-2.5 outline-none focus:ring-2 focus:ring-brand cursor-pointer max-w-[160px] truncate">
+              <option value="">Todos Produtos</option>
+              {tiposOperacao.map(t => <option key={t} value={t}>{t}</option>)}
+            </select>
+            <select value={filtroConvenio} onChange={(e) => { setFiltroConvenio(e.target.value); setPaginaLista(1); }} className="text-sm text-zinc-600 dark:text-zinc-300 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl px-3 py-2.5 outline-none focus:ring-2 focus:ring-brand cursor-pointer max-w-[160px] truncate">
+              <option value="">Todos Convênios</option>
+              {convenios?.map(c => <option key={c.id} value={c.nome}>{c.nome}</option>)}
+            </select>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
+              <input 
+                type="text"
+                placeholder="Buscar proposta..."
+                value={busca}
+                onChange={(e) => { setBusca(e.target.value); setPaginaLista(1); }}
+                className="pl-9 pr-8 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 text-sm focus:ring-2 focus:ring-brand outline-none w-48 transition-all"
+              />
+              {busca && (
+                <button onClick={() => { setBusca(""); setPaginaLista(1); }} className="absolute right-3 top-1/2 -translate-y-1/2">
+                  <X className="h-3.5 w-3.5 text-zinc-400 hover:text-zinc-600" />
+                </button>
+              )}
+            </div>
+            <button
+              onClick={() => setModal(true)}
+              className="flex items-center gap-2 rounded-xl bg-brand px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-brand/25 hover:opacity-95 transition"
+            >
+              <Plus className="h-4 w-4" /> Nova Proposta
+            </button>
+          </div>
         </header>
 
         {/* Funil */}
@@ -388,45 +434,6 @@ export function EsteiraClient({
           ))}
         </div>
 
-        {/* Filtros */}
-        <div className="flex flex-wrap gap-3">
-          <div className="relative flex-1 min-w-[200px]">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
-            <input
-              value={busca}
-              onChange={(e) => setBusca(e.target.value)}
-              placeholder="Buscar cliente..."
-              className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-sm focus:outline-none focus:ring-2 focus:ring-brand/50"
-            />
-          </div>
-          <select value={filtroTipo} onChange={(e) => { setFiltroTipo(e.target.value); setPaginaLista(1); }}
-            className="rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/50">
-            <option value="">Todos os Tipos</option>
-            {tiposOperacao.map(t => <option key={t} value={t}>{t}</option>)}
-          </select>
-          <select value={filtroPeriodo} onChange={(e) => { setFiltroPeriodo(e.target.value); setPaginaLista(1); }}
-            className="rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/50">
-            <option value="">Todo Período</option>
-            <option value="7d">Últimos 7 dias</option>
-            <option value="30d">Últimos 30 dias</option>
-            <option value="90d">Últimos 90 dias</option>
-            <option value="ano">Este ano</option>
-          </select>
-          {filtroStatus && (
-            <button
-              onClick={() => setFiltroStatus("")}
-              className="flex items-center gap-1 text-xs text-brand border border-brand/20 rounded-lg px-3 py-2 hover:bg-brand/10 transition"
-            >
-              <Filter className="h-3 w-3" />
-              {statusConfig[filtroStatus]?.label}
-              <X className="h-3 w-3" />
-            </button>
-          )}
-          {(filtroTipo || filtroPeriodo) && (
-            <button onClick={() => { setFiltroTipo(""); setFiltroPeriodo(""); }}
-              className="text-xs text-zinc-400 hover:text-red-500 transition px-2">✕ Limpar filtros</button>
-          )}
-        </div>
 
         {/* Pipeline Kanban */}
         <div className="flex gap-4 overflow-x-auto pb-4 items-start min-h-[60vh] scrollbar-hide">
