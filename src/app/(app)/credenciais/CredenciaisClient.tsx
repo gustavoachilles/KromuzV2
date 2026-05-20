@@ -3,7 +3,7 @@ import { useState } from "react";
 import {
   KeyRound, ExternalLink, Plus, X, Loader2, Eye, EyeOff,
   Building2, Shield, Search, Copy, Check, Globe, User, Lock,
-  Pencil, Users
+  Pencil, Users, LayoutGrid, List
 } from "lucide-react";
 
 type Banco = {
@@ -91,6 +91,7 @@ export function CredenciaisClient({ bancos, empresaId }: { bancos: Banco[]; empr
   const [copiadoId, setCopiadoId] = useState<string | null>(null);
   const [novoFuncionarioInput, setNovoFuncionarioInput] = useState("");
   const [showAddFuncionario, setShowAddFuncionario] = useState(false);
+  const [viewMode, setViewMode] = useState<"cards" | "lista">("cards");
 
   const [form, setForm] = useState<Omit<Credencial, "id">>({
     tipo: "banco",
@@ -356,6 +357,22 @@ export function CredenciaisClient({ bancos, empresaId }: { bancos: Banco[]; empr
               </button>
             ))}
           </div>
+          <div className="flex gap-1 bg-zinc-100 dark:bg-zinc-800 rounded-xl p-1">
+            <button
+              onClick={() => setViewMode("cards")}
+              className={`p-1.5 rounded-lg transition ${viewMode === "cards" ? "bg-white dark:bg-zinc-900 shadow-sm text-zinc-900 dark:text-zinc-100" : "text-zinc-400 hover:text-zinc-600"}`}
+              title="Visualizar em cards"
+            >
+              <LayoutGrid className="h-4 w-4" />
+            </button>
+            <button
+              onClick={() => setViewMode("lista")}
+              className={`p-1.5 rounded-lg transition ${viewMode === "lista" ? "bg-white dark:bg-zinc-900 shadow-sm text-zinc-900 dark:text-zinc-100" : "text-zinc-400 hover:text-zinc-600"}`}
+              title="Visualizar em lista"
+            >
+              <List className="h-4 w-4" />
+            </button>
+          </div>
           <button
             onClick={() => abrirNovo()}
             className="flex items-center gap-2 rounded-xl bg-brand px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-brand/25 hover:opacity-90 transition"
@@ -371,7 +388,7 @@ export function CredenciaisClient({ bancos, empresaId }: { bancos: Banco[]; empr
             <p className="text-zinc-500 font-medium">Nenhuma credencial cadastrada</p>
             <p className="text-sm text-zinc-400 mt-1">Clique em &quot;Nova Credencial&quot; para adicionar seus acessos</p>
           </div>
-        ) : (
+        ) : viewMode === "cards" ? (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
             {filtrados.map(cred => (
               <div
@@ -469,6 +486,117 @@ export function CredenciaisClient({ bancos, empresaId }: { bancos: Banco[]; empr
                 </div>
               </div>
             ))}
+          </div>
+        ) : (
+          /* Visualização em Lista */
+          <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 overflow-hidden">
+            {/* Header da tabela */}
+            <div className="hidden md:grid grid-cols-[2fr_2fr_2fr_1.5fr_1fr_auto] gap-4 px-5 py-3 bg-zinc-50 dark:bg-zinc-800/50 border-b border-zinc-200 dark:border-zinc-800 text-[11px] font-semibold text-zinc-500 uppercase tracking-wider">
+              <span>Nome</span>
+              <span>Usuário</span>
+              <span>Senha</span>
+              <span>Funcionário</span>
+              <span>Tipo</span>
+              <span className="text-right">Ações</span>
+            </div>
+            {/* Rows */}
+            <div className="divide-y divide-zinc-100 dark:divide-zinc-800">
+              {filtrados.map(cred => (
+                <div
+                  key={cred.id}
+                  className="group grid grid-cols-1 md:grid-cols-[2fr_2fr_2fr_1.5fr_1fr_auto] gap-3 md:gap-4 items-center px-5 py-3.5 hover:bg-zinc-50 dark:hover:bg-zinc-800/30 transition-colors"
+                >
+                  {/* Nome */}
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className={`h-8 w-8 rounded-lg flex items-center justify-center shrink-0 ${tipoColor(cred.tipo)}`}>
+                      {tipoIcon(cred.tipo)}
+                    </div>
+                    <span className="font-medium text-sm truncate">{cred.nome}</span>
+                  </div>
+
+                  {/* Usuário */}
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="text-sm text-zinc-600 dark:text-zinc-400 truncate">{cred.usuario}</span>
+                    <button
+                      onClick={() => copiar(cred.usuario, `user-${cred.id}`)}
+                      className="text-zinc-400 hover:text-brand transition shrink-0 opacity-0 group-hover:opacity-100"
+                      title="Copiar usuário"
+                    >
+                      {copiadoId === `user-${cred.id}` ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Copy className="h-3.5 w-3.5" />}
+                    </button>
+                  </div>
+
+                  {/* Senha */}
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="text-sm text-zinc-600 dark:text-zinc-400 truncate font-mono">
+                      {senhasVisiveis.has(cred.id) ? cred.senha : "••••••••"}
+                    </span>
+                    <button
+                      onClick={() => toggleSenha(cred.id)}
+                      className="text-zinc-400 hover:text-brand transition shrink-0 opacity-0 group-hover:opacity-100"
+                      title={senhasVisiveis.has(cred.id) ? "Ocultar" : "Mostrar"}
+                    >
+                      {senhasVisiveis.has(cred.id) ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                    </button>
+                    <button
+                      onClick={() => copiar(cred.senha, `pw-${cred.id}`)}
+                      className="text-zinc-400 hover:text-brand transition shrink-0 opacity-0 group-hover:opacity-100"
+                      title="Copiar senha"
+                    >
+                      {copiadoId === `pw-${cred.id}` ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Copy className="h-3.5 w-3.5" />}
+                    </button>
+                  </div>
+
+                  {/* Funcionário */}
+                  <div className="min-w-0">
+                    {cred.funcionario ? (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium uppercase tracking-wider bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400">
+                        <User className="h-2.5 w-2.5" />
+                        {cred.funcionario}
+                      </span>
+                    ) : (
+                      <span className="text-xs text-zinc-300 dark:text-zinc-600">—</span>
+                    )}
+                  </div>
+
+                  {/* Tipo */}
+                  <div>
+                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium uppercase tracking-wider ${tipoColor(cred.tipo)}`}>
+                      {cred.tipo}
+                    </span>
+                  </div>
+
+                  {/* Ações */}
+                  <div className="flex items-center gap-1.5 justify-end">
+                    {cred.urlLogin && (
+                      <a
+                        href={cred.urlLogin}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center justify-center h-7 w-7 rounded-lg text-brand hover:bg-brand/10 transition"
+                        title="Acessar Login"
+                      >
+                        <ExternalLink className="h-3.5 w-3.5" />
+                      </a>
+                    )}
+                    <button
+                      onClick={() => abrirEditar(cred)}
+                      className="flex items-center justify-center h-7 w-7 rounded-lg text-zinc-400 hover:text-brand hover:bg-zinc-100 dark:hover:bg-zinc-800 transition"
+                      title="Editar"
+                    >
+                      <Pencil className="h-3.5 w-3.5" />
+                    </button>
+                    <button
+                      onClick={() => excluir(cred.id)}
+                      className="flex items-center justify-center h-7 w-7 rounded-lg text-zinc-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition"
+                      title="Excluir"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
 
