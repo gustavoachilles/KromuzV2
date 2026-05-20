@@ -329,8 +329,12 @@ export function LeadsClient({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [busca, setBusca] = useState("");
+  const [filtroPeriodo, setFiltroPeriodo] = useState("todos");
+  const [filtroProduto, setFiltroProduto] = useState("todos");
+  const [filtroConvenio, setFiltroConvenio] = useState("todos");
 
   const leadsFiltrados = leads.filter(l => {
+    // 1. Busca textual
     if (busca) {
       const termo = busca.toLowerCase();
       if (!l.nome?.toLowerCase().includes(termo) && 
@@ -340,6 +344,25 @@ export function LeadsClient({
         return false;
       }
     }
+
+    // 2. Filtro Produto
+    if (filtroProduto !== "todos" && l.tipoOperacao !== filtroProduto) return false;
+
+    // 3. Filtro Convênio
+    if (filtroConvenio !== "todos" && l.convenioNome !== filtroConvenio) return false;
+
+    // 4. Filtro Período
+    if (filtroPeriodo !== "todos" && l.createdAt) {
+      const dataCriacao = new Date(l.createdAt);
+      const hoje = new Date();
+      const diffTime = Math.abs(hoje.getTime() - dataCriacao.getTime());
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      
+      if (filtroPeriodo === "7d" && diffDays > 7) return false;
+      if (filtroPeriodo === "30d" && diffDays > 30) return false;
+      if (filtroPeriodo === "90d" && diffDays > 90) return false;
+    }
+
     return true;
   });
 
@@ -608,15 +631,29 @@ export function LeadsClient({
               {totalAtivos} lead{totalAtivos !== 1 ? "s" : ""} {busca ? "encontrados" : "no funil"}
             </p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap justify-end">
+            <select value={filtroPeriodo} onChange={e => setFiltroPeriodo(e.target.value)} className="text-sm text-zinc-600 dark:text-zinc-300 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl px-3 py-2.5 outline-none focus:ring-2 focus:ring-brand cursor-pointer">
+              <option value="todos">Qualquer Período</option>
+              <option value="7d">Últimos 7 dias</option>
+              <option value="30d">Últimos 30 dias</option>
+              <option value="90d">Últimos 90 dias</option>
+            </select>
+            <select value={filtroProduto} onChange={e => setFiltroProduto(e.target.value)} className="text-sm text-zinc-600 dark:text-zinc-300 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl px-3 py-2.5 outline-none focus:ring-2 focus:ring-brand cursor-pointer max-w-[160px] truncate">
+              <option value="todos">Todos Produtos</option>
+              {Object.entries(tipoLabel).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+            </select>
+            <select value={filtroConvenio} onChange={e => setFiltroConvenio(e.target.value)} className="text-sm text-zinc-600 dark:text-zinc-300 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl px-3 py-2.5 outline-none focus:ring-2 focus:ring-brand cursor-pointer max-w-[160px] truncate">
+              <option value="todos">Todos Convênios</option>
+              {convenios?.map(c => <option key={c.id} value={c.nome}>{c.nome}</option>)}
+            </select>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
               <input 
                 type="text"
-                placeholder="Buscar lead, cpf, tel..."
+                placeholder="Buscar lead..."
                 value={busca}
                 onChange={(e) => setBusca(e.target.value)}
-                className="pl-9 pr-8 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 text-sm focus:ring-2 focus:ring-brand outline-none w-64 transition-all"
+                className="pl-9 pr-8 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 text-sm focus:ring-2 focus:ring-brand outline-none w-48 transition-all"
               />
               {busca && (
                 <button onClick={() => setBusca("")} className="absolute right-3 top-1/2 -translate-y-1/2">
