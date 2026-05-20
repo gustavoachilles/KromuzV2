@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
 import {
-  Users, Plus, X, Loader2, Phone, Mail, DollarSign, GripVertical, Paperclip, Trash2, UploadCloud, FileText, Building2, MessageCircle, MessageSquare, Eye, EyeOff
+  Users, Plus, X, Loader2, Phone, Mail, DollarSign, GripVertical, Paperclip, Trash2, UploadCloud, FileText, Building2, MessageCircle, MessageSquare, Eye, EyeOff, Search, Filter
 } from "lucide-react";
 import { toast } from "sonner";
 import { InboxDrawer } from "./InboxDrawer";
@@ -328,7 +328,22 @@ export function LeadsClient({
   const [arquivosPendentes, setArquivosPendentes] = useState<File[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const totalAtivos = leads.length;
+  const [busca, setBusca] = useState("");
+
+  const leadsFiltrados = leads.filter(l => {
+    if (busca) {
+      const termo = busca.toLowerCase();
+      if (!l.nome?.toLowerCase().includes(termo) && 
+          !l.cpf?.includes(termo) && 
+          !l.telefone?.includes(termo) && 
+          !l.email?.toLowerCase().includes(termo)) {
+        return false;
+      }
+    }
+    return true;
+  });
+
+  const totalAtivos = leadsFiltrados.length;
 
   useEffect(() => {
     fetch("https://servicodados.ibge.gov.br/api/v1/localidades/estados?orderBy=nome")
@@ -590,19 +605,36 @@ export function LeadsClient({
             </div>
             <h1 className="text-3xl font-bold tracking-tight">Pipeline de Leads</h1>
             <p className="text-zinc-600 dark:text-zinc-400 mt-1">
-              {totalAtivos} lead{totalAtivos !== 1 ? "s" : ""} no funil
+              {totalAtivos} lead{totalAtivos !== 1 ? "s" : ""} {busca ? "encontrados" : "no funil"}
             </p>
           </div>
-          <button onClick={abrirModalNovo}
-            className="flex items-center gap-2 rounded-xl bg-brand px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-brand/100/25 hover:opacity-95 transition">
-            <Plus className="h-4 w-4" /> Novo Lead
-          </button>
+          <div className="flex items-center gap-3">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
+              <input 
+                type="text"
+                placeholder="Buscar lead, cpf, tel..."
+                value={busca}
+                onChange={(e) => setBusca(e.target.value)}
+                className="pl-9 pr-8 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 text-sm focus:ring-2 focus:ring-brand outline-none w-64 transition-all"
+              />
+              {busca && (
+                <button onClick={() => setBusca("")} className="absolute right-3 top-1/2 -translate-y-1/2">
+                  <X className="h-3.5 w-3.5 text-zinc-400 hover:text-zinc-600" />
+                </button>
+              )}
+            </div>
+            <button onClick={abrirModalNovo}
+              className="flex items-center gap-2 rounded-xl bg-brand px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-brand/100/25 hover:opacity-95 transition">
+              <Plus className="h-4 w-4" /> Novo Lead
+            </button>
+          </div>
         </header>
 
         <div className="flex gap-4 overflow-x-auto pb-4 items-start min-h-[60vh]">
           <DragDropContext onDragEnd={onDragEnd}>
             {colunas.map((coluna) => {
-              const items = leads.filter(l => l.status === coluna.nome);
+              const items = leadsFiltrados.filter(l => (l.status || "NOVO").trim().toUpperCase() === coluna.nome.trim().toUpperCase());
               return (
                 <div key={coluna.id} className="flex-shrink-0 w-80 bg-zinc-100/50 dark:bg-zinc-900/50 rounded-2xl p-3 flex flex-col max-h-[80vh]">
                   <div className="flex items-center justify-between px-2 mb-3">
