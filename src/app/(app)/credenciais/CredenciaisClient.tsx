@@ -472,36 +472,7 @@ export function CredenciaisClient({ bancos, empresaId }: { bancos: Banco[]; empr
           </div>
         )}
 
-        {/* Atalhos rápidos dos bancos cadastrados (sem credencial) */}
-        {bancos.filter(b => !credenciais.some(c => c.bancoId === b.id)).length > 0 && (
-          <div className="space-y-3">
-            <h2 className="text-sm font-semibold text-zinc-500 uppercase tracking-wider">Bancos sem credencial cadastrada</h2>
-            <div className="flex flex-wrap gap-2">
-              {bancos.filter(b => !credenciais.some(c => c.bancoId === b.id)).map(b => (
-                <button
-                  key={b.id}
-                  onClick={() => {
-                    setForm({
-                      tipo: "banco",
-                      nome: b.nome,
-                      bancoId: b.id,
-                      urlLogin: guessLoginUrl(b.nome),
-                      usuario: "",
-                      senha: "",
-                      observacoes: "",
-                      funcionario: funcionarioTab !== "Todos" ? funcionarioTab : "",
-                    });
-                    setEditando(null);
-                    setModal(true);
-                  }}
-                  className="flex items-center gap-2 px-3 py-2 rounded-xl border border-dashed border-zinc-300 dark:border-zinc-700 text-sm text-zinc-500 hover:border-brand hover:text-brand transition"
-                >
-                  <Plus className="h-3.5 w-3.5" /> {b.nome}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
+
       </div>
 
       {/* Modal */}
