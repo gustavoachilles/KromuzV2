@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Brain, FileText, Layers, Settings, Calculator, BookOpen, BarChart3, Shield, Package, ScrollText, Kanban, Users, DollarSign, Target, Trophy, Upload, ArrowRightLeft, PieChart, CreditCard, Inbox, Megaphone, RefreshCcw, MessageSquare, GraduationCap, Clock, Activity, LayoutDashboard, KeyRound, ChevronDown } from "lucide-react";
+import { Brain, FileText, Layers, Settings, Calculator, BookOpen, BarChart3, Shield, Package, ScrollText, Kanban, Users, DollarSign, Target, Trophy, Upload, ArrowRightLeft, PieChart, CreditCard, Inbox, Megaphone, RefreshCcw, MessageSquare, GraduationCap, Clock, Activity, LayoutDashboard, KeyRound, ChevronDown, AlertTriangle, UserCheck, ClipboardList, Receipt } from "lucide-react";
 import type { Permissoes } from "@/lib/permissions";
 
 export function SidebarNav({ permissoes }: { permissoes: Permissoes }) {
@@ -16,6 +16,7 @@ export function SidebarNav({ permissoes }: { permissoes: Permissoes }) {
   const inteligenciaPaths = ["/simulador", "/motor-regras", "/roteiros", "/mapa-portabilidade", "/conhecimento"];
   const cadastroPaths = ["/regras", "/bancos", "/produtos", "/convenios", "/credenciais", "/importacao"];
   const sistemaPaths = ["/relatorios", "/auditoria", "/sla", "/configuracoes", "/assinatura"];
+  const rhPaths = ["/rh"];
 
   const isInSection = (paths: string[]) => paths.some(p => pathname === p || pathname.startsWith(p + "/"));
 
@@ -24,6 +25,7 @@ export function SidebarNav({ permissoes }: { permissoes: Permissoes }) {
     inteligencia: isInSection(inteligenciaPaths),
     cadastro: isInSection(cadastroPaths),
     sistema: isInSection(sistemaPaths),
+    rh: isInSection(rhPaths),
   }));
 
   const toggleSection = (key: string) => {
@@ -34,6 +36,7 @@ export function SidebarNav({ permissoes }: { permissoes: Permissoes }) {
   const hasInteligencia = p("simulador") || p("motor_regras") || p("roteiros") || p("mapa_port");
   const hasCadastro = p("cadastro") || p("importacao");
   const hasSistema = p("relatorios") || p("auditoria") || p("configuracoes") || p("assinatura");
+  const hasRh = p("rh");
 
   return (
     <nav className="flex-1 px-3 py-2 space-y-0.5 text-sm overflow-y-auto">
@@ -169,6 +172,21 @@ export function SidebarNav({ permissoes }: { permissoes: Permissoes }) {
           {p("assinatura") && (
             <NavLink href="/assinatura" icon={<CreditCard className="h-4 w-4" />} active={pathname === "/assinatura"}>Minha Assinatura</NavLink>
           )}
+        </CollapsibleSection>
+      )}
+
+      {/* RH & Compliance */}
+      {hasRh && (
+        <CollapsibleSection
+          label="RH & Compliance"
+          isOpen={openSections.rh}
+          onToggle={() => toggleSection("rh")}
+        >
+          <NavLink href="/rh" icon={<BarChart3 className="h-4 w-4" />} active={pathname === "/rh"}>Dashboard RH</NavLink>
+          <NavLink href="/rh/funcionarios" icon={<UserCheck className="h-4 w-4" />} active={pathname.startsWith("/rh/funcionarios")}>Funcionários</NavLink>
+          <NavLink href="/rh/ponto" icon={<Clock className="h-4 w-4" />} active={pathname.startsWith("/rh/ponto")}>Controle de Ponto</NavLink>
+          <NavLink href="/rh/passivo" icon={<AlertTriangle className="h-4 w-4" />} active={pathname.startsWith("/rh/passivo")}>Passivo Trabalhista</NavLink>
+          <NavLink href="/rh/folha" icon={<Receipt className="h-4 w-4" />} active={pathname.startsWith("/rh/folha")}>Folha & Holerites</NavLink>
         </CollapsibleSection>
       )}
     </nav>

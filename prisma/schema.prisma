@@ -47,6 +47,7 @@ model Empresa {
   asaasCustomerId String?   @map("asaas_customer_id")
   statusAssinatura String   @default("ACTIVE") @map("status_assinatura")
   planoSaasId     String?   @map("plano_saas_id") @db.Uuid
+  regimeTributario String   @default("SIMPLES_NACIONAL") @map("regime_tributario") // SIMPLES_NACIONAL, LUCRO_PRESUMIDO, LUCRO_REAL
   createdAt       DateTime  @default(now()) @map("created_at")
   updatedAt       DateTime  @updatedAt @map("updated_at")
 
@@ -76,6 +77,7 @@ model Empresa {
   logsAtividades       LogAtividade[]
   regrasComissao       RegraComissao[]
   cargos               Cargo[]
+  funcionarios         Funcionario[]
   
   planoSaaS            PlanoSaaS? @relation(fields: [planoSaasId], references: [id])
   faturasSaaS          FaturaSaaS[]
@@ -1069,5 +1071,309 @@ model RegraComissao {
 
   @@index([empresaId, banco, ativo])
   @@map("regra_comissao")
+  @@schema("public")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MÓDULO DE RH & COMPLIANCE TRABALHISTA
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Funcionario {
+  id                String    @id @default(uuid()) @db.Uuid
+  empresaId         String    @map("empresa_id") @db.Uuid
+
+  // Dados Pessoais
+  nome              String
+  cpf               String
+  rg                String?
+  dataNascimento    DateTime? @map("data_nascimento") @db.Date
+  telefone          String?
+  email             String?
+  fotoUrl           String?   @map("foto_url")
+  genero            String?   // M, F, OUTRO
+  estadoCivil       String?   @map("estado_civil")
+  escolaridade      String?
+  nomeMae           String?   @map("nome_mae")
+
+  // Endereço
+  cep               String?
+  logradouro        String?
+  numero            String?
+  complemento       String?
+  bairro            String?
+  cidade            String?
+  uf                String?
+
+  // Regime de Contratação: CLT, PJ, ESTAGIARIO, INFORMAL
+  regimeContratacao String    @map("regime_contratacao")
+
+  // Dados CLT
+  ctpsNumero        String?   @map("ctps_numero")
+  ctpsSerie         String?   @map("ctps_serie")
+  pisPasep          String?   @map("pis_pasep")
+  dataAdmissao      DateTime? @map("data_admissao") @db.Date
+  dataDemissao      DateTime? @map("data_demissao") @db.Date
+
+  // Função e Jornada
+  cargoFuncao       String?   @map("cargo_funcao") // Ex: Promotor de Vendas, Telemarketing, Atendente
+  cbo               String?   // Código Brasileiro de Ocupações
+  tipoJornada       String    @default("PADRAO_8H") @map("tipo_jornada") // TELEMARKETING_6H, PADRAO_8H, ESTAGIO_6H
+  horasDiarias      Int       @default(8) @map("horas_diarias")
+  horasSemanais     Int       @default(44) @map("horas_semanais")
+
+  // Remuneração
+  salarioBase       Float?    @map("salario_base")
+  valeTransporte    Boolean   @default(false) @map("vale_transporte")
+  valeAlimentacao   Float?    @map("vale_alimentacao")
+  planoSaude        Boolean   @default(false) @map("plano_saude")
+  outrosBeneficios  Json?     @map("outros_beneficios") @db.JsonB
+  tipoComissao      String?   @map("tipo_comissao") // PERCENTUAL, FIXO, FAIXAS
+  percentualComissao Float?   @map("percentual_comissao")
+
+  // Dados PJ (quando regime = PJ)
+  cnpjPj            String?   @map("cnpj_pj")
+  razaoSocialPj     String?   @map("razao_social_pj")
+  valorMensalPj     Float?    @map("valor_mensal_pj")
+
+  // Sindicato / CCT
+  sindicatoNome     String?   @map("sindicato_nome")
+  cctVigente        String?   @map("cct_vigente")
+  pisoSalarialCct   Float?    @map("piso_salarial_cct")
+
+  // Estágio (quando regime = ESTAGIARIO)
+  instituicaoEnsino String?   @map("instituicao_ensino")
+  cursoEstagio      String?   @map("curso_estagio")
+  bolsaAuxilio      Float?    @map("bolsa_auxilio")
+  dataFimEstagio    DateTime? @map("data_fim_estagio") @db.Date
+
+  // Dados Bancários do Funcionário
+  bancoNome         String?   @map("banco_nome")
+  bancoAgencia      String?   @map("banco_agencia")
+  bancoConta        String?   @map("banco_conta")
+  bancoTipoConta    String?   @map("banco_tipo_conta") // corrente, poupanca
+  chavePix          String?   @map("chave_pix")
+
+  // Status e Risco
+  status            String    @default("ATIVO") // ATIVO, INATIVO, FERIAS, AFASTADO, DESLIGADO
+  nivelRisco        String    @default("BAIXO") @map("nivel_risco") // BAIXO, MEDIO, ALTO, EXTREMO
+  passivoEstimado   Float     @default(0) @map("passivo_estimado")
+
+  observacoes       String?   @db.Text
+
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+
+  empresa           Empresa   @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  registrosPonto    RegistroPonto[]
+  pausasNr17        PausaNR17[]
+  ferias            FeriasFuncionario[]
+  documentos        DocumentoFuncionario[]
+  holerites         HoleriteProjetado[]
+  passivos          PassivoTrabalhista[]
+
+  @@unique([empresaId, cpf])
+  @@index([empresaId, status])
+  @@index([empresaId, regimeContratacao])
+  @@map("funcionario")
+  @@schema("public")
+}
+
+model RegistroPonto {
+  id              String    @id @default(uuid()) @db.Uuid
+  funcionarioId   String    @map("funcionario_id") @db.Uuid
+  data            DateTime  @db.Date
+
+  // Batidas
+  entrada         DateTime?
+  saidaAlmoco     DateTime? @map("saida_almoco")
+  retornoAlmoco   DateTime? @map("retorno_almoco")
+  saida           DateTime?
+
+  // Cálculos automáticos
+  horasTrabalhadas Float?   @map("horas_trabalhadas")
+  horasExtras     Float?    @map("horas_extras")
+  horasNoturnas   Float?    @map("horas_noturnas")
+  atraso          Float?    // minutos de atraso
+  falta           Boolean   @default(false)
+  justificativa   String?
+
+  // Metadados
+  ipEntrada       String?   @map("ip_entrada")
+  ipSaida         String?   @map("ip_saida")
+  geoEntrada      String?   @map("geo_entrada") // lat,lng
+  geoSaida        String?   @map("geo_saida")
+
+  observacoes     String?
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  funcionario     Funcionario @relation(fields: [funcionarioId], references: [id], onDelete: Cascade)
+  pausas          PausaNR17[]
+
+  @@unique([funcionarioId, data])
+  @@index([funcionarioId, data])
+  @@map("registro_ponto")
+  @@schema("public")
+}
+
+model PausaNR17 {
+  id              String    @id @default(uuid()) @db.Uuid
+  funcionarioId   String    @map("funcionario_id") @db.Uuid
+  registroPontoId String    @map("registro_ponto_id") @db.Uuid
+
+  tipoPausa       String    @map("tipo_pausa") // PAUSA_10MIN_1, PAUSA_10MIN_2, REFEICAO_20MIN
+  inicio          DateTime
+  fim             DateTime?
+  duracaoMinutos  Float?    @map("duracao_minutos")
+  cumprida        Boolean   @default(false)
+
+  createdAt       DateTime  @default(now()) @map("created_at")
+
+  funcionario     Funcionario   @relation(fields: [funcionarioId], references: [id], onDelete: Cascade)
+  registroPonto   RegistroPonto @relation(fields: [registroPontoId], references: [id], onDelete: Cascade)
+
+  @@index([funcionarioId, inicio])
+  @@map("pausa_nr17")
+  @@schema("public")
+}
+
+model FeriasFuncionario {
+  id                  String    @id @default(uuid()) @db.Uuid
+  funcionarioId       String    @map("funcionario_id") @db.Uuid
+
+  periodoAquisitivoInicio DateTime @map("periodo_aquisitivo_inicio") @db.Date
+  periodoAquisitivoFim    DateTime @map("periodo_aquisitivo_fim") @db.Date
+  periodoConcessivoFim    DateTime @map("periodo_concessivo_fim") @db.Date
+
+  diasDireito         Int       @default(30) @map("dias_direito")
+  diasGozados         Int       @default(0)  @map("dias_gozados")
+  diasVendidos        Int       @default(0)  @map("dias_vendidos") // Abono pecuniário (máx 1/3)
+
+  dataInicio          DateTime? @map("data_inicio") @db.Date // Quando saiu de férias
+  dataFim             DateTime? @map("data_fim") @db.Date
+  status              String    @default("PENDENTE") // PENDENTE, AGENDADA, EM_GOZO, GOZADA, VENCIDA
+
+  valorFerias         Float?    @map("valor_ferias")
+  valorTerco          Float?    @map("valor_terco")
+  pagoEmDobro         Boolean   @default(false) @map("pago_em_dobro")
+
+  observacoes         String?
+  createdAt           DateTime  @default(now()) @map("created_at")
+  updatedAt           DateTime  @updatedAt @map("updated_at")
+
+  funcionario         Funcionario @relation(fields: [funcionarioId], references: [id], onDelete: Cascade)
+
+  @@index([funcionarioId, status])
+  @@map("ferias_funcionario")
+  @@schema("public")
+}
+
+model DocumentoFuncionario {
+  id              String    @id @default(uuid()) @db.Uuid
+  funcionarioId   String    @map("funcionario_id") @db.Uuid
+
+  tipo            String    // RG, CPF, CTPS, COMPROVANTE_RESIDENCIA, CONTRATO, LAUDO_MEDICO, CERTIDAO, OUTROS
+  nome            String
+  url             String
+  tamanhoBytes    Int?      @map("tamanho_bytes")
+  mimeType        String?   @map("mime_type")
+  dataValidade    DateTime? @map("data_validade") @db.Date
+
+  // Assinatura eletrônica
+  assinado        Boolean   @default(false)
+  dataAssinatura  DateTime? @map("data_assinatura")
+  ipAssinatura    String?   @map("ip_assinatura")
+  hashAssinatura  String?   @map("hash_assinatura")
+
+  createdAt       DateTime  @default(now()) @map("created_at")
+
+  funcionario     Funcionario @relation(fields: [funcionarioId], references: [id], onDelete: Cascade)
+
+  @@index([funcionarioId, tipo])
+  @@map("documento_funcionario")
+  @@schema("public")
+}
+
+model HoleriteProjetado {
+  id              String    @id @default(uuid()) @db.Uuid
+  funcionarioId   String    @map("funcionario_id") @db.Uuid
+  mesReferencia   Int       @map("mes_referencia") // 1-12
+  anoReferencia   Int       @map("ano_referencia")
+
+  // Proventos
+  salarioBruto    Float     @map("salario_bruto")
+  horasExtrasValor Float    @default(0) @map("horas_extras_valor")
+  horasExtrasQtd  Float     @default(0) @map("horas_extras_qtd")
+  adicionalNoturno Float    @default(0) @map("adicional_noturno")
+  comissao        Float     @default(0)
+  dsrExtras       Float     @default(0) @map("dsr_extras") // DSR sobre horas extras
+  outrosProventos Float     @default(0) @map("outros_proventos")
+  totalProventos  Float     @map("total_proventos")
+
+  // Descontos
+  inssAliquota    Float     @map("inss_aliquota")
+  inssValor       Float     @map("inss_valor")
+  irrfBase        Float     @default(0) @map("irrf_base")
+  irrfValor       Float     @default(0) @map("irrf_valor")
+  valeTransporte  Float     @default(0) @map("vale_transporte")
+  valeAlimentacao Float     @default(0) @map("vale_alimentacao_desc")
+  planoSaude      Float     @default(0) @map("plano_saude_desc")
+  faltas          Float     @default(0)
+  outrosDescontos Float     @default(0) @map("outros_descontos")
+  totalDescontos  Float     @map("total_descontos")
+
+  // Líquido
+  salarioLiquido  Float     @map("salario_liquido")
+
+  // Encargos Patronais (custo da empresa)
+  fgtsValor       Float     @default(0) @map("fgts_valor")
+  inssPatronal    Float     @default(0) @map("inss_patronal")
+  custoTotalEmpresa Float   @map("custo_total_empresa")
+
+  createdAt       DateTime  @default(now()) @map("created_at")
+
+  funcionario     Funcionario @relation(fields: [funcionarioId], references: [id], onDelete: Cascade)
+
+  @@unique([funcionarioId, mesReferencia, anoReferencia])
+  @@index([funcionarioId, anoReferencia, mesReferencia])
+  @@map("holerite_projetado")
+  @@schema("public")
+}
+
+model PassivoTrabalhista {
+  id              String    @id @default(uuid()) @db.Uuid
+  funcionarioId   String    @map("funcionario_id") @db.Uuid
+  dataCalculo     DateTime  @default(now()) @map("data_calculo") @db.Date
+
+  // Tempo de vínculo
+  mesesTrabalhados Int      @map("meses_trabalhados")
+  anosTrabalhados  Float    @map("anos_trabalhados")
+
+  // Componentes do passivo
+  fgtsRetroativo      Float @default(0) @map("fgts_retroativo")
+  multaFgts40         Float @default(0) @map("multa_fgts_40")
+  decimoTerceiro      Float @default(0) @map("decimo_terceiro")
+  feriasVencidas      Float @default(0) @map("ferias_vencidas")
+  feriasProporcionais Float @default(0) @map("ferias_proporcionais")
+  tercoFerias         Float @default(0) @map("terco_ferias")
+  avisoPrevio         Float @default(0) @map("aviso_previo")
+  inssRetroativo      Float @default(0) @map("inss_retroativo")
+  horasExtrasRetro    Float @default(0) @map("horas_extras_retro")
+  multaArt477         Float @default(0) @map("multa_art_477")
+  multaArt467         Float @default(0) @map("multa_art_467")
+  danoMoral           Float @default(0) @map("dano_moral")
+  honorarios          Float @default(0) // Honorários advocatícios (15%)
+
+  // Total
+  passivoTotal        Float @map("passivo_total")
+  nivelRisco          String @map("nivel_risco") // BAIXO, MEDIO, ALTO, EXTREMO
+
+  observacoes     String?   @db.Text
+  createdAt       DateTime  @default(now()) @map("created_at")
+
+  funcionario     Funcionario @relation(fields: [funcionarioId], references: [id], onDelete: Cascade)
+
+  @@index([funcionarioId, dataCalculo])
+  @@map("passivo_trabalhista")
   @@schema("public")
 }

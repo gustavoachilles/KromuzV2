@@ -18,6 +18,7 @@ export const MODULOS_SISTEMA = [
   { slug: "auditoria",     label: "Auditoria",          grupo: "Sistema" },
   { slug: "configuracoes", label: "Configurações",      grupo: "Sistema" },
   { slug: "assinatura",    label: "Minha Assinatura",   grupo: "Sistema" },
+  { slug: "rh",            label: "RH & Compliance",    grupo: "RH" },
 ] as const;
 
 export type ModuloSlug = typeof MODULOS_SISTEMA[number]["slug"];
@@ -55,6 +56,7 @@ export const PERMISSOES_VENDEDOR: Permissoes = {
   auditoria: false,
   configuracoes: false,
   assinatura: false,
+  rh: false,
 };
 
 /**
