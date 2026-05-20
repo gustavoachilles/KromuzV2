@@ -177,8 +177,8 @@ export function calcularPassivoTrabalhista(params: {
   const anosCompletos = Math.floor(Math.min(anos, 5));
   const mesesProporcionais = Math.min(mesesTrabalhados, 60) - (anosCompletos * 12);
   const decimoTerceiro = Math.round(
-    (salarioBase * anosCompletos) + (salarioBase * mesesProporcionais / 12)
-  * 100) / 100;
+    ((salarioBase * anosCompletos) + (salarioBase * mesesProporcionais / 12)) * 100
+  ) / 100;
 
   // Férias vencidas (períodos completos não gozados - em dobro)
   const periodosVencidos = Math.max(0, anosCompletos - 1); // Desconta o período aquisitivo atual
