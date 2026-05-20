@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
 import { Brain, FileText, Layers, Settings, Calculator, BookOpen, BarChart3, Shield, Package, ScrollText, Kanban, Users, DollarSign, Target, Trophy, Upload, ArrowRightLeft, PieChart, CreditCard, Inbox, Megaphone, RefreshCcw, MessageSquare, GraduationCap, Clock, Activity, LayoutDashboard, KeyRound, ChevronDown, AlertTriangle, UserCheck, ClipboardList, Receipt, Palmtree, FolderOpen, CalendarDays, Gavel, Eye } from "lucide-react";
 import type { Permissoes } from "@/lib/permissions";
 
@@ -39,7 +40,7 @@ export function SidebarNav({ permissoes }: { permissoes: Permissoes }) {
   const hasRh = p("rh");
 
   return (
-    <nav className="flex-1 px-3 py-2 space-y-0.5 text-sm overflow-y-auto">
+    <nav className="flex-1 px-3 py-4 space-y-1 text-sm overflow-y-auto scrollbar-none pb-20">
       {p("dashboard") && (
         <NavLink href="/mesa" icon={<LayoutDashboard className="h-4 w-4" />} active={pathname === "/mesa"}>
           Mesa
@@ -211,29 +212,36 @@ function CollapsibleSection({
   children: React.ReactNode;
 }) {
   return (
-    <div className="pt-2">
+    <div className="pt-3 pb-1">
       <button
         onClick={onToggle}
         className="w-full flex items-center justify-between px-3 py-1.5 group cursor-pointer"
       >
-        <span className="text-[10px] uppercase tracking-widest font-semibold text-zinc-400 dark:text-zinc-600 group-hover:text-zinc-600 dark:group-hover:text-zinc-400 transition">
+        <span className="text-[11px] uppercase tracking-[0.2em] font-bold text-zinc-400 dark:text-zinc-500 group-hover:text-brand dark:group-hover:text-brand transition-colors duration-300">
           {label}
         </span>
-        <ChevronDown
-          className={`h-3 w-3 text-zinc-400 dark:text-zinc-600 transition-transform duration-200 ${
-            isOpen ? "rotate-0" : "-rotate-90"
-          }`}
-        />
+        <motion.div
+          animate={{ rotate: isOpen ? 0 : -90 }}
+          transition={{ duration: 0.2, ease: "easeOut" }}
+        >
+          <ChevronDown className="h-3.5 w-3.5 text-zinc-400 group-hover:text-brand transition-colors duration-300" />
+        </motion.div>
       </button>
-      <div
-        className={`overflow-hidden transition-all duration-200 ease-in-out ${
-          isOpen ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"
-        }`}
-      >
-        <div className="space-y-0.5 pt-0.5">
-          {children}
-        </div>
-      </div>
+      <AnimatePresence initial={false}>
+        {isOpen && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3, ease: [0.04, 0.62, 0.23, 0.98] }}
+            className="overflow-hidden"
+          >
+            <div className="space-y-0.5 pt-1">
+              {children}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -253,25 +261,56 @@ function NavLink({
 }) {
   if (disabled) {
     return (
-      <span className="flex items-center gap-2 px-3 py-2 rounded-lg text-zinc-400 cursor-not-allowed">
+      <span className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-zinc-400 cursor-not-allowed opacity-60">
         {icon}
-        {children}
-        <span className="ml-auto text-[10px] uppercase tracking-wider">soon</span>
+        <span className="font-medium text-[13px]">{children}</span>
+        <span className="ml-auto text-[9px] uppercase tracking-wider bg-zinc-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded-md">soon</span>
       </span>
     );
   }
+
   return (
-    <Link
-      href={href}
-      className={`flex items-center gap-2 px-3 py-2 rounded-lg transition font-medium ${
-        active
-          ? "bg-brand/10 text-brand dark:bg-brand/20 dark:text-brand"
-          : "text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-900"
-      }`}
-      style={active ? { color: 'var(--brand-primary)', backgroundColor: 'color-mix(in srgb, var(--brand-primary) 15%, transparent)' } : {}}
-    >
-      {icon}
-      {children}
+    <Link href={href} className="relative flex w-full outline-none group">
+      <motion.div
+        className={`relative flex items-center gap-3 px-3 py-2.5 w-full rounded-xl transition-all duration-300 ${
+          active
+            ? "text-brand font-semibold"
+            : "text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 font-medium"
+        }`}
+        whileHover={{ x: active ? 0 : 4 }}
+        whileTap={{ scale: 0.98 }}
+      >
+        {/* Background Ativo Animado (Efeito Magic Hover/Active) */}
+        {active && (
+          <motion.div
+            layoutId="sidebar-active-indicator"
+            className="absolute inset-0 bg-brand/10 dark:bg-brand/20 rounded-xl border-l-[3px] border-brand"
+            style={{
+              boxShadow: 'inset 0px 0px 12px color-mix(in srgb, var(--brand-primary) 15%, transparent)'
+            }}
+            initial={false}
+            transition={{
+              type: "spring",
+              stiffness: 350,
+              damping: 30,
+            }}
+          />
+        )}
+        
+        {/* Conteúdo do Link */}
+        <span className="relative z-10 flex items-center gap-3 w-full">
+          <motion.div
+            className={`flex items-center justify-center ${active ? "text-brand" : "text-zinc-500 group-hover:text-zinc-800 dark:group-hover:text-zinc-200"}`}
+            whileHover={{ scale: 1.1, rotate: active ? 0 : [0, -5, 5, 0] }}
+            transition={{ duration: 0.3 }}
+          >
+            {icon}
+          </motion.div>
+          <span className="text-[13px] tracking-wide relative top-[1px]">
+            {children}
+          </span>
+        </span>
+      </motion.div>
     </Link>
   );
 }
