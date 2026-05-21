@@ -65,7 +65,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           </Link>
         </div>
 
-        <div className="flex-1 overflow-hidden relative z-10">
+        <div className="flex-1 overflow-y-auto scrollbar-hide relative z-10">
           <SidebarNav permissoes={permissoes} />
         </div>
 

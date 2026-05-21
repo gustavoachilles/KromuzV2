@@ -114,7 +114,7 @@ export function InboxClient({ conversas: initConversas, sessao }: { conversas: a
       <div className="flex h-full bg-white dark:bg-zinc-950 rounded-3xl border border-zinc-200 dark:border-zinc-800 overflow-hidden shadow-sm">
         {/* Sidebar - Lista de Conversas */}
         <div className="w-80 border-r border-zinc-200 dark:border-zinc-800 flex flex-col bg-zinc-50/50 dark:bg-zinc-900/30">
-        <div className="p-4 border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
+        <div className="p-4 border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 flex-shrink-0">
           <h2 className="font-bold text-lg mb-4 text-zinc-900 dark:text-white">Inbox Omnichannel</h2>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
@@ -156,7 +156,7 @@ export function InboxClient({ conversas: initConversas, sessao }: { conversas: a
       <div className="flex-1 flex flex-col bg-[#efeae2] dark:bg-zinc-950 relative">
         {conversaAtiva ? (
           <>
-            <div className="px-6 py-4 bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 flex justify-between items-center z-10 shadow-sm">
+            <div className="px-6 py-4 bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 flex justify-between items-center z-10 shadow-sm flex-shrink-0">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-brand/10 dark:bg-brand/20 flex items-center justify-center text-brand font-bold">
                   {conversaAtiva.clienteNome.substring(0,2).toUpperCase()}
@@ -221,7 +221,7 @@ export function InboxClient({ conversas: initConversas, sessao }: { conversas: a
               )}
             </div>
 
-            <div className="px-4 py-2 bg-white/60 dark:bg-zinc-900/60 backdrop-blur-md flex items-center gap-4 border-t border-zinc-200 dark:border-zinc-800">
+            <div className="px-4 py-2 bg-white/60 dark:bg-zinc-900/60 backdrop-blur-md flex items-center gap-4 border-t border-zinc-200 dark:border-zinc-800 flex-shrink-0">
                <div className="flex bg-zinc-100 dark:bg-zinc-800 rounded-lg p-1">
                   <button 
                     type="button"
@@ -254,7 +254,7 @@ export function InboxClient({ conversas: initConversas, sessao }: { conversas: a
 
             <form 
               onSubmit={handleEnviar}
-              className="p-4 bg-[#f0f2f5] dark:bg-zinc-900 border-t border-zinc-200 dark:border-zinc-800 flex gap-2 z-10"
+              className="p-4 bg-[#f0f2f5] dark:bg-zinc-900 border-t border-zinc-200 dark:border-zinc-800 flex gap-2 z-10 flex-shrink-0"
             >
               <input 
                 type="text" 
