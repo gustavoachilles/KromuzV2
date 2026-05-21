@@ -1,14 +1,14 @@
 import { redirect } from "next/navigation";
 import { getSessionEmpresa } from "@/lib/session";
 import { temPermissao } from "@/lib/permissions";
-import { ContabilDashboard } from "./ContabilDashboard";
+import { OrcamentoClient } from "./OrcamentoClient";
 
-export const metadata = { title: "Painel Contábil & Fiscal | Kromuz" };
+export const metadata = { title: "Orçamento | Budget Control | Kromuz" };
 
-export default async function ContabilPage() {
+export default async function OrcamentoPage() {
   const sessao = await getSessionEmpresa();
   if (!sessao) redirect("/");
   if (!temPermissao(null, "contabil", sessao.perfilSlug)) redirect("/mesa");
 
-  return <ContabilDashboard />;
+  return <OrcamentoClient />;
 }

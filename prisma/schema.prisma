@@ -79,6 +79,12 @@ model Empresa {
   cargos               Cargo[]
   funcionarios         Funcionario[]
   auditLogsRh          AuditLogRH[]
+
+  // ── Módulo Contábil & Fiscal ──
+  contasBancarias      ContaBancariaCF[]
+  categoriasFinanceiras CategoriaFinanceira[]
+  lancamentosFinanceiros LancamentoFinanceiro[]
+  orcamentos           OrcamentoDepartamento[]
   
   planoSaaS            PlanoSaaS? @relation(fields: [planoSaasId], references: [id])
   faturasSaaS          FaturaSaaS[]
@@ -1406,5 +1412,142 @@ model AuditLogRH {
   @@index([empresaId, createdAt])
   @@index([entidade, entidadeId])
   @@map("audit_log_rh")
+  @@schema("public")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MÓDULO CONTÁBIL & FISCAL — FASE 1 (Fundação DRE + Contas a Pagar/Receber)
+// ─────────────────────────────────────────────────────────────────────────────
+
+/// Contas Bancárias da empresa (Itaú PJ, Inter PJ, Cora, etc.)
+/// Cada conta mapeia um banco real onde a empresa movimenta dinheiro.
+model ContaBancariaCF {
+  id              String    @id @default(uuid()) @db.Uuid
+  empresaId       String    @map("empresa_id") @db.Uuid
+  nomeBanco       String    @map("nome_banco")           // "Itaú PJ", "Inter PJ"
+  agencia         String?
+  conta           String?
+  tipoConta       String    @default("CORRENTE") @map("tipo_conta") // CORRENTE, POUPANCA, PAGAMENTO
+  chavePix        String?   @map("chave_pix")
+  saldoInicial    Float     @default(0) @map("saldo_inicial")
+  cor             String?                                 // Cor para identificação visual no painel
+  ativo           Boolean   @default(true)
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  empresa         Empresa   @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  lancamentos     LancamentoFinanceiro[]
+
+  @@index([empresaId, ativo])
+  @@map("conta_bancaria_cf")
+  @@schema("public")
+}
+
+/// Plano de Contas hierárquico (Receitas, Despesas Fixas, Variáveis, Impostos, etc.)
+/// Suporta até 2 níveis: Grupo > Subcategoria.
+/// Exemplos: "Despesas Fixas" > "Aluguel", "Receitas" > "Comissões Bancárias"
+model CategoriaFinanceira {
+  id              String    @id @default(uuid()) @db.Uuid
+  empresaId       String    @map("empresa_id") @db.Uuid
+  nome            String                                   // "Aluguel", "Software CRM", "Comissões Recebidas"
+  tipo            String                                   // RECEITA, DESPESA, IMPOSTO, TRANSFERENCIA
+  grupo           String?                                  // Agrupador: "Fixas", "Variáveis", "Marketing", "Folha", "Impostos"
+  icone           String?                                  // Ícone Lucide para UI: "building", "monitor", "megaphone"
+  cor             String?                                  // Cor hex para gráficos do DRE
+  ordem           Int       @default(0)
+  ativo           Boolean   @default(true)
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  empresa         Empresa   @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  lancamentos     LancamentoFinanceiro[]
+  orcamentos      OrcamentoDepartamento[]
+
+  @@unique([empresaId, nome])
+  @@index([empresaId, tipo, ativo])
+  @@map("categoria_financeira")
+  @@schema("public")
+}
+
+/// Lançamento Financeiro — a tabela mais importante do módulo.
+/// Cada registro é uma conta a pagar, conta a receber, ou movimentação já liquidada.
+/// É a base do DRE, do Fluxo de Caixa e do Budget Control.
+model LancamentoFinanceiro {
+  id              String    @id @default(uuid()) @db.Uuid
+  empresaId       String    @map("empresa_id") @db.Uuid
+  categoriaId     String    @map("categoria_id") @db.Uuid
+  contaBancariaId String?   @map("conta_bancaria_id") @db.Uuid
+
+  // Classificação
+  tipo            String                                   // RECEITA, DESPESA, IMPOSTO, TRANSFERENCIA
+  natureza        String    @default("AVULSO")             // AVULSO, RECORRENTE, PARCELADO
+  descricao       String                                   // "Aluguel Sala 3 - Maio/2026"
+  
+  // Valores
+  valor           Float                                    // Valor absoluto (sempre positivo)
+  valorPago       Float?    @map("valor_pago")             // Quanto foi efetivamente pago (pode divergir)
+
+  // Datas
+  dataCompetencia DateTime  @map("data_competencia") @db.Date  // Mês de competência contábil
+  dataVencimento  DateTime  @map("data_vencimento") @db.Date   // Quando vence
+  dataPagamento   DateTime? @map("data_pagamento") @db.Date    // Quando foi efetivamente pago
+
+  // Status
+  status          String    @default("PENDENTE")           // PENDENTE, PAGO, VENCIDO, CANCELADO
+  formaPagamento  String?   @map("forma_pagamento")        // PIX, BOLETO, DEBITO_AUTOMATICO, CARTAO, DINHEIRO
+  comprovanteUrl  String?   @map("comprovante_url")        // Upload do comprovante
+
+  // Parcelamento
+  parcela         Int?                                     // Parcela atual (ex: 3)
+  totalParcelas   Int?      @map("total_parcelas")         // Total de parcelas (ex: 12)
+  parcelamentoRef String?   @map("parcelamento_ref")       // ID agrupador para vincular todas as parcelas
+
+  // Vínculo com proposta da Esteira (para receitas automáticas)
+  propostaId      String?   @map("proposta_id") @db.Uuid
+  
+  // Observações e anexos
+  observacoes     String?
+  tags            String[]  @default([])                    // Tags livres: ["marketing", "filial-centro"]
+  
+  // Controle de quem criou
+  criadoPor       String?   @map("criado_por")             // Email do usuário que lançou
+
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  empresa         Empresa            @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  categoria       CategoriaFinanceira @relation(fields: [categoriaId], references: [id], onDelete: Restrict)
+  contaBancaria   ContaBancariaCF?   @relation(fields: [contaBancariaId], references: [id], onDelete: SetNull)
+
+  @@index([empresaId, tipo, status])
+  @@index([empresaId, dataCompetencia])
+  @@index([empresaId, dataVencimento])
+  @@index([empresaId, categoriaId])
+  @@index([empresaId, status, dataVencimento])
+  @@map("lancamento_financeiro")
+  @@schema("public")
+}
+
+/// Orçamento por Categoria (Budget Control / Orçamento de Guerra)
+/// Define limites mensais de gasto por categoria financeira.
+/// Ex: "Marketing" = R$ 5.000/mês. Se ultrapassar, o sistema bloqueia/alerta.
+model OrcamentoDepartamento {
+  id              String    @id @default(uuid()) @db.Uuid
+  empresaId       String    @map("empresa_id") @db.Uuid
+  categoriaId     String    @map("categoria_id") @db.Uuid
+  mes             Int                                       // 1-12
+  ano             Int
+  valorLimite     Float     @map("valor_limite")            // Teto máximo de gasto
+  alertaPercentual Float    @default(80) @map("alerta_percentual") // % do limite para disparar alerta (ex: 80%)
+  travaBloqueio   Boolean   @default(false) @map("trava_bloqueio") // Se true, bloqueia novos lançamentos ao estourar
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  empresa         Empresa             @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  categoria       CategoriaFinanceira @relation(fields: [categoriaId], references: [id], onDelete: Cascade)
+
+  @@unique([empresaId, categoriaId, mes, ano])
+  @@index([empresaId, ano, mes])
+  @@map("orcamento_departamento")
   @@schema("public")
 }

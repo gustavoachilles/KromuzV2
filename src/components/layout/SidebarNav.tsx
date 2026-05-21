@@ -206,7 +206,10 @@ export function SidebarNav({ permissoes }: { permissoes: Permissoes }) {
           isOpen={openSections.contabil}
           onToggle={() => toggleSection("contabil")}
         >
-          <NavLink isSubItem href="/contabil" icon={<Calculator className="h-4 w-4" />} active={pathname === "/contabil"}>Painel Contábil</NavLink>
+          <NavLink isSubItem href="/contabil" icon={<BarChart3 className="h-4 w-4" />} active={pathname === "/contabil"}>DRE</NavLink>
+          <NavLink isSubItem href="/contabil/lancamentos" icon={<Receipt className="h-4 w-4" />} active={pathname === "/contabil/lancamentos"}>Contas a Pagar/Receber</NavLink>
+          <NavLink isSubItem href="/contabil/contas-bancarias" icon={<CreditCard className="h-4 w-4" />} active={pathname === "/contabil/contas-bancarias"}>Contas Bancárias</NavLink>
+          <NavLink isSubItem href="/contabil/orcamento" icon={<Shield className="h-4 w-4" />} active={pathname === "/contabil/orcamento"}>Orçamento</NavLink>
         </CollapsibleSection>
       )}
     </nav>
