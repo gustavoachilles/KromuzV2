@@ -86,6 +86,11 @@ model Empresa {
   lancamentosFinanceiros LancamentoFinanceiro[]
   orcamentos           OrcamentoDepartamento[]
   transacoesCarteira   TransacaoCarteira[]
+
+  // ── Módulo Societário & Patrimônio ──
+  documentosRegulatorios DocumentoRegulatorio[]
+  certificacoesVendedores CertificacaoVendedor[]
+  ativosImobilizados   AtivoImobilizado[]
   
   planoSaaS            PlanoSaaS? @relation(fields: [planoSaasId], references: [id])
   faturasSaaS          FaturaSaaS[]
@@ -1600,5 +1605,116 @@ model TransacaoCarteira {
   @@index([empresaId, createdAt(sort: Desc)])
   @@index([empresaId, statusPagamento])
   @@map("transacao_carteira")
+  @@schema("public")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MÓDULO CONTÁBIL — FASE 3 (Societário, Patrimônio e CNDs)
+// ─────────────────────────────────────────────────────────────────────────────
+
+/// Documentos Regulatórios — Alvarás, AVCB, CNDs, Licenças.
+/// O sistema monitora vencimentos e dispara alertas com 60/30/15 dias de antecedência.
+model DocumentoRegulatorio {
+  id              String    @id @default(uuid()) @db.Uuid
+  empresaId       String    @map("empresa_id") @db.Uuid
+
+  tipo            String                                   // ALVARA, AVCB, CND_FEDERAL, CND_FGTS, CND_TRABALHISTA, LICENCA_SANITARIA, CERTIFICADO_DIGITAL, CONTRATO_SOCIAL, OUTRO
+  nome            String                                   // "Alvará de Funcionamento 2026"
+  orgaoEmissor    String?   @map("orgao_emissor")          // "Prefeitura Municipal", "Corpo de Bombeiros"
+  numero          String?                                  // Número do documento
+  
+  dataEmissao     DateTime? @map("data_emissao") @db.Date
+  dataVencimento  DateTime? @map("data_vencimento") @db.Date
+  
+  status          String    @default("VIGENTE")            // VIGENTE, VENCIDO, RENOVANDO, CANCELADO
+  arquivoUrl      String?   @map("arquivo_url")            // PDF/imagem em nuvem
+  observacoes     String?
+  
+  // Alertas
+  alertaEnviado60 Boolean   @default(false) @map("alerta_enviado_60")
+  alertaEnviado30 Boolean   @default(false) @map("alerta_enviado_30")
+  alertaEnviado15 Boolean   @default(false) @map("alerta_enviado_15")
+
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  empresa         Empresa   @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+
+  @@index([empresaId, tipo])
+  @@index([empresaId, dataVencimento])
+  @@index([empresaId, status])
+  @@map("documento_regulatorio")
+  @@schema("public")
+}
+
+/// Certificações de Vendedores (FEBRABAN/ANEPS) — CA-300, CA-600, etc.
+/// Se a certificação vencer, o sistema bloqueia o vendedor de operar na Esteira.
+model CertificacaoVendedor {
+  id              String    @id @default(uuid()) @db.Uuid
+  empresaId       String    @map("empresa_id") @db.Uuid
+  vendedorEmail   String    @map("vendedor_email")
+  vendedorNome    String?   @map("vendedor_nome")
+
+  tipoCertificacao String   @map("tipo_certificacao")      // CA-300, CA-600, ANEPS, SUSEP, CPA-10, CPA-20, OUTRO
+  numero          String?                                  // Número do certificado
+  instituicao     String?                                  // "FEBRABAN", "ANEPS"
+  
+  dataEmissao     DateTime? @map("data_emissao") @db.Date
+  dataVencimento  DateTime  @map("data_vencimento") @db.Date
+  
+  status          String    @default("VIGENTE")            // VIGENTE, VENCIDO, RENOVANDO
+  arquivoUrl      String?   @map("arquivo_url")
+  observacoes     String?
+
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  empresa         Empresa   @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+
+  @@index([empresaId, vendedorEmail])
+  @@index([empresaId, dataVencimento])
+  @@index([empresaId, status])
+  @@map("certificacao_vendedor")
+  @@schema("public")
+}
+
+/// Ativo Imobilizado — Computadores, mesas, ar-condicionado, monitores.
+/// Controle patrimonial com depreciação contábil automática.
+model AtivoImobilizado {
+  id              String    @id @default(uuid()) @db.Uuid
+  empresaId       String    @map("empresa_id") @db.Uuid
+
+  nome            String                                   // "Notebook Dell Latitude 5420"
+  categoria       String                                   // INFORMATICA, MOVEIS, ELETRODOMESTICO, VEICULOS, OUTRO
+  numeroPatrimonio String?  @map("numero_patrimonio")      // Etiqueta: "PAT-001"
+  numeroSerie     String?   @map("numero_serie")
+  marca           String?
+  modelo          String?
+  
+  dataAquisicao   DateTime  @map("data_aquisicao") @db.Date
+  valorAquisicao  Float     @map("valor_aquisicao")
+  vidaUtilMeses   Int       @default(60) @map("vida_util_meses")   // Vida útil em meses (ex: 60 = 5 anos)
+  taxaDepreciacao Float     @default(20) @map("taxa_depreciacao")  // % ao ano
+  
+  responsavelEmail String?  @map("responsavel_email")      // Vendedor que está usando
+  responsavelNome String?   @map("responsavel_nome")
+  localizacao     String?                                  // "Sala 3", "Filial Centro"
+  
+  status          String    @default("EM_USO")             // EM_USO, EM_MANUTENCAO, BAIXADO, DISPONIVEL
+  dataBaixa       DateTime? @map("data_baixa") @db.Date
+  motivoBaixa     String?   @map("motivo_baixa")
+  
+  observacoes     String?
+  fotoUrl         String?   @map("foto_url")
+
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  empresa         Empresa   @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+
+  @@index([empresaId, categoria])
+  @@index([empresaId, status])
+  @@index([empresaId, responsavelEmail])
+  @@map("ativo_imobilizado")
   @@schema("public")
 }
