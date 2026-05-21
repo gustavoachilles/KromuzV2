@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Brain, FileText, Layers, Settings, Calculator, BookOpen, BarChart3, Shield, Package, ScrollText, Kanban, Users, DollarSign, Target, Trophy, Upload, ArrowRightLeft, PieChart, CreditCard, Inbox, Megaphone, RefreshCcw, MessageSquare, GraduationCap, Clock, Activity, LayoutDashboard, KeyRound, ChevronDown, AlertTriangle, UserCheck, ClipboardList, Receipt, Palmtree, FolderOpen, CalendarDays, Gavel, Eye } from "lucide-react";
+import { Brain, FileText, Layers, Settings, Calculator, BookOpen, BarChart3, Shield, Package, ScrollText, Kanban, Users, DollarSign, Target, Trophy, Upload, ArrowRightLeft, PieChart, CreditCard, Inbox, Megaphone, RefreshCcw, MessageSquare, GraduationCap, Clock, Activity, LayoutDashboard, KeyRound, ChevronDown, AlertTriangle, UserCheck, ClipboardList, Receipt, Palmtree, FolderOpen, CalendarDays, Gavel, Eye, Bell, Repeat } from "lucide-react";
 import type { Permissoes } from "@/lib/permissions";
 
 export function SidebarNav({ permissoes }: { permissoes: Permissoes }) {
@@ -216,6 +216,9 @@ export function SidebarNav({ permissoes }: { permissoes: Permissoes }) {
           <NavLink isSubItem href="/contabil/bordero" icon={<ScrollText className="h-4 w-4" />} active={pathname === "/contabil/bordero"}>Motor Borderô</NavLink>
           <NavLink isSubItem href="/contabil/simulador" icon={<Calculator className="h-4 w-4" />} active={pathname === "/contabil/simulador"}>Simulador Tributário</NavLink>
           <NavLink isSubItem href="/contabil/categorias" icon={<FolderOpen className="h-4 w-4" />} active={pathname === "/contabil/categorias"}>Plano de Contas</NavLink>
+          <NavLink isSubItem href="/contabil/dashboard" icon={<BarChart3 className="h-4 w-4" />} active={pathname === "/contabil/dashboard"}>Dashboard BI</NavLink>
+          <NavLink isSubItem href="/contabil/conciliacao" icon={<Repeat className="h-4 w-4" />} active={pathname === "/contabil/conciliacao"}>Conciliação Bancária</NavLink>
+          <NavLink isSubItem href="/contabil/notificacoes" icon={<Bell className="h-4 w-4" />} active={pathname === "/contabil/notificacoes"}>Central de Alertas</NavLink>
           <NavLink isSubItem href="/contabil/auditoria" icon={<Eye className="h-4 w-4" />} active={pathname === "/contabil/auditoria"}>Auditoria</NavLink>
         </CollapsibleSection>
       )}
