@@ -92,6 +92,8 @@ model Empresa {
   certificacoesVendedores CertificacaoVendedor[]
   ativosImobilizados   AtivoImobilizado[]
   borderos             BorderoUpload[]
+  mensagensRapidas     MensagemRapida[]
+  tagsConversa         TagConversa[]
   
   planoSaaS            PlanoSaaS? @relation(fields: [planoSaasId], references: [id])
   faturasSaaS          FaturaSaaS[]
@@ -902,6 +904,22 @@ model Conversa {
   
   ultimaMensagem  String?  @map("ultima_mensagem")
   lida            Boolean  @default(false)
+  naoLidas        Int      @default(0) @map("nao_lidas")
+  
+  // Tags (array de nomes)
+  tags            String[] @default([])
+  
+  // Transferência
+  transferidoPor  String?  @map("transferido_por")
+  departamento    String?  // VENDAS, SUPORTE, FINANCEIRO
+  
+  // Finalização
+  finalizadoPor   String?  @map("finalizado_por")
+  finalizadoEm    DateTime? @map("finalizado_em")
+  motivoFechamento String? @map("motivo_fechamento")
+  
+  // Métricas
+  tempoResposta   Int?     @map("tempo_resposta") // em segundos
   
   createdAt       DateTime @default(now()) @map("created_at")
   updatedAt       DateTime @updatedAt @map("updated_at")
@@ -938,6 +956,37 @@ model Mensagem {
   @@index([conversaId, createdAt])
   @@index([agendadoPara])
   @@map("mensagem")
+  @@schema("public")
+}
+
+model MensagemRapida {
+  id          String   @id @default(uuid()) @db.Uuid
+  empresaId   String   @map("empresa_id") @db.Uuid
+  titulo      String
+  conteudo    String   @db.Text
+  atalho      String?  // Ex: "/saudacao", "/preco"
+  categoria   String?  // VENDAS, SUPORTE, GERAL
+  ativo       Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  empresa     Empresa  @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+
+  @@index([empresaId])
+  @@map("mensagem_rapida")
+  @@schema("public")
+}
+
+model TagConversa {
+  id          String   @id @default(uuid()) @db.Uuid
+  empresaId   String   @map("empresa_id") @db.Uuid
+  nome        String
+  cor         String   @default("#6366f1")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  empresa     Empresa  @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+
+  @@unique([empresaId, nome])
+  @@map("tag_conversa")
   @@schema("public")
 }
 

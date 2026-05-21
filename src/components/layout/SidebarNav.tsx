@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Brain, FileText, Layers, Settings, Calculator, BookOpen, BarChart3, Shield, Package, ScrollText, Kanban, Users, DollarSign, Target, Trophy, Upload, ArrowRightLeft, PieChart, CreditCard, Inbox, Megaphone, RefreshCcw, MessageSquare, GraduationCap, Clock, Activity, LayoutDashboard, KeyRound, ChevronDown, AlertTriangle, UserCheck, ClipboardList, Receipt, Palmtree, FolderOpen, CalendarDays, Gavel, Eye, Bell, Repeat } from "lucide-react";
+import { Brain, FileText, Layers, Settings, Calculator, BookOpen, BarChart3, Shield, Package, ScrollText, Kanban, Users, DollarSign, Target, Trophy, Upload, ArrowRightLeft, PieChart, CreditCard, Inbox as InboxIcon, Megaphone, RefreshCcw, MessageSquare, GraduationCap, Clock, Activity, LayoutDashboard, KeyRound, ChevronDown, AlertTriangle, UserCheck, ClipboardList, Receipt, Palmtree, FolderOpen, CalendarDays, Gavel, Eye, Bell, Repeat, Zap } from "lucide-react";
 import type { Permissoes } from "@/lib/permissions";
 
 export function SidebarNav({ permissoes }: { permissoes: Permissoes }) {
@@ -13,7 +13,7 @@ export function SidebarNav({ permissoes }: { permissoes: Permissoes }) {
   const p = (mod: string) => permissoes[mod] === true;
 
   // Detect which section has active route to auto-open it
-  const crmPaths = ["/leads", "/esteira", "/comissoes", "/metas", "/ranking", "/inbox", "/recuperacao", "/marketing", "/canais"];
+  const crmPaths = ["/leads", "/esteira", "/comissoes", "/metas", "/ranking", "/inbox", "/inbox/dashboard", "/inbox/mensagens-rapidas", "/recuperacao", "/marketing", "/canais"];
   const inteligenciaPaths = ["/simulador", "/motor-regras", "/roteiros", "/mapa-portabilidade", "/conhecimento"];
   const cadastroPaths = ["/regras", "/bancos", "/produtos", "/convenios", "/credenciais", "/importacao"];
   const sistemaPaths = ["/relatorios", "/auditoria", "/sla", "/configuracoes", "/assinatura"];
@@ -93,7 +93,13 @@ export function SidebarNav({ permissoes }: { permissoes: Permissoes }) {
             <NavLink isSubItem href="/ranking" icon={<Trophy className="h-4 w-4" />} active={pathname === "/ranking"}>Ranking</NavLink>
           )}
           {p("leads") && (
-            <NavLink isSubItem href="/inbox" icon={<Inbox className="h-4 w-4" />} active={pathname === "/inbox"}>Inbox</NavLink>
+            <NavLink isSubItem href="/inbox" icon={<InboxIcon className="h-4 w-4" />} active={pathname === "/inbox"}>Inbox</NavLink>
+          )}
+          {p("leads") && (
+            <NavLink isSubItem href="/inbox/dashboard" icon={<BarChart3 className="h-4 w-4" />} active={pathname === "/inbox/dashboard"}>Dashboard Atendimento</NavLink>
+          )}
+          {p("leads") && (
+            <NavLink isSubItem href="/inbox/mensagens-rapidas" icon={<Zap className="h-4 w-4" />} active={pathname === "/inbox/mensagens-rapidas"}>Mensagens Rápidas</NavLink>
           )}
           {p("leads") && (
             <NavLink isSubItem href="/recuperacao" icon={<RefreshCcw className="h-4 w-4" />} active={pathname === "/recuperacao"}>Recuperação</NavLink>
