@@ -85,6 +85,7 @@ model Empresa {
   categoriasFinanceiras CategoriaFinanceira[]
   lancamentosFinanceiros LancamentoFinanceiro[]
   orcamentos           OrcamentoDepartamento[]
+  transacoesCarteira   TransacaoCarteira[]
   
   planoSaaS            PlanoSaaS? @relation(fields: [planoSaasId], references: [id])
   faturasSaaS          FaturaSaaS[]
@@ -1549,5 +1550,55 @@ model OrcamentoDepartamento {
   @@unique([empresaId, categoriaId, mes, ano])
   @@index([empresaId, ano, mes])
   @@map("orcamento_departamento")
+  @@schema("public")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MÓDULO CONTÁBIL — FASE 2 (Wallet do Vendedor / Motor de Repasses)
+// ─────────────────────────────────────────────────────────────────────────────
+
+/// Ledger da Carteira do Vendedor — cada linha é uma transação atômica.
+/// Créditos: comissões aprovadas/pagas na Esteira.
+/// Débitos: estornos bancários, vales, adiantamentos, descontos INSS, multas.
+/// O saldo do vendedor = SUM(valor) WHERE tipo = CREDITO - SUM(valor) WHERE tipo = DEBITO.
+model TransacaoCarteira {
+  id              String    @id @default(uuid()) @db.Uuid
+  empresaId       String    @map("empresa_id") @db.Uuid
+  
+  // Identificação do vendedor
+  vendedorEmail   String    @map("vendedor_email")
+  vendedorNome    String?   @map("vendedor_nome")
+  
+  // Classificação
+  tipo            String                                   // CREDITO, DEBITO
+  categoria       String                                   // COMISSAO, ESTORNO, VALE, ADIANTAMENTO, DESCONTO_INSS, MULTA, SAQUE, AJUSTE
+  descricao       String                                   // "Comissão Proposta #ABC", "Estorno Banco PAN"
+  
+  // Valor (sempre positivo — o tipo define se é entrada ou saída)
+  valor           Float
+  
+  // Referências opcionais
+  propostaId      String?   @map("proposta_id") @db.Uuid   // Vínculo com proposta da Esteira
+  bancoNome       String?   @map("banco_nome")              // Banco de origem (para estornos)
+  
+  // Status do pagamento (para saques/liquidações)
+  statusPagamento String    @default("PENDENTE") @map("status_pagamento") // PENDENTE, LIQUIDADO, CANCELADO
+  dataPagamento   DateTime? @map("data_pagamento")
+  comprovanteUrl  String?   @map("comprovante_url")
+  
+  // Metadados
+  criadoPor       String?   @map("criado_por")             // Email de quem registrou
+  observacoes     String?
+
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  empresa         Empresa   @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+
+  @@index([empresaId, vendedorEmail])
+  @@index([empresaId, vendedorEmail, tipo])
+  @@index([empresaId, createdAt(sort: Desc)])
+  @@index([empresaId, statusPagamento])
+  @@map("transacao_carteira")
   @@schema("public")
 }

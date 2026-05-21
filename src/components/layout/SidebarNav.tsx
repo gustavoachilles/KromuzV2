@@ -210,6 +210,7 @@ export function SidebarNav({ permissoes }: { permissoes: Permissoes }) {
           <NavLink isSubItem href="/contabil/lancamentos" icon={<Receipt className="h-4 w-4" />} active={pathname === "/contabil/lancamentos"}>Contas a Pagar/Receber</NavLink>
           <NavLink isSubItem href="/contabil/contas-bancarias" icon={<CreditCard className="h-4 w-4" />} active={pathname === "/contabil/contas-bancarias"}>Contas Bancárias</NavLink>
           <NavLink isSubItem href="/contabil/orcamento" icon={<Shield className="h-4 w-4" />} active={pathname === "/contabil/orcamento"}>Orçamento</NavLink>
+          <NavLink isSubItem href="/contabil/carteira" icon={<DollarSign className="h-4 w-4" />} active={pathname.startsWith("/contabil/carteira")}>Carteira Vendedores</NavLink>
         </CollapsibleSection>
       )}
     </nav>
