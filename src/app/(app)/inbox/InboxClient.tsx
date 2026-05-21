@@ -110,9 +110,10 @@ export function InboxClient({ conversas: initConversas, sessao }: { conversas: a
   }
 
   return (
-    <div className="flex h-full bg-white dark:bg-zinc-950 rounded-xl border border-zinc-200 dark:border-zinc-800 overflow-hidden shadow-sm">
-      {/* Sidebar - Lista de Conversas */}
-      <div className="w-80 border-r border-zinc-200 dark:border-zinc-800 flex flex-col bg-zinc-50 dark:bg-zinc-900/50">
+    <div className="h-screen py-4 pr-4">
+      <div className="flex h-full bg-white dark:bg-zinc-950 rounded-3xl border border-zinc-200 dark:border-zinc-800 overflow-hidden shadow-sm">
+        {/* Sidebar - Lista de Conversas */}
+        <div className="w-80 border-r border-zinc-200 dark:border-zinc-800 flex flex-col bg-zinc-50/50 dark:bg-zinc-900/30">
         <div className="p-4 border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
           <h2 className="font-bold text-lg mb-4 text-zinc-900 dark:text-white">Inbox Omnichannel</h2>
           <div className="relative">
@@ -302,6 +303,7 @@ export function InboxClient({ conversas: initConversas, sessao }: { conversas: a
           </div>
         )}
       </div>
+    </div>
     </div>
   );
 }
