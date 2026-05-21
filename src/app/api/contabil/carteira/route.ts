@@ -128,6 +128,9 @@ export async function DELETE(req: NextRequest) {
     const id = searchParams.get("id");
     if (!id) return NextResponse.json({ error: "ID obrigatório" }, { status: 400 });
 
+    const existing = await prisma.transacaoCarteira.findFirst({ where: { id, empresaId: sessao.empresaId } });
+    if (!existing) return NextResponse.json({ error: "Transação não encontrada" }, { status: 404 });
+
     await prisma.transacaoCarteira.delete({ where: { id } });
     return NextResponse.json({ ok: true });
   } catch {

@@ -12,6 +12,10 @@ export async function GET(req: NextRequest) {
     const borderoId = searchParams.get("borderoId");
     if (!borderoId) return NextResponse.json({ error: "borderoId obrigatório" }, { status: 400 });
 
+    // Verificar que o borderô pertence à empresa do usuário
+    const bordero = await prisma.borderoUpload.findFirst({ where: { id: borderoId, empresaId: sessao.empresaId } });
+    if (!bordero) return NextResponse.json({ error: "Borderô não encontrado" }, { status: 404 });
+
     const linhas = await prisma.borderoLinha.findMany({
       where: { borderoId },
       orderBy: { createdAt: "asc" },

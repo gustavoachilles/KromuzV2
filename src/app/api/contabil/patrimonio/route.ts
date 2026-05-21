@@ -53,6 +53,8 @@ export async function PUT(req: NextRequest) {
     const body = await req.json();
     const { id, ...dados } = body;
     if (!id) return NextResponse.json({ error: "ID obrigatório" }, { status: 400 });
+    const existing = await prisma.ativoImobilizado.findFirst({ where: { id, empresaId: sessao.empresaId } });
+    if (!existing) return NextResponse.json({ error: "Não encontrado" }, { status: 404 });
     if (dados.dataAquisicao) dados.dataAquisicao = new Date(dados.dataAquisicao);
     if (dados.dataBaixa) dados.dataBaixa = new Date(dados.dataBaixa);
     const ativo = await prisma.ativoImobilizado.update({ where: { id }, data: dados });
@@ -69,6 +71,8 @@ export async function DELETE(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
     if (!id) return NextResponse.json({ error: "ID obrigatório" }, { status: 400 });
+    const existing = await prisma.ativoImobilizado.findFirst({ where: { id, empresaId: sessao.empresaId } });
+    if (!existing) return NextResponse.json({ error: "Não encontrado" }, { status: 404 });
     await prisma.ativoImobilizado.delete({ where: { id } });
     return NextResponse.json({ ok: true });
   } catch {

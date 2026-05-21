@@ -49,6 +49,8 @@ export async function PUT(req: NextRequest) {
     const body = await req.json();
     const { id, ...dados } = body;
     if (!id) return NextResponse.json({ error: "ID obrigatório" }, { status: 400 });
+    const existing = await prisma.certificacaoVendedor.findFirst({ where: { id, empresaId: sessao.empresaId } });
+    if (!existing) return NextResponse.json({ error: "Não encontrado" }, { status: 404 });
     if (dados.dataEmissao) dados.dataEmissao = new Date(dados.dataEmissao);
     if (dados.dataVencimento) dados.dataVencimento = new Date(dados.dataVencimento);
     const cert = await prisma.certificacaoVendedor.update({ where: { id }, data: dados });
@@ -65,6 +67,8 @@ export async function DELETE(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
     if (!id) return NextResponse.json({ error: "ID obrigatório" }, { status: 400 });
+    const existing = await prisma.certificacaoVendedor.findFirst({ where: { id, empresaId: sessao.empresaId } });
+    if (!existing) return NextResponse.json({ error: "Não encontrado" }, { status: 404 });
     await prisma.certificacaoVendedor.delete({ where: { id } });
     return NextResponse.json({ ok: true });
   } catch {

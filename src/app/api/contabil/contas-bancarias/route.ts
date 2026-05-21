@@ -61,6 +61,9 @@ export async function PUT(req: NextRequest) {
     const { id, ...dados } = body;
     if (!id) return NextResponse.json({ error: "ID obrigatório" }, { status: 400 });
 
+    const existing = await prisma.contaBancariaCF.findFirst({ where: { id, empresaId: sessao.empresaId } });
+    if (!existing) return NextResponse.json({ error: "Não encontrado" }, { status: 404 });
+
     const contaBancaria = await prisma.contaBancariaCF.update({
       where: { id },
       data: dados,
@@ -81,6 +84,9 @@ export async function DELETE(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
     if (!id) return NextResponse.json({ error: "ID obrigatório" }, { status: 400 });
+
+    const existing = await prisma.contaBancariaCF.findFirst({ where: { id, empresaId: sessao.empresaId } });
+    if (!existing) return NextResponse.json({ error: "Não encontrado" }, { status: 404 });
 
     const count = await prisma.lancamentoFinanceiro.count({ where: { contaBancariaId: id } });
     if (count > 0) {

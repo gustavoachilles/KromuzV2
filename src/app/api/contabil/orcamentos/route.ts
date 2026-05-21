@@ -79,6 +79,9 @@ export async function DELETE(req: NextRequest) {
     const id = searchParams.get("id");
     if (!id) return NextResponse.json({ error: "ID obrigatório" }, { status: 400 });
 
+    const existing = await prisma.orcamentoDepartamento.findFirst({ where: { id, empresaId: sessao.empresaId } });
+    if (!existing) return NextResponse.json({ error: "Não encontrado" }, { status: 404 });
+
     await prisma.orcamentoDepartamento.delete({ where: { id } });
     return NextResponse.json({ ok: true });
   } catch {
