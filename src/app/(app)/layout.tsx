@@ -65,17 +65,17 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           </Link>
         </div>
 
-        <div className="flex-1 overflow-y-auto scrollbar-hide relative z-10">
+        <div className="flex-1 flex flex-col overflow-y-auto scrollbar-hide relative z-10">
           <SidebarNav permissoes={permissoes} />
-        </div>
 
-        <div className="mt-auto p-4 relative z-10">
-          <div className="bg-white/5 border border-white/10 rounded-2xl p-1 backdrop-blur-md">
-            <UserMenu 
-              nomeUsuario={sessao.nomeUsuario} 
-              nomeEmpresa={sessao.nomeEmpresa} 
-              email={sessao.email} 
-            />
+          <div className="mt-auto p-4 relative z-10 shrink-0">
+            <div className="bg-white/5 border border-white/10 rounded-2xl p-1 backdrop-blur-md">
+              <UserMenu 
+                nomeUsuario={sessao.nomeUsuario} 
+                nomeEmpresa={sessao.nomeEmpresa} 
+                email={sessao.email} 
+              />
+            </div>
           </div>
         </div>
       </aside>

@@ -22,11 +22,11 @@ export function SidebarNav({ permissoes }: { permissoes: Permissoes }) {
   const isInSection = (paths: string[]) => paths.some(p => pathname === p || pathname.startsWith(p + "/"));
 
   const [openSections, setOpenSections] = useState<Record<string, boolean>>(() => ({
-    crm: isInSection(crmPaths),
-    inteligencia: isInSection(inteligenciaPaths),
-    cadastro: isInSection(cadastroPaths),
-    sistema: isInSection(sistemaPaths),
-    rh: isInSection(rhPaths),
+    crm: false,
+    inteligencia: false,
+    cadastro: false,
+    sistema: false,
+    rh: false,
   }));
 
   const toggleSection = (key: string) => {
@@ -40,7 +40,7 @@ export function SidebarNav({ permissoes }: { permissoes: Permissoes }) {
   const hasRh = p("rh");
 
   return (
-    <nav className="flex-1 px-3 py-4 space-y-1 text-sm overflow-y-auto scrollbar-none pb-20">
+    <nav className="px-3 py-4 space-y-1 text-sm pb-6">
       {p("dashboard") && (
         <NavLink href="/mesa" icon={<LayoutDashboard className="h-4 w-4" />} active={pathname === "/mesa"}>
           Mesa
