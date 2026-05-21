@@ -18,6 +18,7 @@ export function SidebarNav({ permissoes }: { permissoes: Permissoes }) {
   const cadastroPaths = ["/regras", "/bancos", "/produtos", "/convenios", "/credenciais", "/importacao"];
   const sistemaPaths = ["/relatorios", "/auditoria", "/sla", "/configuracoes", "/assinatura"];
   const rhPaths = ["/rh"];
+  const contabilPaths = ["/contabil"];
 
   const isInSection = (paths: string[]) => paths.some(p => pathname === p || pathname.startsWith(p + "/"));
 
@@ -27,6 +28,7 @@ export function SidebarNav({ permissoes }: { permissoes: Permissoes }) {
     cadastro: false,
     sistema: false,
     rh: false,
+    contabil: false,
   }));
 
   const toggleSection = (key: string) => {
@@ -38,6 +40,7 @@ export function SidebarNav({ permissoes }: { permissoes: Permissoes }) {
   const hasCadastro = p("cadastro") || p("importacao");
   const hasSistema = p("relatorios") || p("auditoria") || p("configuracoes") || p("assinatura");
   const hasRh = p("rh");
+  const hasContabil = p("contabil");
 
   return (
     <nav className="px-3 py-4 space-y-1 text-sm pb-6">
@@ -193,6 +196,17 @@ export function SidebarNav({ permissoes }: { permissoes: Permissoes }) {
           <NavLink isSubItem href="/rh/rescisao" icon={<Gavel className="h-4 w-4" />} active={pathname.startsWith("/rh/rescisao")}>Simulador Rescisão</NavLink>
           <NavLink isSubItem href="/rh/documentos" icon={<FolderOpen className="h-4 w-4" />} active={pathname.startsWith("/rh/documentos")}>Documentos</NavLink>
           <NavLink isSubItem href="/rh/auditoria" icon={<Eye className="h-4 w-4" />} active={pathname.startsWith("/rh/auditoria")}>Auditoria</NavLink>
+        </CollapsibleSection>
+      )}
+
+      {/* Contábil & Fiscal */}
+      {hasContabil && (
+        <CollapsibleSection
+          label="Contábil & Fiscal"
+          isOpen={openSections.contabil}
+          onToggle={() => toggleSection("contabil")}
+        >
+          <NavLink isSubItem href="/contabil" icon={<Calculator className="h-4 w-4" />} active={pathname === "/contabil"}>Painel Contábil</NavLink>
         </CollapsibleSection>
       )}
     </nav>
