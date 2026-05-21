@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSessionEmpresa } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
+import { registrarAuditoria } from "@/lib/audit";
+import { isRateLimited, getClientIP } from "@/lib/rate-limit";
+import { validarCPF } from "@/lib/validations";
 
 // GET — Lista todos os borderôs enviados
 export async function GET() {
@@ -46,11 +49,20 @@ export async function POST(req: NextRequest) {
     const sessao = await getSessionEmpresa();
     if (!sessao) return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
 
+    const ip = getClientIP(req);
+    if (isRateLimited(`${ip}:bordero:POST`, 10, 60_000)) {
+      return NextResponse.json({ error: "Muitas requisições. Aguarde." }, { status: 429 });
+    }
+
     const body = await req.json();
     const { bancoNome, nomeArquivo, linhas } = body;
 
     if (!bancoNome || !linhas || !Array.isArray(linhas) || linhas.length === 0) {
       return NextResponse.json({ error: "Dados do borderô inválidos" }, { status: 400 });
+    }
+
+    if (linhas.length > 5000) {
+      return NextResponse.json({ error: "Máximo de 5.000 linhas por borderô" }, { status: 400 });
     }
 
     const totalValor = linhas.reduce((s: number, l: any) => s + (l.valorComissao || 0), 0);
@@ -157,6 +169,13 @@ export async function POST(req: NextRequest) {
       data: { matchEncontrados, matchNaoEncontrados, status: "CONCLUIDO" },
     });
 
+    registrarAuditoria({
+      empresaId: sessao.empresaId, usuarioEmail: sessao.email,
+      acao: "CRIAR", entidade: "BORDERO", entidadeId: bordero.id,
+      entidadeNome: `${bancoNome} (${linhas.length} linhas)`,
+      detalhes: { matchEncontrados, matchNaoEncontrados, totalValor },
+    });
+
     return NextResponse.json({
       id: bordero.id,
       totalLinhas: linhas.length,
@@ -182,6 +201,13 @@ export async function DELETE(req: NextRequest) {
     const existing = await prisma.borderoUpload.findFirst({ where: { id, empresaId: sessao.empresaId } });
     if (!existing) return NextResponse.json({ error: "Não encontrado" }, { status: 404 });
     await prisma.borderoUpload.delete({ where: { id } });
+
+    registrarAuditoria({
+      empresaId: sessao.empresaId, usuarioEmail: sessao.email,
+      acao: "EXCLUIR", entidade: "BORDERO", entidadeId: id,
+      entidadeNome: `${existing.bancoNome} (${existing.totalLinhas} linhas)`,
+    });
+
     return NextResponse.json({ ok: true });
   } catch {
     return NextResponse.json({ error: "Erro ao excluir" }, { status: 500 });

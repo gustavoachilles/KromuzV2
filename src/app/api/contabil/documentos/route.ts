@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSessionEmpresa } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
+import { registrarAuditoria } from "@/lib/audit";
 
 export async function GET() {
   try {
@@ -44,6 +45,7 @@ export async function POST(req: NextRequest) {
         status: status || "VIGENTE", arquivoUrl, observacoes,
       },
     });
+    registrarAuditoria({ empresaId: sessao.empresaId, usuarioEmail: sessao.email, acao: "CRIAR", entidade: "DOCUMENTO", entidadeId: doc.id, entidadeNome: doc.nome });
     return NextResponse.json(doc, { status: 201 });
   } catch {
     return NextResponse.json({ error: "Erro ao criar documento" }, { status: 500 });
@@ -62,6 +64,7 @@ export async function PUT(req: NextRequest) {
     if (dados.dataEmissao) dados.dataEmissao = new Date(dados.dataEmissao);
     if (dados.dataVencimento) dados.dataVencimento = new Date(dados.dataVencimento);
     const doc = await prisma.documentoRegulatorio.update({ where: { id }, data: dados });
+    registrarAuditoria({ empresaId: sessao.empresaId, usuarioEmail: sessao.email, acao: "EDITAR", entidade: "DOCUMENTO", entidadeId: id, entidadeNome: existing.nome });
     return NextResponse.json(doc);
   } catch {
     return NextResponse.json({ error: "Erro ao atualizar" }, { status: 500 });
@@ -78,6 +81,7 @@ export async function DELETE(req: NextRequest) {
     const existing = await prisma.documentoRegulatorio.findFirst({ where: { id, empresaId: sessao.empresaId } });
     if (!existing) return NextResponse.json({ error: "Não encontrado" }, { status: 404 });
     await prisma.documentoRegulatorio.delete({ where: { id } });
+    registrarAuditoria({ empresaId: sessao.empresaId, usuarioEmail: sessao.email, acao: "EXCLUIR", entidade: "DOCUMENTO", entidadeId: id, entidadeNome: existing.nome });
     return NextResponse.json({ ok: true });
   } catch {
     return NextResponse.json({ error: "Erro ao excluir" }, { status: 500 });

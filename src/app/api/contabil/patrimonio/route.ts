@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSessionEmpresa } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
+import { registrarAuditoria } from "@/lib/audit";
 
 export async function GET() {
   try {
