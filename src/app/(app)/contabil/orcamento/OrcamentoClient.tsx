@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { Shield, Plus, ChevronLeft, ChevronRight, Save, AlertTriangle, Lock, Unlock } from "lucide-react";
+import { SkeletonTable } from "@/components/ui/Skeleton";
 
 type Categoria = { id: string; nome: string; tipo: string; grupo: string | null };
 type Orcamento = {
@@ -100,7 +101,7 @@ export function OrcamentoClient() {
         </header>
 
         {loading ? (
-          <div className="flex items-center justify-center py-20"><div className="w-8 h-8 border-4 border-brand/30 border-t-brand rounded-full animate-spin" /></div>
+          <SkeletonTable />
         ) : categorias.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24 bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200 dark:border-zinc-800">
             <AlertTriangle className="w-12 h-12 text-zinc-300 dark:text-zinc-700 mb-4" />

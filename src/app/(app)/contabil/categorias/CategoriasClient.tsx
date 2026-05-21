@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FolderOpen, Plus, X, Trash2, Edit3, Search } from "lucide-react";
+import { SkeletonCards } from "@/components/ui/Skeleton";
 
 type Categoria = {
   id: string; nome: string; tipo: string; grupo: string | null;
@@ -108,7 +109,7 @@ export function CategoriasClient() {
         </div>
 
         {loading ? (
-          <div className="flex items-center justify-center py-20"><div className="w-8 h-8 border-4 border-brand/30 border-t-brand rounded-full animate-spin" /></div>
+          <SkeletonCards />
         ) : (
           <div className="space-y-6">
             {Object.entries(grupos).map(([tipo, cats]) => {

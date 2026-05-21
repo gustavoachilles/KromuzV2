@@ -22,7 +22,8 @@ export async function GET(req: NextRequest) {
     const categoriaId = searchParams.get("categoriaId");
     const mes = searchParams.get("mes");               // 1-12
     const ano = searchParams.get("ano");               // 2026
-    const limit = parseInt(searchParams.get("limit") || "200");
+    const limit = Math.min(parseInt(searchParams.get("limit") || "50"), 200);
+    const cursor = searchParams.get("cursor"); // ID do último item da página anterior
 
     const where: any = { empresaId: sessao.empresaId };
     if (tipo) where.tipo = tipo;
@@ -49,10 +50,15 @@ export async function GET(req: NextRequest) {
         contaBancaria: { select: { id: true, nomeBanco: true, cor: true } },
       },
       orderBy: { dataVencimento: "asc" },
-      take: limit,
+      take: limit + 1, // Buscar 1 a mais para saber se tem próxima página
+      ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
     });
 
-    return NextResponse.json(lancamentos);
+    const hasMore = lancamentos.length > limit;
+    const items = hasMore ? lancamentos.slice(0, limit) : lancamentos;
+    const nextCursor = hasMore ? items[items.length - 1].id : null;
+
+    return NextResponse.json({ items, nextCursor, hasMore });
   } catch {
     return NextResponse.json({ error: "Erro ao buscar lançamentos" }, { status: 500 });
   }

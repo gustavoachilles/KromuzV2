@@ -7,6 +7,7 @@ import {
   ChevronLeft, ChevronRight, Wallet, ArrowUpRight, ArrowDownRight,
   BadgePercent, Calculator, BarChart3, Shield, Clock
 } from "lucide-react";
+import { SkeletonPage } from "@/components/ui/Skeleton";
 
 type DREData = {
   periodo: { mes: number; ano: number };

@@ -7,6 +7,7 @@ import {
   ArrowLeft, ArrowUpRight, ArrowDownRight, DollarSign, Wallet,
   Trash2, Calendar
 } from "lucide-react";
+import { SkeletonTable } from "@/components/ui/Skeleton";
 
 type Transacao = {
   id: string; tipo: string; categoria: string; descricao: string; valor: number;
@@ -72,7 +73,7 @@ export function ExtratoVendedorClient({ email }: { email: string }) {
         </header>
 
         {loading ? (
-          <div className="flex items-center justify-center py-20"><div className="w-8 h-8 border-4 border-brand/30 border-t-brand rounded-full animate-spin" /></div>
+          <SkeletonTable />
         ) : data ? (
           <>
             {/* Saldo Cards */}

@@ -6,6 +6,7 @@ import {
   ShieldAlert, Plus, X, Trash2, Edit3, AlertTriangle, CheckCircle, Clock,
   FileText, Award, Search, Building, Flame
 } from "lucide-react";
+import { SkeletonCards } from "@/components/ui/Skeleton";
 
 type Doc = {
   id: string; tipo: string; nome: string; orgaoEmissor?: string; numero?: string;
@@ -129,7 +130,7 @@ export function RadarVencimentosClient() {
         </div>
 
         {loading ? (
-          <div className="flex items-center justify-center py-20"><div className="w-8 h-8 border-4 border-brand/30 border-t-brand rounded-full animate-spin" /></div>
+          <SkeletonCards />
         ) : tab === "docs" ? (
           <div className="bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200 dark:border-zinc-800 shadow-sm overflow-hidden">
             <table className="w-full text-sm">

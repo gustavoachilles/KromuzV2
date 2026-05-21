@@ -4,8 +4,9 @@ import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Plus, Search, Filter, X, Check, Trash2, Edit3, ChevronLeft, ChevronRight,
-  ArrowUpRight, ArrowDownRight, Receipt, DollarSign, Clock, CalendarDays
+  ArrowUpRight, ArrowDownRight, Receipt, DollarSign, Clock, CalendarDays, Loader2
 } from "lucide-react";
+import { SkeletonKPI, SkeletonTable } from "@/components/ui/Skeleton";
 
 const MESES = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
 
@@ -33,6 +34,9 @@ export function LancamentosClient() {
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [contas, setContas] = useState<ContaBancaria[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [hasMore, setHasMore] = useState(false);
   const [filtroTipo, setFiltroTipo] = useState<string>("");
   const [filtroStatus, setFiltroStatus] = useState<string>("");
   const [showModal, setShowModal] = useState(false);
@@ -50,16 +54,36 @@ export function LancamentosClient() {
     setLoading(true);
     try {
       const [resL, resC, resCB] = await Promise.all([
-        fetch(`/api/contabil/lancamentos?mes=${mes}&ano=${ano}`),
+        fetch(`/api/contabil/lancamentos?mes=${mes}&ano=${ano}&limit=50`),
         fetch("/api/contabil/categorias"),
         fetch("/api/contabil/contas-bancarias"),
       ]);
-      if (resL.ok) setLancamentos(await resL.json());
+      if (resL.ok) {
+        const data = await resL.json();
+        setLancamentos(data.items || []);
+        setNextCursor(data.nextCursor || null);
+        setHasMore(data.hasMore || false);
+      }
       if (resC.ok) setCategorias(await resC.json());
       if (resCB.ok) setContas(await resCB.json());
     } catch { /* ignore */ }
     setLoading(false);
   }, [mes, ano]);
+
+  const loadMore = async () => {
+    if (!nextCursor || loadingMore) return;
+    setLoadingMore(true);
+    try {
+      const r = await fetch(`/api/contabil/lancamentos?mes=${mes}&ano=${ano}&limit=50&cursor=${nextCursor}`);
+      if (r.ok) {
+        const data = await r.json();
+        setLancamentos(prev => [...prev, ...(data.items || [])]);
+        setNextCursor(data.nextCursor || null);
+        setHasMore(data.hasMore || false);
+      }
+    } catch {}
+    setLoadingMore(false);
+  };
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
 
@@ -225,8 +249,9 @@ export function LancamentosClient() {
 
         {/* Tabela */}
         {loading ? (
-          <div className="flex items-center justify-center py-20">
-            <div className="w-8 h-8 border-4 border-brand/30 border-t-brand rounded-full animate-spin" />
+          <div className="space-y-4">
+            <SkeletonKPI count={3} />
+            <SkeletonTable rows={8} cols={7} />
           </div>
         ) : (
           <div className="bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200 dark:border-zinc-800 shadow-sm overflow-hidden">
@@ -296,6 +321,17 @@ export function LancamentosClient() {
               </tbody>
             </table>
           </div>
+
+          {/* Carregar Mais */}
+          {hasMore && (
+            <div className="flex justify-center py-4">
+              <button onClick={loadMore} disabled={loadingMore}
+                className="flex items-center gap-2 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 px-6 py-2.5 rounded-xl text-sm font-semibold transition-colors disabled:opacity-50">
+                {loadingMore ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                {loadingMore ? "Carregando..." : `Carregar mais (${lancamentos.length} exibidos)`}
+              </button>
+            </div>
+          )}
         )}
 
         {/* Modal de Criação/Edição */}

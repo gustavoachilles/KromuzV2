@@ -6,6 +6,7 @@ import {
   Upload, FileSpreadsheet, CheckCircle, XCircle, AlertTriangle,
   Trash2, Eye, X, Search, Brain, Loader2
 } from "lucide-react";
+import { SkeletonTable } from "@/components/ui/Skeleton";
 
 type Bordero = {
   id: string; bancoNome: string; nomeArquivo: string; totalLinhas: number; totalValor: number;
@@ -111,7 +112,7 @@ export function BorderoClient() {
 
         {/* Lista de Borderôs */}
         {loading ? (
-          <div className="flex items-center justify-center py-20"><div className="w-8 h-8 border-4 border-brand/30 border-t-brand rounded-full animate-spin" /></div>
+          <SkeletonTable />
         ) : borderos.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24 bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200 dark:border-zinc-800">
             <FileSpreadsheet className="w-12 h-12 text-zinc-300 dark:text-zinc-700 mb-4" />
@@ -206,7 +207,7 @@ export function BorderoClient() {
                   <button onClick={() => { setShowDetail(null); setLinhas([]); }} className="p-2 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800"><X className="h-5 w-5" /></button>
                 </div>
                 {loadingLinhas ? (
-                  <div className="flex items-center justify-center py-10"><div className="w-8 h-8 border-4 border-brand/30 border-t-brand rounded-full animate-spin" /></div>
+                  <SkeletonTable />
                 ) : (
                   <table className="w-full text-xs">
                     <thead><tr className="border-b border-zinc-100 dark:border-zinc-800">

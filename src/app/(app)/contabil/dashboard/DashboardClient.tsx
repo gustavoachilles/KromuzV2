@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { BarChart3, TrendingUp, TrendingDown, DollarSign, Building2, Users, AlertCircle, ChevronLeft, ChevronRight, PieChart } from "lucide-react";
+import { SkeletonPage } from "@/components/ui/Skeleton";
 
 type MesData = { mes: number; label: string; receitas: number; despesas: number; impostos: number; resultado: number };
 type Despesa = { nome: string; cor: string | null; valor: number };
@@ -33,7 +34,7 @@ export function DashboardClient() {
   };
   useEffect(() => { fetchData(); }, [ano]);
 
-  if (loading) return <div className="flex items-center justify-center py-32"><div className="w-10 h-10 border-4 border-brand/30 border-t-brand rounded-full animate-spin" /></div>;
+  if (loading) return <SkeletonPage />;
   if (!data) return null;
 
   const { resumo, meses, topDespesas, fluxoCaixa } = data;
