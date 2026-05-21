@@ -216,6 +216,7 @@ export function SidebarNav({ permissoes }: { permissoes: Permissoes }) {
           <NavLink isSubItem href="/contabil/bordero" icon={<ScrollText className="h-4 w-4" />} active={pathname === "/contabil/bordero"}>Motor Borderô</NavLink>
           <NavLink isSubItem href="/contabil/simulador" icon={<Calculator className="h-4 w-4" />} active={pathname === "/contabil/simulador"}>Simulador Tributário</NavLink>
           <NavLink isSubItem href="/contabil/categorias" icon={<FolderOpen className="h-4 w-4" />} active={pathname === "/contabil/categorias"}>Plano de Contas</NavLink>
+          <NavLink isSubItem href="/contabil/auditoria" icon={<Eye className="h-4 w-4" />} active={pathname === "/contabil/auditoria"}>Auditoria</NavLink>
         </CollapsibleSection>
       )}
     </nav>

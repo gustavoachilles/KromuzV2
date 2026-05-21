@@ -1,12 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSessionEmpresa } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
+import { registrarAuditoria } from "@/lib/audit";
+import { isRateLimited, getClientIP } from "@/lib/rate-limit";
+import { sanitizar } from "@/lib/validations";
 
 // GET — Lista lançamentos financeiros com filtros
 export async function GET(req: NextRequest) {
   try {
     const sessao = await getSessionEmpresa();
     if (!sessao) return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
+
+    const ip = getClientIP(req);
+    if (isRateLimited(`${ip}:lancamentos:GET`, 60)) {
+      return NextResponse.json({ error: "Muitas requisições" }, { status: 429 });
+    }
 
     const { searchParams } = new URL(req.url);
     const tipo = searchParams.get("tipo");             // RECEITA, DESPESA, IMPOSTO
@@ -149,6 +157,13 @@ export async function PUT(req: NextRequest) {
       },
     });
 
+    registrarAuditoria({
+      empresaId: sessao.empresaId, usuarioEmail: sessao.email,
+      acao: "EDITAR", entidade: "LANCAMENTO", entidadeId: id,
+      entidadeNome: existing.descricao,
+      detalhes: { alteracoes: dados },
+    });
+
     return NextResponse.json(lancamento);
   } catch {
     return NextResponse.json({ error: "Erro ao atualizar lançamento" }, { status: 500 });
@@ -169,6 +184,14 @@ export async function DELETE(req: NextRequest) {
     if (!existing) return NextResponse.json({ error: "Não encontrado" }, { status: 404 });
 
     await prisma.lancamentoFinanceiro.delete({ where: { id } });
+
+    registrarAuditoria({
+      empresaId: sessao.empresaId, usuarioEmail: sessao.email,
+      acao: "EXCLUIR", entidade: "LANCAMENTO", entidadeId: id,
+      entidadeNome: existing.descricao,
+      detalhes: { valor: existing.valor, tipo: existing.tipo },
+    });
+
     return NextResponse.json({ ok: true });
   } catch {
     return NextResponse.json({ error: "Erro ao excluir lançamento" }, { status: 500 });

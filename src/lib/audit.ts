@@ -2,45 +2,35 @@ import { prisma } from "@/lib/prisma";
 
 /**
  * Registra uma ação no log de auditoria.
- * Chamado internamente pelas APIs de mutação.
+ * Chamada fire-and-forget — não bloqueia a resposta da API.
  */
-export async function registrarAuditoria({
-  empresaId,
-  usuarioEmail,
-  usuarioNome,
-  acao,
-  entidade,
-  entidadeId,
-  entidadeNome,
-  detalhes,
-  ip,
-}: {
+export async function registrarAuditoria(params: {
   empresaId: string;
   usuarioEmail: string;
-  usuarioNome?: string | null;
-  acao: string;
-  entidade: string;
-  entidadeId?: string | null;
-  entidadeNome?: string | null;
-  detalhes?: Record<string, any> | null;
-  ip?: string | null;
+  usuarioNome?: string;
+  acao: "CRIAR" | "EDITAR" | "EXCLUIR" | "EXPORTAR" | "LOGIN" | "LOGOUT";
+  entidade: string;   // LANCAMENTO, CARTEIRA, DOCUMENTO, CERTIFICACAO, ATIVO, BORDERO, CATEGORIA, CONTA_BANCARIA, ORCAMENTO
+  entidadeId?: string;
+  entidadeNome?: string;
+  detalhes?: Record<string, any>;
+  ip?: string;
 }) {
   try {
     await prisma.auditLog.create({
       data: {
-        empresaId,
-        usuarioEmail,
-        usuarioNome: usuarioNome || null,
-        acao,
-        entidade,
-        entidadeId: entidadeId || null,
-        entidadeNome: entidadeNome || null,
-        detalhes: detalhes || undefined,
-        ip: ip || null,
+        empresaId: params.empresaId,
+        usuarioEmail: params.usuarioEmail,
+        usuarioNome: params.usuarioNome,
+        acao: params.acao,
+        entidade: params.entidade,
+        entidadeId: params.entidadeId,
+        entidadeNome: params.entidadeNome,
+        detalhes: params.detalhes || undefined,
+        ip: params.ip,
       },
     });
   } catch (e) {
-    // Silently fail — audit should never break operations
-    console.error("[AuditLog] Falha ao registrar:", e);
+    // Nunca falhar por causa de auditoria
+    console.error("Erro ao registrar auditoria:", e);
   }
 }

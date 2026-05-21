@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSessionEmpresa } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
+import { registrarAuditoria } from "@/lib/audit";
+import { isRateLimited, getClientIP } from "@/lib/rate-limit";
 
 // GET — Resumo de saldos de TODOS os vendedores (visão gerencial)
 //        Ou extrato de um vendedor específico se ?email=xxx
@@ -111,6 +113,13 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    registrarAuditoria({
+      empresaId: sessao.empresaId, usuarioEmail: sessao.email,
+      acao: "CRIAR", entidade: "CARTEIRA", entidadeId: transacao.id,
+      entidadeNome: `${tipo} ${categoria} - ${vendedorEmail}`,
+      detalhes: { valor, tipo, categoria, vendedorEmail },
+    });
+
     return NextResponse.json(transacao, { status: 201 });
   } catch (e) {
     console.error("Erro ao criar transação:", e);
@@ -132,6 +141,14 @@ export async function DELETE(req: NextRequest) {
     if (!existing) return NextResponse.json({ error: "Transação não encontrada" }, { status: 404 });
 
     await prisma.transacaoCarteira.delete({ where: { id } });
+
+    registrarAuditoria({
+      empresaId: sessao.empresaId, usuarioEmail: sessao.email,
+      acao: "EXCLUIR", entidade: "CARTEIRA", entidadeId: id,
+      entidadeNome: `${existing.tipo} ${existing.categoria} - ${existing.vendedorEmail}`,
+      detalhes: { valor: existing.valor },
+    });
+
     return NextResponse.json({ ok: true });
   } catch {
     return NextResponse.json({ error: "Erro ao excluir" }, { status: 500 });
