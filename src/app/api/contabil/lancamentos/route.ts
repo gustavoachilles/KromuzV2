@@ -76,6 +76,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Campos obrigatórios faltando" }, { status: 400 });
     }
 
+    const descricaoSafe = sanitizar(descricao, 300);
+    const observacoesSafe = sanitizar(observacoes, 1000);
+
     // Se parcelado, criar múltiplos lançamentos
     const parcelas = totalParcelas && totalParcelas > 1 ? totalParcelas : 1;
     const parcelamentoRef = parcelas > 1 ? crypto.randomUUID() : null;
@@ -96,14 +99,14 @@ export async function POST(req: NextRequest) {
           contaBancariaId: contaBancariaId || null,
           tipo,
           natureza: parcelas > 1 ? "PARCELADO" : (natureza || "AVULSO"),
-          descricao: parcelas > 1 ? `${descricao} (${i + 1}/${parcelas})` : descricao,
+          descricao: parcelas > 1 ? `${descricaoSafe} (${i + 1}/${parcelas})` : descricaoSafe,
           valor: valorParcela,
           dataCompetencia: dataComp,
           dataVencimento: dataVenc,
           dataPagamento: i === 0 && dataPagamento ? new Date(dataPagamento) : null,
           status: i === 0 && dataPagamento ? "PAGO" : (status || "PENDENTE"),
           formaPagamento: formaPagamento || null,
-          observacoes,
+          observacoes: observacoesSafe || null,
           tags: tags || [],
           parcela: parcelas > 1 ? i + 1 : null,
           totalParcelas: parcelas > 1 ? parcelas : null,

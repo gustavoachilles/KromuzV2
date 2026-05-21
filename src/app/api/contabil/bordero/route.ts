@@ -97,6 +97,9 @@ export async function POST(req: NextRequest) {
       let melhorScore = 0;
       let divergencia: string | null = null;
 
+      // Validar CPF quando presente
+      const cpfValido = linha.cpfCliente ? validarCPF(linha.cpfCliente) : true;
+
       for (const prop of propostas) {
         let score = 0;
 
@@ -157,6 +160,7 @@ export async function POST(req: NextRequest) {
         propostaId: melhorScore >= 50 ? melhorMatch?.id : null,
         scoreSimilaridade: melhorScore,
         divergencia,
+        observacoes: !cpfValido && linha.cpfCliente ? `⚠ CPF inválido: ${linha.cpfCliente}` : null,
       });
     }
 

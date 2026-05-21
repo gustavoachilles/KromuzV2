@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSessionEmpresa } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
+import { registrarAuditoria } from "@/lib/audit";
+import { isRateLimited, getClientIP } from "@/lib/rate-limit";
 
 // POST — Gera um lote de pagamentos PIX (remessa consolidada)
 // Marca todas as transações pendentes como LIQUIDADO e retorna CSV/JSON para pagar
@@ -8,6 +10,12 @@ export async function POST(req: NextRequest) {
   try {
     const sessao = await getSessionEmpresa();
     if (!sessao) return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
+
+    // Rate limit rigoroso — exportar PIX é operação crítica
+    const ip = getClientIP(req);
+    if (isRateLimited(`${ip}:exportar-pix`, 3, 60_000)) {
+      return NextResponse.json({ error: "Muitas exportações. Aguarde 1 minuto." }, { status: 429 });
+    }
 
     const body = await req.json();
     const { vendedoresEmails } = body; // Array opcional de emails para filtrar
@@ -110,6 +118,17 @@ export async function POST(req: NextRequest) {
       `${r.vendedorNome};${r.cpf};${r.chavePix};${r.tipoChavePix};${r.banco};${r.agencia};${r.conta};${r.valorLiquido.toFixed(2)}`
     );
     const csv = [csvHeader, ...csvRows].join("\n");
+
+    registrarAuditoria({
+      empresaId: sessao.empresaId, usuarioEmail: sessao.email,
+      acao: "EXPORTAR", entidade: "CARTEIRA",
+      entidadeNome: `Lote PIX - ${remessa.length} vendedores`,
+      detalhes: {
+        totalVendedores: remessa.length,
+        valorTotal: remessa.reduce((s, r) => s + r.valorLiquido, 0),
+        transacoesLiquidadas: allIds.length,
+      },
+    });
 
     return NextResponse.json({
       totalVendedores: remessa.length,
