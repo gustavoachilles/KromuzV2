@@ -213,6 +213,8 @@ export function SidebarNav({ permissoes }: { permissoes: Permissoes }) {
           <NavLink isSubItem href="/contabil/carteira" icon={<DollarSign className="h-4 w-4" />} active={pathname.startsWith("/contabil/carteira")}>Carteira Vendedores</NavLink>
           <NavLink isSubItem href="/contabil/radar" icon={<AlertTriangle className="h-4 w-4" />} active={pathname === "/contabil/radar"}>Radar Vencimentos</NavLink>
           <NavLink isSubItem href="/contabil/patrimonio" icon={<Package className="h-4 w-4" />} active={pathname === "/contabil/patrimonio"}>Patrimônio</NavLink>
+          <NavLink isSubItem href="/contabil/bordero" icon={<ScrollText className="h-4 w-4" />} active={pathname === "/contabil/bordero"}>Motor Borderô</NavLink>
+          <NavLink isSubItem href="/contabil/simulador" icon={<Calculator className="h-4 w-4" />} active={pathname === "/contabil/simulador"}>Simulador Tributário</NavLink>
         </CollapsibleSection>
       )}
     </nav>

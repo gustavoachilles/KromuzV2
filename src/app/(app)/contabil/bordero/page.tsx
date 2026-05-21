@@ -1,0 +1,13 @@
+import { redirect } from "next/navigation";
+import { getSessionEmpresa } from "@/lib/session";
+import { temPermissao } from "@/lib/permissions";
+import { BorderoClient } from "./BorderoClient";
+
+export const metadata = { title: "Motor de Borderô | Kromuz" };
+
+export default async function BorderoPage() {
+  const sessao = await getSessionEmpresa();
+  if (!sessao) redirect("/");
+  if (!temPermissao(null, "contabil", sessao.perfilSlug)) redirect("/mesa");
+  return <BorderoClient />;
+}

@@ -91,6 +91,7 @@ model Empresa {
   documentosRegulatorios DocumentoRegulatorio[]
   certificacoesVendedores CertificacaoVendedor[]
   ativosImobilizados   AtivoImobilizado[]
+  borderos             BorderoUpload[]
   
   planoSaaS            PlanoSaaS? @relation(fields: [planoSaasId], references: [id])
   faturasSaaS          FaturaSaaS[]
@@ -1716,5 +1717,69 @@ model AtivoImobilizado {
   @@index([empresaId, status])
   @@index([empresaId, responsavelEmail])
   @@map("ativo_imobilizado")
+  @@schema("public")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MÓDULO CONTÁBIL — FASE 4 (Motor de Borderô / Auditoria Bancária)
+// ─────────────────────────────────────────────────────────────────────────────
+
+/// Upload de Borderô Bancário — Arquivo CSV/XLSX enviado pelo banco parceiro.
+model BorderoUpload {
+  id              String    @id @default(uuid()) @db.Uuid
+  empresaId       String    @map("empresa_id") @db.Uuid
+  
+  bancoNome       String    @map("banco_nome")             // "Banco PAN", "BMG", "Itaú Consignado"
+  nomeArquivo     String    @map("nome_arquivo")           // "bordero_pan_mai2026.csv"
+  totalLinhas     Int       @default(0) @map("total_linhas")
+  totalValor      Float     @default(0) @map("total_valor")
+  
+  // Resultado do matching
+  matchEncontrados Int      @default(0) @map("match_encontrados")
+  matchNaoEncontrados Int   @default(0) @map("match_nao_encontrados")
+  
+  status          String    @default("PROCESSANDO")        // PROCESSANDO, CONCLUIDO, ERRO
+  enviadoPor      String?   @map("enviado_por")
+
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  empresa         Empresa   @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  linhas          BorderoLinha[]
+
+  @@index([empresaId, createdAt(sort: Desc)])
+  @@map("bordero_upload")
+  @@schema("public")
+}
+
+/// Linha individual do Borderô — cada linha é um registro do extrato bancário.
+/// O sistema tenta cruzar (Fuzzy Match) com propostas da Esteira.
+model BorderoLinha {
+  id              String    @id @default(uuid()) @db.Uuid
+  borderoId       String    @map("bordero_id") @db.Uuid
+  
+  // Dados do banco
+  cpfCliente      String?   @map("cpf_cliente")
+  nomeCliente     String?   @map("nome_cliente")
+  contrato        String?                                  // Número do contrato bancário
+  valorLiberado   Float?    @map("valor_liberado")
+  valorComissao   Float?    @map("valor_comissao")
+  dataPagamento   DateTime? @map("data_pagamento") @db.Date
+  produto         String?                                  // "Consignado", "Cartão", "FGTS"
+  
+  // Resultado do match
+  statusMatch     String    @default("PENDENTE") @map("status_match") // MATCH_EXATO, MATCH_FUZZY, NAO_ENCONTRADO, DIVERGENCIA, IGNORADO
+  propostaId      String?   @map("proposta_id") @db.Uuid  // Proposta encontrada na Esteira
+  scoreSimilaridade Float?  @map("score_similaridade")     // 0-100 (% de confiança do match)
+  divergencia     String?                                  // "Valor difere: R$500 vs R$480"
+  observacoes     String?
+
+  createdAt       DateTime  @default(now()) @map("created_at")
+
+  bordero         BorderoUpload @relation(fields: [borderoId], references: [id], onDelete: Cascade)
+
+  @@index([borderoId])
+  @@index([borderoId, statusMatch])
+  @@map("bordero_linha")
   @@schema("public")
 }
