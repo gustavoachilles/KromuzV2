@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
 
     const { conversaId, acao, dados } = await req.json();
     if (!conversaId || !acao) return NextResponse.json({ error: "Dados inválidos" }, { status: 400 });
-    const ACOES_VALIDAS = ["FINALIZAR", "REABRIR", "TRANSFERIR", "ADD_TAG", "REMOVE_TAG", "ASSUMIR"];
+    const ACOES_VALIDAS = ["FINALIZAR", "REABRIR", "TRANSFERIR", "ADD_TAG", "REMOVE_TAG", "ASSUMIR", "FIXAR", "DESFIXAR", "ARQUIVAR", "DESARQUIVAR", "BLOQUEAR", "DESBLOQUEAR", "MARCAR_NAO_LIDO"];
     if (!ACOES_VALIDAS.includes(acao)) return NextResponse.json({ error: "Ação inválida" }, { status: 400 });
 
     const conversa = await prisma.conversa.findFirst({ where: { id: conversaId, empresaId: sessao.empresaId } });
@@ -104,6 +104,45 @@ export async function POST(req: NextRequest) {
             conteudo: `${sessao.email} assumiu o atendimento`,
           },
         });
+        return NextResponse.json(updated);
+      }
+
+      case "FIXAR": {
+        const updated = await prisma.conversa.update({ where: { id: conversaId }, data: { fixada: true } });
+        return NextResponse.json(updated);
+      }
+
+      case "DESFIXAR": {
+        const updated = await prisma.conversa.update({ where: { id: conversaId }, data: { fixada: false } });
+        return NextResponse.json(updated);
+      }
+
+      case "ARQUIVAR": {
+        const updated = await prisma.conversa.update({ where: { id: conversaId }, data: { arquivada: true } });
+        registrarAuditoria({ empresaId: sessao.empresaId, usuarioEmail: sessao.email, acao: "EDITAR", entidade: "CONVERSA", entidadeId: conversaId, entidadeNome: `Arquivar: ${conversa.clienteNome}` });
+        return NextResponse.json(updated);
+      }
+
+      case "DESARQUIVAR": {
+        const updated = await prisma.conversa.update({ where: { id: conversaId }, data: { arquivada: false } });
+        return NextResponse.json(updated);
+      }
+
+      case "BLOQUEAR": {
+        const updated = await prisma.conversa.update({ where: { id: conversaId }, data: { bloqueada: true } });
+        await prisma.mensagem.create({ data: { conversaId, remetente: "SISTEMA", tipo: "INTERNA", conteudo: `Contato bloqueado por ${sessao.email}` } });
+        registrarAuditoria({ empresaId: sessao.empresaId, usuarioEmail: sessao.email, acao: "EDITAR", entidade: "CONVERSA", entidadeId: conversaId, entidadeNome: `Bloquear: ${conversa.clienteNome}` });
+        return NextResponse.json(updated);
+      }
+
+      case "DESBLOQUEAR": {
+        const updated = await prisma.conversa.update({ where: { id: conversaId }, data: { bloqueada: false } });
+        await prisma.mensagem.create({ data: { conversaId, remetente: "SISTEMA", tipo: "INTERNA", conteudo: `Contato desbloqueado por ${sessao.email}` } });
+        return NextResponse.json(updated);
+      }
+
+      case "MARCAR_NAO_LIDO": {
+        const updated = await prisma.conversa.update({ where: { id: conversaId }, data: { naoLidas: 1, lida: false } });
         return NextResponse.json(updated);
       }
 

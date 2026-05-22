@@ -921,6 +921,11 @@ model Conversa {
   // Métricas
   tempoResposta   Int?     @map("tempo_resposta") // em segundos
   
+  // Ações de conversa
+  fixada          Boolean  @default(false)
+  arquivada       Boolean  @default(false)
+  bloqueada       Boolean  @default(false)
+  
   createdAt       DateTime @default(now()) @map("created_at")
   updatedAt       DateTime @updatedAt @map("updated_at")
 
