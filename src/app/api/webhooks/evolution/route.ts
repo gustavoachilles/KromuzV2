@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { GoogleGenerativeAI } from "@google/generative-ai";
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
+import { AutomationEngine } from "@/lib/automations/engine";
 
 export async function POST(req: NextRequest) {
   try {
@@ -50,63 +48,54 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ received: true, ignored: "Lead já possui atendimento humano." });
     }
 
-    // Passar para o Gemini atuar como Atendente de Triagem
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-    const prompt = `
-      Você é a assistente virtual de uma correspondente bancária (Kromuz).
-      O cliente enviou a seguinte mensagem no WhatsApp: "${textoRecebido}"
-      
-      Sua missão é fazer a triagem (Atendimento nível 1).
-      Seja muito educada, curta e direta.
-      Objetivo principal: Pedir o número do CPF ou uma foto do documento (RG/CNH) para podermos fazer uma simulação de margem no INSS.
-      
-      Não prometa valores, não fale de taxas. Apenas cumprimente, entenda a necessidade e peça o CPF/Documento.
-      Se o cliente já mandou o CPF na mensagem, responda que vai consultar e já passa para um consultor humano.
-    `;
+    // --- NOVA INTEGRAÇÃO: AUTOMATION ENGINE ---
 
-    const result = await model.generateContent(prompt);
-    const respostaBot = result.response.text();
+    // 1. Verifica se já existe um fluxo rodando para esse lead
+    const execucaoAtiva = await prisma.execucaoFluxo.findFirst({
+      where: { leadId: lead.id, empresaId, status: "RODANDO" }
+    });
 
-    // Encontrar o canal do WhatsApp da empresa para vincular a conversa
+    if (execucaoAtiva) {
+      // Se o fluxo estiver esperando uma condição, a gente injeta o texto recebido e avança
+      await prisma.execucaoFluxo.update({
+        where: { id: execucaoAtiva.id },
+        data: { variaveis: { ...execucaoAtiva.variaveis as object, textoRecebido } }
+      });
+      await AutomationEngine.avancarFluxo(execucaoAtiva.id);
+      return NextResponse.json({ success: true, message: "Fluxo existente avançado" });
+    }
+
+    // 2. Se não tem execução rodando, buscar fluxo ativo para Gatilho "NOVA_MENSAGEM"
+    const fluxoAtivo = await prisma.automacaoFluxo.findFirst({
+      where: { empresaId, ativo: true, gatilhoTipo: "Nova Mensagem (WhatsApp)" }
+    });
+
+    if (fluxoAtivo) {
+      // Inicia o fluxo visual criado no construtor
+      await AutomationEngine.iniciarFluxo(fluxoAtivo.id, lead.id, { empresaId, textoRecebido });
+      return NextResponse.json({ success: true, message: "Fluxo inicializado" });
+    }
+
+    // 3. (Fallback) Se não houver fluxo configurado, registrar a mensagem apenas no Inbox
     const canal = await prisma.canalComunicacao.findFirst({
       where: { empresaId, tipo: "WHATSAPP", ativo: true }
     });
     
-    if (!canal) {
-      return NextResponse.json({ error: "Canal de WhatsApp não configurado" }, { status: 400 });
-    }
-
-    // Salvar a conversa e as mensagens no banco
-    let conversa = await prisma.conversa.findFirst({
-      where: { empresaId, clienteContato: telefone }
-    });
-
-    if (!conversa) {
-      conversa = await prisma.conversa.create({
-        data: { 
-          empresaId, 
-          canalId: canal.id,
-          clienteContato: telefone, 
-          clienteNome: lead.nome,
-          leadId: lead.id
-        }
+    if (canal) {
+      let conversa = await prisma.conversa.findFirst({
+        where: { empresaId, clienteContato: telefone }
+      });
+      if (!conversa) {
+        conversa = await prisma.conversa.create({
+          data: { empresaId, canalId: canal.id, clienteContato: telefone, clienteNome: lead.nome, leadId: lead.id }
+        });
+      }
+      await prisma.mensagem.create({
+        data: { conversaId: conversa.id, remetente: "LEAD", conteudo: textoRecebido }
       });
     }
 
-    // Mensagem do Lead
-    await prisma.mensagem.create({
-      data: { conversaId: conversa.id, remetente: "LEAD", conteudo: textoRecebido }
-    });
-
-    // Mensagem do Bot
-    await prisma.mensagem.create({
-      data: { conversaId: conversa.id, remetente: "SISTEMA", conteudo: respostaBot }
-    });
-
-    // TODO: Enviar a resposta de volta pelo endpoint da Evolution API
-    // fetch('https://sua-evolution-api.com/message/sendText/InstanciaX', { ... body: { number: telefone, text: respostaBot } })
-
-    return NextResponse.json({ success: true, resposta: respostaBot });
+    return NextResponse.json({ success: true, fallback: true });
   } catch (error: any) {
     console.error("Erro no Webhook Evolution:", error);
     return NextResponse.json({ error: "Erro interno" }, { status: 500 });

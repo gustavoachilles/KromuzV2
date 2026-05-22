@@ -66,6 +66,7 @@ model Empresa {
   pipelineColunas      PipelineColuna[]
   metas                Meta[]
   simulacoes           SimulacaoCredito[]
+  execucoesFluxo       ExecucaoFluxo[]
   faturasBanco         FaturaBanco[]
   conhecimentoBevi     ConhecimentoBevi[]
 
@@ -738,6 +739,7 @@ model Lead {
   empresa Empresa @relation(fields: [empresaId], references: [id], onDelete: Cascade)
   arquivos LeadArquivo[]
   conversas Conversa[]
+  execucoesFluxo ExecucaoFluxo[]
 
   @@index([empresaId, status])
   @@index([empresaId, vendedorEmail])
@@ -1900,8 +1902,36 @@ model AutomacaoFluxo {
   updatedAt       DateTime  @updatedAt @map("updated_at")
   
   empresa         Empresa   @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  execucoes       ExecucaoFluxo[]
   
   @@index([empresaId])
   @@map("automacao_fluxo")
+  @@schema("public")
+}
+
+model ExecucaoFluxo {
+  id              String    @id @default(uuid()) @db.Uuid
+  empresaId       String    @map("empresa_id") @db.Uuid
+  fluxoId         String    @map("fluxo_id") @db.Uuid
+  leadId          String    @map("lead_id") @db.Uuid
+  
+  nodeAtualId     String?   @map("node_atual_id")
+  status          String    @default("RODANDO") // RODANDO, PAUSADO, CONCLUIDO, ERRO
+  
+  aguardandoAte   DateTime? @map("aguardando_ate")
+  variaveis       Json      @default("{}") @db.JsonB
+  
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+  
+  empresa         Empresa        @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  fluxo           AutomacaoFluxo @relation(fields: [fluxoId], references: [id], onDelete: Cascade)
+  lead            Lead           @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  
+  @@index([empresaId])
+  @@index([fluxoId])
+  @@index([leadId])
+  @@index([status, aguardandoAte])
+  @@map("execucao_fluxo")
   @@schema("public")
 }
