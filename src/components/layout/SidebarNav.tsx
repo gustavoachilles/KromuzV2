@@ -13,7 +13,7 @@ export function SidebarNav({ permissoes }: { permissoes: Permissoes }) {
   const p = (mod: string) => permissoes[mod] === true;
 
   // Detect which section has active route to auto-open it
-  const crmPaths = ["/leads", "/esteira", "/comissoes", "/metas", "/ranking", "/inbox", "/inbox/dashboard", "/inbox/mensagens-rapidas", "/recuperacao", "/marketing", "/canais", "/calendario"];
+  const crmPaths = ["/leads", "/esteira", "/comissoes", "/metas", "/ranking", "/inbox", "/inbox/dashboard", "/inbox/mensagens-rapidas", "/recuperacao", "/marketing", "/canais", "/calendario", "/automacoes"];
   const inteligenciaPaths = ["/simulador", "/motor-regras", "/roteiros", "/mapa-portabilidade", "/conhecimento"];
   const cadastroPaths = ["/regras", "/bancos", "/produtos", "/convenios", "/credenciais", "/importacao"];
   const sistemaPaths = ["/relatorios", "/auditoria", "/sla", "/configuracoes", "/assinatura"];
@@ -112,6 +112,9 @@ export function SidebarNav({ permissoes }: { permissoes: Permissoes }) {
           )}
           {p("leads") && (
             <NavLink isSubItem href="/calendario" icon={<CalendarDays className="h-4 w-4" />} active={pathname === "/calendario"}>Calendário</NavLink>
+          )}
+          {p("leads") && (
+            <NavLink isSubItem href="/automacoes" icon={<Repeat className="h-4 w-4" />} active={pathname.startsWith("/automacoes")}>Automações</NavLink>
           )}
         </CollapsibleSection>
       )}

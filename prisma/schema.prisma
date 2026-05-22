@@ -95,6 +95,7 @@ model Empresa {
   mensagensRapidas     MensagemRapida[]
   tagsConversa         TagConversa[]
   atividades           Atividade[]
+  automacoesFluxo      AutomacaoFluxo[]
   
   planoSaaS            PlanoSaaS? @relation(fields: [planoSaasId], references: [id])
   faturasSaaS          FaturaSaaS[]
@@ -1877,5 +1878,30 @@ model Atividade {
   @@index([empresaId, status])
   @@index([empresaId, responsavelId])
   @@map("atividade")
+  @@schema("public")
+}
+
+// ═══ Módulo de Automações (Workflow Builder) ═══
+model AutomacaoFluxo {
+  id              String    @id @default(uuid()) @db.Uuid
+  empresaId       String    @map("empresa_id") @db.Uuid
+  
+  nome            String
+  descricao       String?
+  ativo           Boolean   @default(false)
+  
+  // Estrutura do React Flow salva em JSON
+  nodes           Json?     @default("[]")
+  edges           Json?     @default("[]")
+  
+  gatilhoTipo     String?   @map("gatilho_tipo") // Para buscas rápidas (ex: "NOVA_MENSAGEM")
+  
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+  
+  empresa         Empresa   @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  
+  @@index([empresaId])
+  @@map("automacao_fluxo")
   @@schema("public")
 }
