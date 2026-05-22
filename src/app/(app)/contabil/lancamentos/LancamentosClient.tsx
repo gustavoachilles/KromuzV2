@@ -250,10 +250,11 @@ export function LancamentosClient() {
         {/* Tabela */}
         {loading ? (
           <div className="space-y-4">
-            <SkeletonKPI count={3} />
-            <SkeletonTable rows={8} cols={7} />
+            <SkeletonKPI />
+            <SkeletonTable />
           </div>
         ) : (
+          <>
           <div className="bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200 dark:border-zinc-800 shadow-sm overflow-hidden">
             <table className="w-full text-sm">
               <thead>
@@ -322,7 +323,6 @@ export function LancamentosClient() {
             </table>
           </div>
 
-          {/* Carregar Mais */}
           {hasMore && (
             <div className="flex justify-center py-4">
               <button onClick={loadMore} disabled={loadingMore}
@@ -332,7 +332,7 @@ export function LancamentosClient() {
               </button>
             </div>
           )}
-        )}
+          </>)}
 
         {/* Modal de Criação/Edição */}
         <AnimatePresence>
