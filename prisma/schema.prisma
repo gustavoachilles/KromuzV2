@@ -97,6 +97,7 @@ model Empresa {
   tagsConversa         TagConversa[]
   atividades           Atividade[]
   automacoesFluxo      AutomacaoFluxo[]
+  campanhasBroadcast   Campanha[]
   
   planoSaaS            PlanoSaaS? @relation(fields: [planoSaasId], references: [id])
   faturasSaaS          FaturaSaaS[]
@@ -740,6 +741,7 @@ model Lead {
   arquivos LeadArquivo[]
   conversas Conversa[]
   execucoesFluxo ExecucaoFluxo[]
+  campanhas CampanhaLead[]
 
   @@index([empresaId, status])
   @@index([empresaId, vendedorEmail])
@@ -1933,5 +1935,48 @@ model ExecucaoFluxo {
   @@index([leadId])
   @@index([status, aguardandoAte])
   @@map("execucao_fluxo")
+  @@schema("public")
+}
+
+// ═══ Módulo de Campanhas (Broadcast) ═══
+model Campanha {
+  id              String         @id @default(uuid()) @db.Uuid
+  empresaId       String         @map("empresa_id") @db.Uuid
+  
+  nome            String
+  conteudoMensagem String         @map("conteudo_mensagem") @db.Text
+  status          String         @default("RASCUNHO") // RASCUNHO, RODANDO, PAUSADA, CONCLUIDA
+  
+  dataAgendamento DateTime?      @map("data_agendamento")
+  
+  createdAt       DateTime       @default(now()) @map("created_at")
+  updatedAt       DateTime       @updatedAt @map("updated_at")
+  
+  empresa         Empresa        @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  leads           CampanhaLead[]
+  
+  @@index([empresaId])
+  @@index([status])
+  @@map("campanha")
+  @@schema("public")
+}
+
+model CampanhaLead {
+  id              String    @id @default(uuid()) @db.Uuid
+  campanhaId      String    @map("campanha_id") @db.Uuid
+  leadId          String    @map("lead_id") @db.Uuid
+  
+  statusEnvio     String    @default("PENDENTE") // PENDENTE, ENVIADO, FALHOU
+  erroLog         String?   @map("erro_log") @db.Text
+  
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+  
+  campanha        Campanha  @relation(fields: [campanhaId], references: [id], onDelete: Cascade)
+  lead            Lead      @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  
+  @@index([campanhaId, statusEnvio])
+  @@index([leadId])
+  @@map("campanha_lead")
   @@schema("public")
 }

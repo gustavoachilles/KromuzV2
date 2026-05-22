@@ -114,6 +114,9 @@ export function SidebarNav({ permissoes }: { permissoes: Permissoes }) {
             <NavLink isSubItem href="/calendario" icon={<CalendarDays className="h-4 w-4" />} active={pathname === "/calendario"}>Calendário</NavLink>
           )}
           {p("leads") && (
+            <NavLink isSubItem href="/marketing/campanhas" icon={<Megaphone className="h-4 w-4" />} active={pathname.startsWith("/marketing/campanhas")}>Campanhas</NavLink>
+          )}
+          {p("leads") && (
             <NavLink isSubItem href="/automacoes" icon={<Repeat className="h-4 w-4" />} active={pathname.startsWith("/automacoes")}>Automações</NavLink>
           )}
         </CollapsibleSection>
