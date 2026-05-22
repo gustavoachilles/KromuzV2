@@ -40,6 +40,16 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Validação de tipo e tamanho
+    const MAX_SIZE = 10 * 1024 * 1024; // 10MB
+    const ALLOWED_TYPES = ["application/pdf", "image/png", "image/jpeg", "image/webp", "text/csv", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"];
+    if (file.size > MAX_SIZE) {
+      return Response.json({ ok: false, error: "Arquivo excede 10MB" }, { status: 400 });
+    }
+    if (file.type && !ALLOWED_TYPES.includes(file.type)) {
+      return Response.json({ ok: false, error: `Tipo não permitido: ${file.type}` }, { status: 400 });
+    }
+
     const supabase = createClient(url, serviceKey, {
       auth: { persistSession: false, autoRefreshToken: false },
     });
@@ -77,7 +87,7 @@ export async function POST(req: NextRequest) {
     });
   } catch (e) {
     return Response.json(
-      { ok: false, error: (e as Error).message },
+      { ok: false, error: "Erro interno do servidor" },
       { status: 500 }
     );
   }

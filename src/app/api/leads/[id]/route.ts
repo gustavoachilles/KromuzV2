@@ -205,7 +205,7 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
     return Response.json(leadAtualizado);
   } catch (e: any) {
     console.error("Erro ao atualizar lead:", e);
-    return Response.json({ error: e.message }, { status: 400 });
+    return Response.json({ error: "Erro interno do servidor" }, { status: 400 });
   }
 }
 

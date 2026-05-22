@@ -355,6 +355,6 @@ export async function PUT(req: NextRequest) {
 
     return Response.json({ duplicados: existentes.map(e => e.cpf) });
   } catch (e: any) {
-    return Response.json({ error: e.message }, { status: 400 });
+    return Response.json({ error: "Erro interno do servidor" }, { status: 400 });
   }
 }

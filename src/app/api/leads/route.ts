@@ -140,6 +140,6 @@ export async function POST(req: NextRequest) {
     return Response.json(lead, { status: 201 });
   } catch (e: any) {
     console.error("Erro ao criar lead:", e);
-    return Response.json({ error: e.message }, { status: 400 });
+    return Response.json({ error: "Erro interno do servidor" }, { status: 400 });
   }
 }

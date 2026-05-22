@@ -4,19 +4,24 @@ import { getSessionEmpresaApi } from "@/lib/session";
 
 // GET /api/roteiros — lista importações PDF (histórico de roteiros processados)
 export async function GET() {
-  const sessao = await getSessionEmpresaApi();
-  if (!sessao) return Response.json({ error: "Não autorizado" }, { status: 401 });
+  try {
+    const sessao = await getSessionEmpresaApi();
+    if (!sessao) return Response.json({ error: "Não autorizado" }, { status: 401 });
 
-  const importacoes = await prisma.importacaoPDF.findMany({
-    where: { empresaId: sessao.empresaId },
-    orderBy: { createdAt: "desc" },
-    take: 100,
-    include: {
-      regrasGeradas: {
-        select: { id: true, tipoOperacao: true, produtoNome: true, bancoNome: true },
+    const importacoes = await prisma.importacaoPDF.findMany({
+      where: { empresaId: sessao.empresaId },
+      orderBy: { createdAt: "desc" },
+      take: 100,
+      include: {
+        regrasGeradas: {
+          select: { id: true, tipoOperacao: true, produtoNome: true, bancoNome: true },
+        },
       },
-    },
-  });
+    });
 
-  return Response.json(importacoes);
+    return Response.json(importacoes);
+  } catch (e) {
+    console.error("[ROTEIROS]", e);
+    return Response.json({ error: "Erro interno do servidor" }, { status: 500 });
+  }
 }

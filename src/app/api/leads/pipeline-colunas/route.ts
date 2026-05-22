@@ -31,6 +31,6 @@ export async function POST(req: NextRequest) {
 
     return Response.json(coluna);
   } catch (e: any) {
-    return Response.json({ error: e.message }, { status: 400 });
+    return Response.json({ error: "Erro interno do servidor" }, { status: 400 });
   }
 }
