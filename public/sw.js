@@ -1,7 +1,7 @@
-const CACHE_NAME = 'kromuz-v2-cache-v1';
+const CACHE_NAME = 'kromuz-v2-cache-v2';
 const urlsToCache = [
   '/',
-  '/simulador',
+  '/dashboard',
   '/manifest.json',
   '/icon-192x192.png',
   '/icon-512x512.png'
@@ -15,20 +15,24 @@ self.addEventListener('install', (event) => {
         return cache.addAll(urlsToCache);
       })
   );
+  self.skipWaiting();
 });
 
 self.addEventListener('fetch', (event) => {
+  // Ignora requisições para a API e extensões de chrome
+  if (event.request.url.includes('/api/') || event.request.url.startsWith('chrome-extension')) {
+    return;
+  }
+
   event.respondWith(
     caches.match(event.request)
       .then((response) => {
-        // Retorna o cache se houver, caso contrário, tenta a rede
         if (response) {
           return response;
         }
         return fetch(event.request).catch(() => {
-          // Fallback genérico para quando estiver offline e não houver cache
           if (event.request.mode === 'navigate') {
-            return caches.match('/simulador');
+            return caches.match('/dashboard');
           }
         });
       })
@@ -46,6 +50,49 @@ self.addEventListener('activate', (event) => {
           }
         })
       );
+    })
+  );
+  self.clients.claim();
+});
+
+// Push Notifications
+self.addEventListener('push', (event) => {
+  if (!event.data) return;
+  
+  let data;
+  try {
+    data = event.data.json();
+  } catch (e) {
+    data = { title: 'Nova Notificação', body: event.data.text() };
+  }
+
+  const title = data.title || 'Kromuz CRM';
+  const options = {
+    body: data.body || 'Você tem uma nova mensagem.',
+    icon: '/icon-192x192.png',
+    badge: '/favicon-32x32.png',
+    data: data.url || '/',
+    vibrate: [100, 50, 100],
+    requireInteraction: true,
+  };
+
+  event.waitUntil(self.registration.showNotification(title, options));
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const urlToOpen = event.notification.data || '/dashboard';
+  
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
+      for (let client of windowClients) {
+        if (client.url === urlToOpen && 'focus' in client) {
+          return client.focus();
+        }
+      }
+      if (clients.openWindow) {
+        return clients.openWindow(urlToOpen);
+      }
     })
   );
 });

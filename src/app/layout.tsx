@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { PwaPrompt } from "@/components/ui/PwaPrompt";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -17,6 +18,23 @@ export const metadata: Metadata = {
   description: "Motor de regras com IA, simulador HISCON e gestão de crédito consignado.",
   manifest: "/manifest.json",
   themeColor: "#7c3aed",
+  appleWebApp: {
+    capable: true,
+    title: "Kromuz CRM",
+    statusBarStyle: "default",
+  },
+  icons: {
+    icon: "/favicon-32x32.png",
+    apple: "/apple-touch-icon.png",
+  },
+};
+
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  themeColor: "#7c3aed",
 };
 
 export default function RootLayout({
@@ -31,6 +49,7 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         {children}
+        <PwaPrompt />
         <script
           dangerouslySetInnerHTML={{
             __html: `
