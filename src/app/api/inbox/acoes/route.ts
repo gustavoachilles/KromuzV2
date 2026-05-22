@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSessionEmpresa } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 import { registrarAuditoria } from "@/lib/audit";
+import { getClientIP, isRateLimited } from "@/lib/rate-limit";
 
 // POST — Ações em conversas: finalizar, transferir, addTag, removeTag, reabrir
 export async function POST(req: NextRequest) {
@@ -9,8 +10,13 @@ export async function POST(req: NextRequest) {
     const sessao = await getSessionEmpresa();
     if (!sessao) return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
 
+    const ip = getClientIP(req);
+    if (isRateLimited(`${ip}:acoes:POST`, 60)) return NextResponse.json({ error: "Muitas requisições" }, { status: 429 });
+
     const { conversaId, acao, dados } = await req.json();
     if (!conversaId || !acao) return NextResponse.json({ error: "Dados inválidos" }, { status: 400 });
+    const ACOES_VALIDAS = ["FINALIZAR", "REABRIR", "TRANSFERIR", "ADD_TAG", "REMOVE_TAG", "ASSUMIR"];
+    if (!ACOES_VALIDAS.includes(acao)) return NextResponse.json({ error: "Ação inválida" }, { status: 400 });
 
     const conversa = await prisma.conversa.findFirst({ where: { id: conversaId, empresaId: sessao.empresaId } });
     if (!conversa) return NextResponse.json({ error: "Conversa não encontrada" }, { status: 404 });

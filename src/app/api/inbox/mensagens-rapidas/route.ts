@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSessionEmpresa } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
+import { registrarAuditoria } from "@/lib/audit";
+import { getClientIP, isRateLimited } from "@/lib/rate-limit";
+import { sanitizar } from "@/lib/validations";
 
 // GET — Lista mensagens rápidas da empresa
 export async function GET() {
@@ -22,11 +25,14 @@ export async function POST(req: NextRequest) {
   try {
     const sessao = await getSessionEmpresa();
     if (!sessao) return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
+    const ip = getClientIP(req);
+    if (isRateLimited(`${ip}:msgrapida:POST`, 30)) return NextResponse.json({ error: "Muitas requisições" }, { status: 429 });
     const { titulo, conteudo, atalho, categoria } = await req.json();
     if (!titulo || !conteudo) return NextResponse.json({ error: "Título e conteúdo obrigatórios" }, { status: 400 });
     const msg = await prisma.mensagemRapida.create({
-      data: { empresaId: sessao.empresaId, titulo, conteudo, atalho: atalho || null, categoria: categoria || null },
+      data: { empresaId: sessao.empresaId, titulo: sanitizar(titulo), conteudo: sanitizar(conteudo), atalho: atalho ? sanitizar(atalho) : null, categoria: categoria || null },
     });
+    registrarAuditoria({ empresaId: sessao.empresaId, usuarioEmail: sessao.email, acao: "CRIAR", entidade: "MENSAGEM_RAPIDA", entidadeNome: titulo });
     return NextResponse.json(msg, { status: 201 });
   } catch {
     return NextResponse.json({ error: "Erro ao criar" }, { status: 500 });
@@ -42,7 +48,10 @@ export async function PUT(req: NextRequest) {
     if (!id) return NextResponse.json({ error: "ID obrigatório" }, { status: 400 });
     const existing = await prisma.mensagemRapida.findFirst({ where: { id, empresaId: sessao.empresaId } });
     if (!existing) return NextResponse.json({ error: "Não encontrado" }, { status: 404 });
+    if (dados.titulo) dados.titulo = sanitizar(dados.titulo);
+    if (dados.conteudo) dados.conteudo = sanitizar(dados.conteudo);
     const msg = await prisma.mensagemRapida.update({ where: { id }, data: dados });
+    registrarAuditoria({ empresaId: sessao.empresaId, usuarioEmail: sessao.email, acao: "EDITAR", entidade: "MENSAGEM_RAPIDA", entidadeId: id, entidadeNome: existing.titulo });
     return NextResponse.json(msg);
   } catch {
     return NextResponse.json({ error: "Erro ao editar" }, { status: 500 });
@@ -60,6 +69,7 @@ export async function DELETE(req: NextRequest) {
     const existing = await prisma.mensagemRapida.findFirst({ where: { id, empresaId: sessao.empresaId } });
     if (!existing) return NextResponse.json({ error: "Não encontrado" }, { status: 404 });
     await prisma.mensagemRapida.delete({ where: { id } });
+    registrarAuditoria({ empresaId: sessao.empresaId, usuarioEmail: sessao.email, acao: "EXCLUIR", entidade: "MENSAGEM_RAPIDA", entidadeId: id, entidadeNome: existing.titulo });
     return NextResponse.json({ ok: true });
   } catch {
     return NextResponse.json({ error: "Erro ao excluir" }, { status: 500 });
