@@ -94,6 +94,7 @@ model Empresa {
   borderos             BorderoUpload[]
   mensagensRapidas     MensagemRapida[]
   tagsConversa         TagConversa[]
+  atividades           Atividade[]
   
   planoSaaS            PlanoSaaS? @relation(fields: [planoSaasId], references: [id])
   faturasSaaS          FaturaSaaS[]
@@ -1835,5 +1836,46 @@ model BorderoLinha {
   @@index([borderoId])
   @@index([borderoId, statusMatch])
   @@map("bordero_linha")
+  @@schema("public")
+}
+
+// ═══ Módulo Calendário de Atividades ═══
+model Atividade {
+  id              String    @id @default(uuid()) @db.Uuid
+  empresaId       String    @map("empresa_id") @db.Uuid
+  
+  titulo          String
+  descricao       String?
+  tipo            String    @default("TAREFA") // TAREFA, LIGACAO, REUNIAO, EMAIL, FOLLOW_UP
+  
+  dataInicio      DateTime  @map("data_inicio")
+  dataFim         DateTime? @map("data_fim")
+  diaInteiro      Boolean   @default(false) @map("dia_inteiro")
+  
+  status          String    @default("PENDENTE") // PENDENTE, CONCLUIDA, CANCELADA
+  prioridade      String    @default("MEDIA") // BAIXA, MEDIA, ALTA, URGENTE
+  cor             String    @default("#6366f1") // Cor no calendário
+  
+  // Vínculo com lead (opcional)
+  leadId          String?   @map("lead_id") @db.Uuid
+  leadNome        String?   @map("lead_nome")
+  
+  // Responsável
+  responsavelId   String?   @map("responsavel_id") @db.Uuid
+  responsavelNome String?   @map("responsavel_nome")
+  
+  // Lembrete
+  lembrete        Int?      // minutos antes (15, 30, 60, 1440)
+  
+  concluidaEm     DateTime? @map("concluida_em")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+  
+  empresa         Empresa   @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  
+  @@index([empresaId, dataInicio])
+  @@index([empresaId, status])
+  @@index([empresaId, responsavelId])
+  @@map("atividade")
   @@schema("public")
 }
