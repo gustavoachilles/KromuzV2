@@ -1,11 +1,14 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getSessionEmpresa } from "@/lib/session";
 
 export async function POST(req: Request) {
   try {
+    const sessao = await getSessionEmpresa();
+    if (!sessao) return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
+
     const body = await req.json();
     const {
-      empresaId,
       beneficioTipo,
       especieBeneficio,
       idade,
@@ -17,7 +20,9 @@ export async function POST(req: Request) {
       salvarSimulacao,
     } = body;
 
-    if (!empresaId || !beneficioTipo || idade == null) {
+    const empresaId = sessao.empresaId; // Usar sessão, nunca body
+
+    if (!beneficioTipo || idade == null) {
       return NextResponse.json({ error: "Dados obrigatórios incompletos" }, { status: 400 });
     }
 

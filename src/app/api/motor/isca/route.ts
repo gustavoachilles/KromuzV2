@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
-// import * as xlsx from 'xlsx'; // Necessário instalar xlsx para parser real
+import { getSessionEmpresa } from "@/lib/session";
 
 export async function POST(req: Request) {
   try {
+    const sessao = await getSessionEmpresa();
+    if (!sessao) return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
     const formData = await req.formData();
     const file = formData.get("file") as File;
 
