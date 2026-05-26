@@ -1,15 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSessionEmpresaApi } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
+import { inssOperacoesDisponiveis, fgtsSaldo, FACTA_CONFIG } from "@/lib/facta";
 
 /**
  * POST /api/consultas/executar
- * 
+ *
  * Orquestrador de Consultas — recebe solicitação de consulta (INSS, FGTS, CLT)
- * e cria uma tarefa na FilaRpa para ser processada pelo worker/robô.
- * 
- * Este mesmo endpoint é usado tanto pela Mesa do Operador (consulta manual)
- * quanto pela IA do WhatsApp (consulta automática).
+ * INSS: Consulta direta via API Facta (retorna tabelas/taxas em tempo real)
+ * FGTS: Consulta saldo via API Facta (só produção) ou FilaRpa
+ * CLT:  Cria tarefa na FilaRpa para processamento via robô
+ *
+ * Usado tanto pela Mesa do Operador quanto pela IA do WhatsApp.
  */
 export async function POST(req: NextRequest) {
   try {
@@ -18,7 +20,7 @@ export async function POST(req: NextRequest) {
     const { empresaId } = sessao;
 
     const data = await req.json();
-    const { tipo, cpf, telefone, dataNascimento, origem = "MESA" } = data;
+    const { tipo, cpf, telefone, dataNascimento, origem = "MESA", valor, prazo } = data;
 
     // Validações
     if (!tipo || !["INSS", "FGTS", "CLT"].includes(tipo)) {
@@ -59,7 +61,82 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // Criar tarefa na fila do RPA
+    // ── INSS: Consulta direta via Facta API ──
+    if (tipo === "INSS") {
+      try {
+        // Converter data ISO para DD/MM/AAAA se necessário
+        let dataNasc = dataNascimento || "";
+        if (dataNasc.includes("-")) {
+          const [y, m, d] = dataNasc.split("-");
+          dataNasc = `${d}/${m}/${y}`;
+        }
+
+        const resultado = await inssOperacoesDisponiveis({
+          cpf: cpfLimpo,
+          dataNascimento: dataNasc || "01/01/1970",
+          valor: valor || 1000,
+          prazo: prazo || 84,
+          tipoOperacao: 13,
+        });
+
+        // Salvar resultado no lead
+        await prisma.lead.update({
+          where: { id: lead.id },
+          data: {
+            observacoes: `Consulta INSS Facta (${FACTA_CONFIG.isHomol ? "HOMOL" : "PROD"}): ${
+              resultado.erro ? resultado.mensagem : `${resultado.tabelas?.length || 0} tabelas encontradas`
+            }`,
+          },
+        });
+
+        return NextResponse.json({
+          success: !resultado.erro,
+          leadId: lead.id,
+          tipo: "INSS",
+          fonte: "FACTA_API",
+          ambiente: FACTA_CONFIG.isHomol ? "HOMOLOGAÇÃO" : "PRODUÇÃO",
+          message: resultado.erro
+            ? resultado.mensagem
+            : `Consulta INSS realizada com sucesso. ${resultado.tabelas?.length || 0} tabela(s) disponível(is).`,
+          tabelas: resultado.tabelas || [],
+        });
+      } catch (e: any) {
+        console.error("[Consulta INSS Facta] Erro:", e.message);
+        // Fallback: cria na FilaRpa se a API falhar
+      }
+    }
+
+    // ── FGTS: Consulta saldo via Facta (só produção) ──
+    if (tipo === "FGTS" && !FACTA_CONFIG.isHomol) {
+      try {
+        const resultado = await fgtsSaldo(cpfLimpo);
+
+        await prisma.lead.update({
+          where: { id: lead.id },
+          data: {
+            observacoes: `Consulta FGTS Facta: ${
+              resultado.erro ? resultado.mensagem : `Saldo total: R$ ${resultado.retorno?.saldo_total || "0"}`
+            }`,
+          },
+        });
+
+        return NextResponse.json({
+          success: !resultado.erro,
+          leadId: lead.id,
+          tipo: "FGTS",
+          fonte: "FACTA_API",
+          ambiente: "PRODUÇÃO",
+          message: resultado.erro
+            ? resultado.mensagem
+            : `Saldo FGTS consultado: R$ ${resultado.retorno?.saldo_total || "0"}`,
+          saldo: resultado.retorno || null,
+        });
+      } catch (e: any) {
+        console.error("[Consulta FGTS Facta] Erro:", e.message);
+      }
+    }
+
+    // ── Fallback: FilaRpa (FGTS homol, CLT, ou quando API falha) ──
     const tipoRpa = `CONSULTA_${tipo}`;
     const tarefa = await prisma.filaRpa.create({
       data: {
@@ -77,18 +154,17 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // TODO: Disparar worker externo que executa a consulta no portal
-    // await fetch(process.env.RPA_WORKER_URL + '/consultar', {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${process.env.RPA_SECRET}` },
-    //   body: JSON.stringify({ jobId: tarefa.id, tipo, cpf: cpfLimpo, telefone, dataNascimento }),
-    // });
+    const mensagemExtra = tipo === "FGTS" && FACTA_CONFIG.isHomol
+      ? " (Ambiente de homologação: saldo FGTS não disponível via API, consulta será feita via robô)"
+      : "";
 
     return NextResponse.json({
       success: true,
       jobId: tarefa.id,
       leadId: lead.id,
-      message: `Consulta ${tipo} enviada para processamento.`,
+      tipo,
+      fonte: "FILA_RPA",
+      message: `Consulta ${tipo} enviada para processamento.${mensagemExtra}`,
     });
   } catch (error: any) {
     console.error("Erro na consulta:", error);
