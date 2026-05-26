@@ -3,7 +3,7 @@ import { useState } from "react";
 import {
   KeyRound, ExternalLink, Plus, X, Loader2, Eye, EyeOff,
   Building2, Shield, Search, Copy, Check, Globe, User, Lock,
-  Pencil, Users, LayoutGrid, List
+  Pencil, Users, LayoutGrid, List, Wifi, WifiOff, AlertCircle
 } from "lucide-react";
 
 type Banco = {
@@ -92,6 +92,8 @@ export function CredenciaisClient({ bancos, empresaId }: { bancos: Banco[]; empr
   const [novoFuncionarioInput, setNovoFuncionarioInput] = useState("");
   const [showAddFuncionario, setShowAddFuncionario] = useState(false);
   const [viewMode, setViewMode] = useState<"cards" | "lista">("cards");
+  const [testandoId, setTestandoId] = useState<string | null>(null);
+  const [testeStatus, setTesteStatus] = useState<Record<string, { success: boolean; mensagem: string }>>({}); 
 
   const [form, setForm] = useState<Omit<Credencial, "id">>({
     tipo: "banco",
@@ -203,6 +205,31 @@ export function CredenciaisClient({ bancos, empresaId }: { bancos: Banco[]; empr
       nome: banco?.nome || prev.nome,
       urlLogin: banco ? guessLoginUrl(banco.nome) : prev.urlLogin,
     }));
+  }
+
+  async function testarAcesso(cred: Credencial) {
+    if (!cred.urlLogin) {
+      setTesteStatus(prev => ({ ...prev, [cred.id]: { success: false, mensagem: "Nenhuma URL de login cadastrada." } }));
+      return;
+    }
+    setTestandoId(cred.id);
+    try {
+      const res = await fetch("/api/credenciais/testar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          urlLogin: cred.urlLogin,
+          usuario: cred.usuario,
+          senha: cred.senha,
+          bancoNome: cred.nome,
+        }),
+      });
+      const json = await res.json();
+      setTesteStatus(prev => ({ ...prev, [cred.id]: { success: json.success, mensagem: json.mensagem || json.error || "Resultado desconhecido." } }));
+    } catch (e: any) {
+      setTesteStatus(prev => ({ ...prev, [cred.id]: { success: false, mensagem: "Erro de conexão ao testar." } }));
+    }
+    setTestandoId(null);
   }
 
   // Filter by employee tab first, then by tipo and search
@@ -476,6 +503,22 @@ export function CredenciaisClient({ bancos, empresaId }: { bancos: Banco[]; empr
                       <ExternalLink className="h-3.5 w-3.5" /> Acessar Login
                     </a>
                   )}
+                  <button
+                    onClick={() => testarAcesso(cred)}
+                    disabled={testandoId === cred.id}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 text-xs font-medium hover:bg-emerald-100 dark:hover:bg-emerald-900/40 transition disabled:opacity-50"
+                    title="Testar se o portal está acessível"
+                  >
+                    {testandoId === cred.id ? (
+                      <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Testando...</>
+                    ) : testeStatus[cred.id] ? (
+                      testeStatus[cred.id].success
+                        ? <><Wifi className="h-3.5 w-3.5" /> Acessível</>
+                        : <><WifiOff className="h-3.5 w-3.5 text-red-500" /> <span className="text-red-600 dark:text-red-400">Falha</span></>
+                    ) : (
+                      <><Wifi className="h-3.5 w-3.5" /> Testar Acesso</>
+                    )}
+                  </button>
                   <div className="flex-1" />
                   <button
                     onClick={() => excluir(cred.id)}
@@ -484,6 +527,19 @@ export function CredenciaisClient({ bancos, empresaId }: { bancos: Banco[]; empr
                     Excluir
                   </button>
                 </div>
+                {/* Resultado do teste */}
+                {testeStatus[cred.id] && (
+                  <div className={`mt-2 rounded-lg p-2.5 text-[11px] flex items-start gap-2 ${
+                    testeStatus[cred.id].success
+                      ? "bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-300"
+                      : "bg-red-50 dark:bg-red-950/20 text-red-700 dark:text-red-300"
+                  }`}>
+                    {testeStatus[cred.id].success
+                      ? <Check className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                      : <AlertCircle className="h-3.5 w-3.5 shrink-0 mt-0.5" />}
+                    <span>{testeStatus[cred.id].mensagem}</span>
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -579,6 +635,24 @@ export function CredenciaisClient({ bancos, empresaId }: { bancos: Banco[]; empr
                         <ExternalLink className="h-3.5 w-3.5" />
                       </a>
                     )}
+                    <button
+                      onClick={(e) => { e.stopPropagation(); testarAcesso(cred); }}
+                      disabled={testandoId === cred.id}
+                      className={`flex items-center justify-center h-7 w-7 rounded-lg transition ${
+                        testeStatus[cred.id]
+                          ? testeStatus[cred.id].success
+                            ? "text-emerald-500 bg-emerald-50 dark:bg-emerald-950/30"
+                            : "text-red-500 bg-red-50 dark:bg-red-950/30"
+                          : "text-zinc-400 hover:text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-950/30"
+                      }`}
+                      title={testeStatus[cred.id] ? testeStatus[cred.id].mensagem : "Testar Acesso"}
+                    >
+                      {testandoId === cred.id
+                        ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        : testeStatus[cred.id]
+                          ? testeStatus[cred.id].success ? <Wifi className="h-3.5 w-3.5" /> : <WifiOff className="h-3.5 w-3.5" />
+                          : <Wifi className="h-3.5 w-3.5" />}
+                    </button>
                     <button
                       onClick={() => abrirEditar(cred)}
                       className="flex items-center justify-center h-7 w-7 rounded-lg text-zinc-400 hover:text-brand hover:bg-zinc-100 dark:hover:bg-zinc-800 transition"

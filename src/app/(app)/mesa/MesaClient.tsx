@@ -4,7 +4,8 @@ import { useRouter } from "next/navigation";
 import {
   LayoutDashboard, Clock, CheckCircle2, AlertTriangle, Phone,
   ArrowRight, Calculator, Brain, Building2, TrendingUp, DollarSign,
-  CalendarClock, ChevronRight, RefreshCw, MessageSquare, Zap, List
+  CalendarClock, ChevronRight, RefreshCw, MessageSquare, Zap, List,
+  Search, X, Loader2, FileSearch, ShieldCheck, Landmark, Briefcase
 } from "lucide-react";
 
 type Proposta = {
@@ -65,6 +66,89 @@ export function MesaClient({ sessao, propostas, leadsHoje, ultimasPropostas=[], 
   const [propostasState, setPropostasState] = useState(propostas);
   const [porPagina, setPorPagina] = useState(10);
   const [pagina, setPagina] = useState(1);
+
+  // ── Consulta Rápida ──
+  const [consultaModal, setConsultaModal] = useState(false);
+  const [consultaTipo, setConsultaTipo] = useState<"INSS"|"FGTS"|"CLT"|null>(null);
+  const [consultaCpf, setConsultaCpf] = useState("");
+  const [consultaTelefone, setConsultaTelefone] = useState("");
+  const [consultaNascimento, setConsultaNascimento] = useState("");
+  const [consultaEnviando, setConsultaEnviando] = useState(false);
+  const [consultaResultado, setConsultaResultado] = useState<{success:boolean;message:string}|null>(null);
+
+  const formatarCpf = (value: string) => {
+    const nums = value.replace(/\D/g, "").slice(0, 11);
+    if (nums.length <= 3) return nums;
+    if (nums.length <= 6) return `${nums.slice(0,3)}.${nums.slice(3)}`;
+    if (nums.length <= 9) return `${nums.slice(0,3)}.${nums.slice(3,6)}.${nums.slice(6)}`;
+    return `${nums.slice(0,3)}.${nums.slice(3,6)}.${nums.slice(6,9)}-${nums.slice(9)}`;
+  };
+
+  const formatarTelefone = (value: string) => {
+    const nums = value.replace(/\D/g, "").slice(0, 11);
+    if (nums.length <= 2) return nums;
+    if (nums.length <= 7) return `(${nums.slice(0,2)}) ${nums.slice(2)}`;
+    return `(${nums.slice(0,2)}) ${nums.slice(2,7)}-${nums.slice(7)}`;
+  };
+
+  const formatarData = (value: string) => {
+    const nums = value.replace(/\D/g, "").slice(0, 8);
+    if (nums.length <= 2) return nums;
+    if (nums.length <= 4) return `${nums.slice(0,2)}/${nums.slice(2)}`;
+    return `${nums.slice(0,2)}/${nums.slice(2,4)}/${nums.slice(4)}`;
+  };
+
+  const fecharConsultaModal = () => {
+    setConsultaModal(false);
+    setConsultaTipo(null);
+    setConsultaCpf("");
+    setConsultaTelefone("");
+    setConsultaNascimento("");
+    setConsultaResultado(null);
+  };
+
+  const enviarConsulta = async () => {
+    if (!consultaTipo) return;
+    const cpfLimpo = consultaCpf.replace(/\D/g, "");
+    if (cpfLimpo.length !== 11) { alert("CPF inválido. Informe 11 dígitos."); return; }
+    if ((consultaTipo === "FGTS" || consultaTipo === "CLT") && !consultaTelefone.replace(/\D/g, "")) {
+      alert("Telefone é obrigatório para consultas FGTS/CLT."); return;
+    }
+    if ((consultaTipo === "FGTS" || consultaTipo === "CLT") && consultaNascimento.replace(/\D/g, "").length < 8) {
+      alert("Data de nascimento inválida."); return;
+    }
+
+    setConsultaEnviando(true);
+    setConsultaResultado(null);
+    try {
+      // Converter data DD/MM/YYYY para ISO
+      let dataNasc: string | undefined;
+      if (consultaNascimento) {
+        const parts = consultaNascimento.split("/");
+        if (parts.length === 3) dataNasc = `${parts[2]}-${parts[1]}-${parts[0]}`;
+      }
+      const res = await fetch("/api/consultas/executar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          tipo: consultaTipo,
+          cpf: cpfLimpo,
+          telefone: consultaTelefone.replace(/\D/g, "") || undefined,
+          dataNascimento: dataNasc,
+          origem: "MESA",
+        }),
+      });
+      const json = await res.json();
+      if (res.ok) {
+        setConsultaResultado({ success: true, message: json.message || "Consulta enviada com sucesso!" });
+      } else {
+        setConsultaResultado({ success: false, message: json.error || "Erro ao enviar consulta." });
+      }
+    } catch (e: any) {
+      setConsultaResultado({ success: false, message: "Erro de conexão. Tente novamente." });
+    }
+    setConsultaEnviando(false);
+  };
 
   const saudacao = (() => { const h = new Date().getHours(); return h<12?"Bom dia":h<18?"Boa tarde":"Boa noite"; })();
   const emAndamento = propostasState.filter(p => !["PAGA","CANCELADA"].includes(p.status));
@@ -403,7 +487,7 @@ export function MesaClient({ sessao, propostas, leadsHoje, ultimasPropostas=[], 
         </section>
 
         {/* Ações Rápidas */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           {[
             { icon: <Calculator className="h-5 w-5"/>, title: "Nova Simulação", desc: "Upload de HISCON para análise", href: "/simulador" },
             { icon: <Brain className="h-5 w-5"/>, title: "Consultar Regras", desc: "Pergunte à IA sobre qualquer banco", href: "/conhecimento" },
@@ -418,8 +502,146 @@ export function MesaClient({ sessao, propostas, leadsHoje, ultimasPropostas=[], 
               <p className="text-xs text-zinc-500 mt-0.5">{a.desc}</p>
             </button>
           ))}
+          {/* Botão Consulta Rápida */}
+          <button onClick={() => setConsultaModal(true)} className="group rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 text-left hover:shadow-md hover:border-emerald-400 transition">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="h-9 w-9 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 flex items-center justify-center group-hover:scale-110 transition"><FileSearch className="h-5 w-5"/></div>
+              <ArrowRight className="h-4 w-4 text-zinc-300 ml-auto group-hover:text-emerald-500 group-hover:translate-x-1 transition"/>
+            </div>
+            <p className="font-semibold text-sm">Consulta Rápida</p>
+            <p className="text-xs text-zinc-500 mt-0.5">INSS, FGTS ou CLT via robô</p>
+          </button>
         </div>
       </div>
+
+      {/* ══════════ MODAL CONSULTA RÁPIDA ══════════ */}
+      {consultaModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={fecharConsultaModal}>
+          <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-2xl w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+            {/* Header */}
+            <div className="flex items-center justify-between p-6 border-b border-zinc-100 dark:border-zinc-800">
+              <h2 className="text-lg font-semibold flex items-center gap-2">
+                <FileSearch className="h-5 w-5 text-emerald-500" />
+                Consulta Rápida
+              </h2>
+              <button onClick={fecharConsultaModal} className="text-zinc-400 hover:text-zinc-600 transition">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-5">
+              {/* Escolha do tipo */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Tipo de Consulta</label>
+                <div className="grid grid-cols-3 gap-3">
+                  {([
+                    { tipo: "INSS" as const, icon: <ShieldCheck className="h-5 w-5" />, desc: "Margem / Benefício", color: "emerald" },
+                    { tipo: "FGTS" as const, icon: <Landmark className="h-5 w-5" />, desc: "Saque Aniversário", color: "blue" },
+                    { tipo: "CLT" as const, icon: <Briefcase className="h-5 w-5" />, desc: "Consignado Privado", color: "violet" },
+                  ]).map(item => {
+                    const selected = consultaTipo === item.tipo;
+                    const colors: Record<string, { bg: string; border: string; text: string }> = {
+                      emerald: { bg: selected ? "bg-emerald-50 dark:bg-emerald-950/40" : "bg-white dark:bg-zinc-800", border: selected ? "border-emerald-500" : "border-zinc-200 dark:border-zinc-700", text: selected ? "text-emerald-700 dark:text-emerald-400" : "text-zinc-600 dark:text-zinc-400" },
+                      blue: { bg: selected ? "bg-blue-50 dark:bg-blue-950/40" : "bg-white dark:bg-zinc-800", border: selected ? "border-blue-500" : "border-zinc-200 dark:border-zinc-700", text: selected ? "text-blue-700 dark:text-blue-400" : "text-zinc-600 dark:text-zinc-400" },
+                      violet: { bg: selected ? "bg-violet-50 dark:bg-violet-950/40" : "bg-white dark:bg-zinc-800", border: selected ? "border-violet-500" : "border-zinc-200 dark:border-zinc-700", text: selected ? "text-violet-700 dark:text-violet-400" : "text-zinc-600 dark:text-zinc-400" },
+                    };
+                    const c = colors[item.color];
+                    return (
+                      <button
+                        key={item.tipo}
+                        onClick={() => { setConsultaTipo(item.tipo); setConsultaResultado(null); }}
+                        className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${c.bg} ${c.border} ${c.text} hover:shadow-md`}
+                      >
+                        {item.icon}
+                        <span className="text-sm font-bold">{item.tipo}</span>
+                        <span className="text-[10px] text-zinc-500">{item.desc}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Formulário dinâmico */}
+              {consultaTipo && (
+                <div className="space-y-4 pt-2">
+                  {/* CPF — sempre presente */}
+                  <div className="space-y-1.5">
+                    <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">CPF *</label>
+                    <input
+                      type="text"
+                      value={consultaCpf}
+                      onChange={e => setConsultaCpf(formatarCpf(e.target.value))}
+                      placeholder="000.000.000-00"
+                      maxLength={14}
+                      className="w-full rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm tabular-nums focus:outline-none focus:ring-2 focus:ring-emerald-500/50 transition"
+                    />
+                  </div>
+
+                  {/* Telefone e Data de Nascimento — FGTS e CLT */}
+                  {(consultaTipo === "FGTS" || consultaTipo === "CLT") && (
+                    <>
+                      <div className="space-y-1.5">
+                        <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Telefone *</label>
+                        <input
+                          type="text"
+                          value={consultaTelefone}
+                          onChange={e => setConsultaTelefone(formatarTelefone(e.target.value))}
+                          placeholder="(51) 99999-9999"
+                          maxLength={15}
+                          className="w-full rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm tabular-nums focus:outline-none focus:ring-2 focus:ring-emerald-500/50 transition"
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Data de Nascimento *</label>
+                        <input
+                          type="text"
+                          value={consultaNascimento}
+                          onChange={e => setConsultaNascimento(formatarData(e.target.value))}
+                          placeholder="DD/MM/AAAA"
+                          maxLength={10}
+                          className="w-full rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm tabular-nums focus:outline-none focus:ring-2 focus:ring-emerald-500/50 transition"
+                        />
+                      </div>
+                    </>
+                  )}
+
+                  {/* Resultado da consulta */}
+                  {consultaResultado && (
+                    <div className={`rounded-xl p-4 text-sm flex items-start gap-3 ${
+                      consultaResultado.success
+                        ? "bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300"
+                        : "bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 text-red-800 dark:text-red-300"
+                    }`}>
+                      {consultaResultado.success
+                        ? <CheckCircle2 className="h-5 w-5 text-emerald-500 shrink-0 mt-0.5" />
+                        : <AlertTriangle className="h-5 w-5 text-red-500 shrink-0 mt-0.5" />}
+                      <p>{consultaResultado.message}</p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="flex items-center justify-between p-6 border-t border-zinc-100 dark:border-zinc-800">
+              <button onClick={fecharConsultaModal} className="px-4 py-2 text-sm text-zinc-600 hover:text-zinc-900 dark:hover:text-zinc-200 transition">
+                Cancelar
+              </button>
+              <button
+                onClick={enviarConsulta}
+                disabled={!consultaTipo || consultaCpf.replace(/\D/g, "").length !== 11 || consultaEnviando}
+                className="flex items-center gap-2 rounded-xl bg-emerald-600 px-6 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/25 hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
+              >
+                {consultaEnviando ? (
+                  <><Loader2 className="h-4 w-4 animate-spin" /> Consultando...</>
+                ) : (
+                  <><Search className="h-4 w-4" /> Realizar Consulta</>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
