@@ -23,7 +23,7 @@ export function SidebarNav({ permissoes }: { permissoes: Permissoes }) {
   const p = (mod: string) => permissoes[mod] === true;
 
   // Detect which section has active route to auto-open it
-  const crmPaths = ["/leads", "/esteira", "/comissoes", "/metas", "/ranking", "/inbox", "/inbox/dashboard", "/inbox/mensagens-rapidas", "/recuperacao", "/marketing", "/canais", "/calendario", "/automacoes"];
+  const crmPaths = ["/leads", "/esteira", "/comissoes", "/metas", "/ranking", "/inbox", "/inbox/dashboard", "/inbox/mensagens-rapidas", "/recuperacao", "/marketing", "/canais", "/calendario", "/automacoes", "/dashboard-financeiro", "/vendedores", "/dashboard-vendedores"];
   const inteligenciaPaths = ["/simulador", "/motor-regras", "/roteiros", "/mapa-portabilidade", "/conhecimento"];
   const cadastroPaths = ["/regras", "/bancos", "/produtos", "/convenios", "/credenciais", "/importacao"];
   const sistemaPaths = ["/relatorios", "/auditoria", "/sla", "/configuracoes", "/assinatura"];
@@ -45,7 +45,7 @@ export function SidebarNav({ permissoes }: { permissoes: Permissoes }) {
     setOpenSections(prev => ({ ...prev, [key]: !prev[key] }));
   };
 
-  const hasCrm = p("leads") || p("esteira") || p("comissoes") || p("metas") || p("ranking");
+  const hasCrm = p("leads") || p("esteira") || p("comissoes") || p("metas") || p("ranking") || p("financeiro") || p("vendedores");
   const hasInteligencia = p("simulador") || p("motor_regras") || p("roteiros") || p("mapa_port");
   const hasCadastro = p("cadastro") || p("importacao");
   const hasSistema = p("relatorios") || p("auditoria") || p("configuracoes") || p("assinatura");
@@ -77,21 +77,6 @@ export function SidebarNav({ permissoes }: { permissoes: Permissoes }) {
             Dashboard
           </NavLink>
         )}
-        {p("financeiro") && (
-          <NavLink href="/dashboard-financeiro" icon={<DollarSign className="h-4 w-4" />} active={pathname === "/dashboard-financeiro"}>
-            Financeiro
-          </NavLink>
-        )}
-        {p("vendedores") && (
-          <NavLink href="/vendedores" icon={<PieChart className="h-4 w-4" />} active={pathname === "/vendedores"}>
-            Vendedores
-          </NavLink>
-        )}
-        {p("vendedores") && (
-          <NavLink href="/dashboard-vendedores" icon={<Activity className="h-4 w-4" />} active={pathname === "/dashboard-vendedores"}>
-            Perf. Vendedores
-          </NavLink>
-        )}
       </div>
 
       {/* ── Separator ── */}
@@ -106,6 +91,15 @@ export function SidebarNav({ permissoes }: { permissoes: Permissoes }) {
           onToggle={() => toggleSection("crm")}
           hasActiveChild={isInSection(crmPaths)}
         >
+          {p("financeiro") && (
+            <NavLink isSubItem href="/dashboard-financeiro" icon={<DollarSign className="h-4 w-4" />} active={pathname === "/dashboard-financeiro"}>Financeiro</NavLink>
+          )}
+          {p("vendedores") && (
+            <NavLink isSubItem href="/vendedores" icon={<PieChart className="h-4 w-4" />} active={pathname === "/vendedores"}>Vendedores</NavLink>
+          )}
+          {p("vendedores") && (
+            <NavLink isSubItem href="/dashboard-vendedores" icon={<Activity className="h-4 w-4" />} active={pathname === "/dashboard-vendedores"}>Perf. Vendedores</NavLink>
+          )}
           {p("leads") && (
             <NavLink isSubItem href="/leads" icon={<Users className="h-4 w-4" />} active={pathname === "/leads"}>Leads</NavLink>
           )}
