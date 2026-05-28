@@ -91,47 +91,8 @@ export function SidebarNav({ permissoes }: { permissoes: Permissoes }) {
           onToggle={() => toggleSection("crm")}
           hasActiveChild={isInSection(crmPaths)}
         >
-          {p("financeiro") && (
-            <NavLink isSubItem href="/dashboard-financeiro" icon={<DollarSign className="h-4 w-4" />} active={pathname === "/dashboard-financeiro"}>Financeiro</NavLink>
-          )}
-          {p("vendedores") && (
-            <NavLink isSubItem href="/vendedores" icon={<PieChart className="h-4 w-4" />} active={pathname === "/vendedores"}>Vendedores</NavLink>
-          )}
-          {p("vendedores") && (
-            <NavLink isSubItem href="/dashboard-vendedores" icon={<Activity className="h-4 w-4" />} active={pathname === "/dashboard-vendedores"}>Perf. Vendedores</NavLink>
-          )}
           {p("leads") && (
-            <NavLink isSubItem href="/leads" icon={<Users className="h-4 w-4" />} active={pathname === "/leads"}>Leads</NavLink>
-          )}
-          {p("esteira") && (
-            <NavLink isSubItem href="/esteira" icon={<Kanban className="h-4 w-4" />} active={pathname === "/esteira"}>Esteira</NavLink>
-          )}
-          {p("comissoes") && (
-            <NavLink isSubItem href="/comissoes" icon={<DollarSign className="h-4 w-4" />} active={pathname === "/comissoes"}>Comissões</NavLink>
-          )}
-          {p("metas") && (
-            <NavLink isSubItem href="/metas" icon={<Target className="h-4 w-4" />} active={pathname === "/metas"}>Metas</NavLink>
-          )}
-          {p("ranking") && (
-            <NavLink isSubItem href="/ranking" icon={<Trophy className="h-4 w-4" />} active={pathname === "/ranking"}>Ranking</NavLink>
-          )}
-          {p("leads") && (
-            <NavLink isSubItem href="/inbox" icon={<InboxIcon className="h-4 w-4" />} active={pathname === "/inbox"}>Inbox</NavLink>
-          )}
-          {p("leads") && (
-            <NavLink isSubItem href="/inbox/dashboard" icon={<BarChart3 className="h-4 w-4" />} active={pathname === "/inbox/dashboard"}>Dash Atendimento</NavLink>
-          )}
-          {p("leads") && (
-            <NavLink isSubItem href="/inbox/mensagens-rapidas" icon={<Zap className="h-4 w-4" />} active={pathname === "/inbox/mensagens-rapidas"}>Mensagens Rápidas</NavLink>
-          )}
-          {p("leads") && (
-            <NavLink isSubItem href="/recuperacao" icon={<RefreshCcw className="h-4 w-4" />} active={pathname === "/recuperacao"}>Recuperação</NavLink>
-          )}
-          {p("leads") && (
-            <NavLink isSubItem href="/marketing" icon={<Megaphone className="h-4 w-4" />} active={pathname === "/marketing"}>Marketing</NavLink>
-          )}
-          {p("leads") && (
-            <NavLink isSubItem href="/canais" icon={<MessageSquare className="h-4 w-4" />} active={pathname.startsWith("/canais")}>Canais</NavLink>
+            <NavLink isSubItem href="/automacoes" icon={<Repeat className="h-4 w-4" />} active={pathname.startsWith("/automacoes")}>Automações</NavLink>
           )}
           {p("leads") && (
             <NavLink isSubItem href="/calendario" icon={<CalendarDays className="h-4 w-4" />} active={pathname === "/calendario"}>Calendário</NavLink>
@@ -140,7 +101,46 @@ export function SidebarNav({ permissoes }: { permissoes: Permissoes }) {
             <NavLink isSubItem href="/marketing/campanhas" icon={<Megaphone className="h-4 w-4" />} active={pathname.startsWith("/marketing/campanhas")}>Campanhas</NavLink>
           )}
           {p("leads") && (
-            <NavLink isSubItem href="/automacoes" icon={<Repeat className="h-4 w-4" />} active={pathname.startsWith("/automacoes")}>Automações</NavLink>
+            <NavLink isSubItem href="/canais" icon={<MessageSquare className="h-4 w-4" />} active={pathname.startsWith("/canais")}>Canais</NavLink>
+          )}
+          {p("comissoes") && (
+            <NavLink isSubItem href="/comissoes" icon={<DollarSign className="h-4 w-4" />} active={pathname === "/comissoes"}>Comissões</NavLink>
+          )}
+          {p("leads") && (
+            <NavLink isSubItem href="/inbox/dashboard" icon={<BarChart3 className="h-4 w-4" />} active={pathname === "/inbox/dashboard"}>Dash Atendimento</NavLink>
+          )}
+          {p("esteira") && (
+            <NavLink isSubItem href="/esteira" icon={<Kanban className="h-4 w-4" />} active={pathname === "/esteira"}>Esteira</NavLink>
+          )}
+          {p("financeiro") && (
+            <NavLink isSubItem href="/dashboard-financeiro" icon={<DollarSign className="h-4 w-4" />} active={pathname === "/dashboard-financeiro"}>Financeiro</NavLink>
+          )}
+          {p("leads") && (
+            <NavLink isSubItem href="/inbox" icon={<InboxIcon className="h-4 w-4" />} active={pathname === "/inbox"}>Inbox</NavLink>
+          )}
+          {p("leads") && (
+            <NavLink isSubItem href="/leads" icon={<Users className="h-4 w-4" />} active={pathname === "/leads"}>Leads</NavLink>
+          )}
+          {p("leads") && (
+            <NavLink isSubItem href="/marketing" icon={<Megaphone className="h-4 w-4" />} active={pathname === "/marketing"}>Marketing</NavLink>
+          )}
+          {p("leads") && (
+            <NavLink isSubItem href="/inbox/mensagens-rapidas" icon={<Zap className="h-4 w-4" />} active={pathname === "/inbox/mensagens-rapidas"}>Mensagens Rápidas</NavLink>
+          )}
+          {p("metas") && (
+            <NavLink isSubItem href="/metas" icon={<Target className="h-4 w-4" />} active={pathname === "/metas"}>Metas</NavLink>
+          )}
+          {p("vendedores") && (
+            <NavLink isSubItem href="/dashboard-vendedores" icon={<Activity className="h-4 w-4" />} active={pathname === "/dashboard-vendedores"}>Perf. Vendedores</NavLink>
+          )}
+          {p("ranking") && (
+            <NavLink isSubItem href="/ranking" icon={<Trophy className="h-4 w-4" />} active={pathname === "/ranking"}>Ranking</NavLink>
+          )}
+          {p("leads") && (
+            <NavLink isSubItem href="/recuperacao" icon={<RefreshCcw className="h-4 w-4" />} active={pathname === "/recuperacao"}>Recuperação</NavLink>
+          )}
+          {p("vendedores") && (
+            <NavLink isSubItem href="/vendedores" icon={<PieChart className="h-4 w-4" />} active={pathname === "/vendedores"}>Vendedores</NavLink>
           )}
         </CollapsibleSection>
       )}
@@ -154,8 +154,11 @@ export function SidebarNav({ permissoes }: { permissoes: Permissoes }) {
           onToggle={() => toggleSection("inteligencia")}
           hasActiveChild={isInSection(inteligenciaPaths)}
         >
-          {p("simulador") && (
-            <NavLink isSubItem href="/simulador" icon={<Calculator className="h-4 w-4" />} active={pathname === "/simulador"}>Simulador</NavLink>
+          {p("roteiros") && (
+            <NavLink isSubItem href="/conhecimento" icon={<GraduationCap className="h-4 w-4" />} active={pathname === "/conhecimento"}>Base Conhecimento</NavLink>
+          )}
+          {p("mapa_port") && (
+            <NavLink isSubItem href="/mapa-portabilidade" icon={<ArrowRightLeft className="h-4 w-4" />} active={pathname === "/mapa-portabilidade"}>Mapa Port.</NavLink>
           )}
           {p("motor_regras") && (
             <NavLink isSubItem href="/motor-regras" icon={<Brain className="h-4 w-4" />} active={pathname === "/motor-regras"}>Motor de Regras</NavLink>
@@ -163,11 +166,8 @@ export function SidebarNav({ permissoes }: { permissoes: Permissoes }) {
           {p("roteiros") && (
             <NavLink isSubItem href="/roteiros" icon={<FileText className="h-4 w-4" />} active={pathname === "/roteiros"}>Roteiros</NavLink>
           )}
-          {p("mapa_port") && (
-            <NavLink isSubItem href="/mapa-portabilidade" icon={<ArrowRightLeft className="h-4 w-4" />} active={pathname === "/mapa-portabilidade"}>Mapa Port.</NavLink>
-          )}
-          {p("roteiros") && (
-            <NavLink isSubItem href="/conhecimento" icon={<GraduationCap className="h-4 w-4" />} active={pathname === "/conhecimento"}>Base Conhecimento</NavLink>
+          {p("simulador") && (
+            <NavLink isSubItem href="/simulador" icon={<Calculator className="h-4 w-4" />} active={pathname === "/simulador"}>Simulador</NavLink>
           )}
         </CollapsibleSection>
       )}
@@ -183,15 +183,19 @@ export function SidebarNav({ permissoes }: { permissoes: Permissoes }) {
         >
           {p("cadastro") && (
             <>
-              <NavLink isSubItem href="/regras" icon={<BookOpen className="h-4 w-4" />} active={pathname.startsWith("/regras")}>Regras</NavLink>
               <NavLink isSubItem href="/bancos" icon={<Layers className="h-4 w-4" />} active={pathname.startsWith("/bancos")}>Bancos</NavLink>
-              <NavLink isSubItem href="/produtos" icon={<Package className="h-4 w-4" />} active={pathname.startsWith("/produtos")}>Produtos</NavLink>
               <NavLink isSubItem href="/convenios" icon={<Shield className="h-4 w-4" />} active={pathname.startsWith("/convenios")}>Convênios</NavLink>
               <NavLink isSubItem href="/credenciais" icon={<KeyRound className="h-4 w-4" />} active={pathname === "/credenciais"}>Credenciais</NavLink>
             </>
           )}
           {p("importacao") && (
             <NavLink isSubItem href="/importacao" icon={<Upload className="h-4 w-4" />} active={pathname === "/importacao"}>Importar Clientes</NavLink>
+          )}
+          {p("cadastro") && (
+            <>
+              <NavLink isSubItem href="/produtos" icon={<Package className="h-4 w-4" />} active={pathname.startsWith("/produtos")}>Produtos</NavLink>
+              <NavLink isSubItem href="/regras" icon={<BookOpen className="h-4 w-4" />} active={pathname.startsWith("/regras")}>Regras</NavLink>
+            </>
           )}
         </CollapsibleSection>
       )}
@@ -205,20 +209,20 @@ export function SidebarNav({ permissoes }: { permissoes: Permissoes }) {
           onToggle={() => toggleSection("sistema")}
           hasActiveChild={isInSection(sistemaPaths)}
         >
-          {p("relatorios") && (
-            <NavLink isSubItem href="/relatorios" icon={<BarChart3 className="h-4 w-4" />} active={pathname === "/relatorios"}>Relatórios</NavLink>
-          )}
           {p("auditoria") && (
             <NavLink isSubItem href="/auditoria" icon={<ScrollText className="h-4 w-4" />} active={pathname === "/auditoria"}>Auditoria</NavLink>
-          )}
-          {p("auditoria") && (
-            <NavLink isSubItem href="/sla" icon={<Clock className="h-4 w-4" />} active={pathname === "/sla"}>SLA</NavLink>
           )}
           {p("configuracoes") && (
             <NavLink isSubItem href="/configuracoes" icon={<Settings className="h-4 w-4" />} active={pathname === "/configuracoes"}>Configurações</NavLink>
           )}
           {p("assinatura") && (
             <NavLink isSubItem href="/assinatura" icon={<CreditCard className="h-4 w-4" />} active={pathname === "/assinatura"}>Minha Assinatura</NavLink>
+          )}
+          {p("relatorios") && (
+            <NavLink isSubItem href="/relatorios" icon={<BarChart3 className="h-4 w-4" />} active={pathname === "/relatorios"}>Relatórios</NavLink>
+          )}
+          {p("auditoria") && (
+            <NavLink isSubItem href="/sla" icon={<Clock className="h-4 w-4" />} active={pathname === "/sla"}>SLA</NavLink>
           )}
         </CollapsibleSection>
       )}
@@ -232,16 +236,16 @@ export function SidebarNav({ permissoes }: { permissoes: Permissoes }) {
           onToggle={() => toggleSection("rh")}
           hasActiveChild={isInSection(rhPaths)}
         >
-          <NavLink isSubItem href="/rh" icon={<BarChart3 className="h-4 w-4" />} active={pathname === "/rh"}>Dashboard RH</NavLink>
-          <NavLink isSubItem href="/rh/funcionarios" icon={<UserCheck className="h-4 w-4" />} active={pathname.startsWith("/rh/funcionarios")}>Funcionários</NavLink>
+          <NavLink isSubItem href="/rh/auditoria" icon={<Eye className="h-4 w-4" />} active={pathname.startsWith("/rh/auditoria")}>Auditoria</NavLink>
           <NavLink isSubItem href="/rh/ponto" icon={<Clock className="h-4 w-4" />} active={pathname.startsWith("/rh/ponto")}>Controle de Ponto</NavLink>
+          <NavLink isSubItem href="/rh" icon={<BarChart3 className="h-4 w-4" />} active={pathname === "/rh"}>Dashboard RH</NavLink>
+          <NavLink isSubItem href="/rh/documentos" icon={<FolderOpen className="h-4 w-4" />} active={pathname.startsWith("/rh/documentos")}>Documentos</NavLink>
           <NavLink isSubItem href="/rh/espelho" icon={<CalendarDays className="h-4 w-4" />} active={pathname.startsWith("/rh/espelho")}>Espelho de Ponto</NavLink>
           <NavLink isSubItem href="/rh/ferias" icon={<Palmtree className="h-4 w-4" />} active={pathname.startsWith("/rh/ferias")}>Férias</NavLink>
-          <NavLink isSubItem href="/rh/passivo" icon={<AlertTriangle className="h-4 w-4" />} active={pathname.startsWith("/rh/passivo")}>Passivo Trabalhista</NavLink>
           <NavLink isSubItem href="/rh/folha" icon={<Receipt className="h-4 w-4" />} active={pathname.startsWith("/rh/folha")}>Folha & Holerites</NavLink>
+          <NavLink isSubItem href="/rh/funcionarios" icon={<UserCheck className="h-4 w-4" />} active={pathname.startsWith("/rh/funcionarios")}>Funcionários</NavLink>
+          <NavLink isSubItem href="/rh/passivo" icon={<AlertTriangle className="h-4 w-4" />} active={pathname.startsWith("/rh/passivo")}>Passivo Trabalhista</NavLink>
           <NavLink isSubItem href="/rh/rescisao" icon={<Gavel className="h-4 w-4" />} active={pathname.startsWith("/rh/rescisao")}>Simulador Rescisão</NavLink>
-          <NavLink isSubItem href="/rh/documentos" icon={<FolderOpen className="h-4 w-4" />} active={pathname.startsWith("/rh/documentos")}>Documentos</NavLink>
-          <NavLink isSubItem href="/rh/auditoria" icon={<Eye className="h-4 w-4" />} active={pathname.startsWith("/rh/auditoria")}>Auditoria</NavLink>
         </CollapsibleSection>
       )}
 
@@ -254,20 +258,20 @@ export function SidebarNav({ permissoes }: { permissoes: Permissoes }) {
           onToggle={() => toggleSection("contabil")}
           hasActiveChild={isInSection(contabilPaths)}
         >
-          <NavLink isSubItem href="/contabil" icon={<BarChart3 className="h-4 w-4" />} active={pathname === "/contabil"}>DRE</NavLink>
+          <NavLink isSubItem href="/contabil/auditoria" icon={<Eye className="h-4 w-4" />} active={pathname === "/contabil/auditoria"}>Auditoria</NavLink>
+          <NavLink isSubItem href="/contabil/carteira" icon={<DollarSign className="h-4 w-4" />} active={pathname.startsWith("/contabil/carteira")}>Carteira Vendedores</NavLink>
+          <NavLink isSubItem href="/contabil/notificacoes" icon={<Bell className="h-4 w-4" />} active={pathname === "/contabil/notificacoes"}>Central de Alertas</NavLink>
+          <NavLink isSubItem href="/contabil/conciliacao" icon={<Repeat className="h-4 w-4" />} active={pathname === "/contabil/conciliacao"}>Conciliação Bancária</NavLink>
           <NavLink isSubItem href="/contabil/lancamentos" icon={<Receipt className="h-4 w-4" />} active={pathname === "/contabil/lancamentos"}>Contas a Pagar/Receber</NavLink>
           <NavLink isSubItem href="/contabil/contas-bancarias" icon={<CreditCard className="h-4 w-4" />} active={pathname === "/contabil/contas-bancarias"}>Contas Bancárias</NavLink>
-          <NavLink isSubItem href="/contabil/orcamento" icon={<Shield className="h-4 w-4" />} active={pathname === "/contabil/orcamento"}>Orçamento</NavLink>
-          <NavLink isSubItem href="/contabil/carteira" icon={<DollarSign className="h-4 w-4" />} active={pathname.startsWith("/contabil/carteira")}>Carteira Vendedores</NavLink>
-          <NavLink isSubItem href="/contabil/radar" icon={<AlertTriangle className="h-4 w-4" />} active={pathname === "/contabil/radar"}>Radar Vencimentos</NavLink>
-          <NavLink isSubItem href="/contabil/patrimonio" icon={<Package className="h-4 w-4" />} active={pathname === "/contabil/patrimonio"}>Patrimônio</NavLink>
-          <NavLink isSubItem href="/contabil/bordero" icon={<ScrollText className="h-4 w-4" />} active={pathname === "/contabil/bordero"}>Motor Borderô</NavLink>
-          <NavLink isSubItem href="/contabil/simulador" icon={<Calculator className="h-4 w-4" />} active={pathname === "/contabil/simulador"}>Simulador Tributário</NavLink>
-          <NavLink isSubItem href="/contabil/categorias" icon={<FolderOpen className="h-4 w-4" />} active={pathname === "/contabil/categorias"}>Plano de Contas</NavLink>
           <NavLink isSubItem href="/contabil/dashboard" icon={<BarChart3 className="h-4 w-4" />} active={pathname === "/contabil/dashboard"}>Dashboard BI</NavLink>
-          <NavLink isSubItem href="/contabil/conciliacao" icon={<Repeat className="h-4 w-4" />} active={pathname === "/contabil/conciliacao"}>Conciliação Bancária</NavLink>
-          <NavLink isSubItem href="/contabil/notificacoes" icon={<Bell className="h-4 w-4" />} active={pathname === "/contabil/notificacoes"}>Central de Alertas</NavLink>
-          <NavLink isSubItem href="/contabil/auditoria" icon={<Eye className="h-4 w-4" />} active={pathname === "/contabil/auditoria"}>Auditoria</NavLink>
+          <NavLink isSubItem href="/contabil" icon={<BarChart3 className="h-4 w-4" />} active={pathname === "/contabil"}>DRE</NavLink>
+          <NavLink isSubItem href="/contabil/bordero" icon={<ScrollText className="h-4 w-4" />} active={pathname === "/contabil/bordero"}>Motor Borderô</NavLink>
+          <NavLink isSubItem href="/contabil/orcamento" icon={<Shield className="h-4 w-4" />} active={pathname === "/contabil/orcamento"}>Orçamento</NavLink>
+          <NavLink isSubItem href="/contabil/patrimonio" icon={<Package className="h-4 w-4" />} active={pathname === "/contabil/patrimonio"}>Patrimônio</NavLink>
+          <NavLink isSubItem href="/contabil/categorias" icon={<FolderOpen className="h-4 w-4" />} active={pathname === "/contabil/categorias"}>Plano de Contas</NavLink>
+          <NavLink isSubItem href="/contabil/radar" icon={<AlertTriangle className="h-4 w-4" />} active={pathname === "/contabil/radar"}>Radar Vencimentos</NavLink>
+          <NavLink isSubItem href="/contabil/simulador" icon={<Calculator className="h-4 w-4" />} active={pathname === "/contabil/simulador"}>Simulador Tributário</NavLink>
         </CollapsibleSection>
       )}
     </nav>
