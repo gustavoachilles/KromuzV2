@@ -4,7 +4,7 @@ import {
   KeyRound, ExternalLink, Plus, X, Loader2, Eye, EyeOff,
   Building2, Shield, Search, Copy, Check, Globe, User, Lock,
   Pencil, Users, LayoutGrid, List, Wifi, WifiOff, AlertCircle,
-  Zap, RefreshCw, Server, Activity, CheckCircle2, XCircle, Clock, AlertTriangle
+  Zap, RefreshCw, Server, Activity, CheckCircle2, XCircle, Clock, AlertTriangle, ChevronDown
 } from "lucide-react";
 
 type Banco = {
@@ -73,7 +73,8 @@ const DEFAULT_FUNCIONARIOS = ["Gustavo", "Wandeyr", "Walckiria"];
 // ────────────────────────────────────────────────────────────
 // Integration Status Panel
 // ────────────────────────────────────────────────────────────
-function IntegrationStatusPanel() {
+function IntegrationStatusPanel({ bancos }: { bancos: Banco[] }) {
+  const [showBancos, setShowBancos] = useState(false);
   const [integracoes, setIntegracoes] = useState<Record<string, IntegracaoStatus>>({
     facta: { nome: "Facta Financeira", status: "checking", servicos: ["INSS", "FGTS", "CLT"] },
     v8: { nome: "V8 Sistema", status: "checking", servicos: ["Consulta CPF", "Dados Funcionais", "Margem INSS"] },
@@ -215,6 +216,96 @@ function IntegrationStatusPanel() {
           );
         })}
       </div>
+
+      {/* ── Bancos / Portais ── */}
+      {bancos.length > 0 && (
+        <div className="border-t border-zinc-100 dark:border-zinc-800">
+          <button
+            onClick={() => setShowBancos(prev => !prev)}
+            className="w-full flex items-center justify-between px-6 py-3 text-xs font-semibold text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 transition group"
+          >
+            <span className="flex items-center gap-2">
+              <Building2 className="h-3.5 w-3.5" />
+              Portais de Bancos & Promotoras
+              <span className="px-1.5 py-0.5 rounded-md bg-zinc-100 dark:bg-zinc-800 text-[10px] font-bold text-zinc-500 dark:text-zinc-400">
+                {bancos.length}
+              </span>
+            </span>
+            <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-200 ${showBancos ? "" : "-rotate-90"}`} />
+          </button>
+
+          {showBancos && (
+            <div className="px-4 pb-4">
+              <div className="rounded-xl border border-zinc-100 dark:border-zinc-800 overflow-hidden">
+                {/* Header */}
+                <div className="grid grid-cols-[1fr_auto_auto] gap-4 px-4 py-2 bg-zinc-50 dark:bg-zinc-800/50 text-[10px] font-bold text-zinc-400 uppercase tracking-wider">
+                  <span>Banco</span>
+                  <span>Integração</span>
+                  <span>Portal</span>
+                </div>
+                {/* Rows */}
+                <div className="divide-y divide-zinc-50 dark:divide-zinc-800/50">
+                  {bancos.map(banco => {
+                    const portalUrl = guessLoginUrl(banco.nome);
+                    return (
+                      <div key={banco.id} className="grid grid-cols-[1fr_auto_auto] gap-4 items-center px-4 py-2.5 hover:bg-zinc-50 dark:hover:bg-zinc-800/30 transition-colors">
+                        {/* Nome + Logo */}
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          {banco.logoUrl ? (
+                            <img src={banco.logoUrl} alt={banco.nome} className="h-6 w-6 rounded-md object-contain bg-white border border-zinc-200 dark:border-zinc-700 p-0.5" />
+                          ) : (
+                            <div className="h-6 w-6 rounded-md bg-blue-100 dark:bg-blue-950/40 flex items-center justify-center text-[10px] font-bold text-blue-600 dark:text-blue-400">
+                              {banco.nome.substring(0, 2).toUpperCase()}
+                            </div>
+                          )}
+                          <span className="text-sm font-medium truncate">{banco.nome}</span>
+                          {banco.codigoCompe && (
+                            <span className="text-[10px] text-zinc-400 font-mono">{banco.codigoCompe}</span>
+                          )}
+                        </div>
+
+                        {/* Integration status */}
+                        <div>
+                          {banco.permiteIntegracao ? (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400">
+                              <span className="relative flex h-1.5 w-1.5">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75" />
+                                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500" />
+                              </span>
+                              API
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-zinc-100 text-zinc-400 dark:bg-zinc-800 dark:text-zinc-500">
+                              Manual
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Portal link */}
+                        <div>
+                          {portalUrl ? (
+                            <a
+                              href={portalUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-medium text-brand hover:bg-brand/10 transition"
+                            >
+                              <ExternalLink className="h-3 w-3" />
+                              Acessar
+                            </a>
+                          ) : (
+                            <span className="text-[10px] text-zinc-300 dark:text-zinc-600">—</span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -443,7 +534,7 @@ export function CredenciaisClient({ bancos, empresaId }: { bancos: Banco[]; empr
         </div>
 
         {/* ── Integrações API Panel ── */}
-        <IntegrationStatusPanel />
+        <IntegrationStatusPanel bancos={bancos} />
 
         {/* Funcionário Tabs */}
         <div className="flex items-center gap-2 flex-wrap">
