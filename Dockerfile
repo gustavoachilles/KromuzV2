@@ -34,10 +34,11 @@ RUN apt-get update && apt-get install -y \
 # Define o diretório de trabalho
 WORKDIR /app
 
-# Copia os arquivos de dependência
+# Copia os arquivos de dependência e schema do Prisma
 COPY package.json package-lock.json ./
+COPY prisma ./prisma/
 
-# Instala as dependências do projeto
+# Instala as dependências do projeto (isso vai disparar o postinstall: prisma generate)
 RUN npm install
 
 # Copia o restante do código
