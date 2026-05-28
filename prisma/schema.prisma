@@ -98,6 +98,7 @@ model Empresa {
   atividades           Atividade[]
   automacoesFluxo      AutomacaoFluxo[]
   campanhasBroadcast   Campanha[]
+  syncTabelaConfig     SyncTabelaConfig?
   
   planoSaaS            PlanoSaaS? @relation(fields: [planoSaasId], references: [id])
   faturasSaaS          FaturaSaaS[]
@@ -1978,5 +1979,65 @@ model CampanhaLead {
   @@index([campanhaId, statusEnvio])
   @@index([leadId])
   @@map("campanha_lead")
+  @@schema("public")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SYNC DE TABELAS DE COMISSÃO (Bevi Scraper)
+// ─────────────────────────────────────────────────────────────────────────────
+
+model SyncTabelaConfig {
+  id              String    @id @default(uuid()) @db.Uuid
+  empresaId       String    @unique @map("empresa_id") @db.Uuid
+
+  // Credenciais Bevi (criptografadas AES-256-GCM)
+  loginBevi       String    @map("login_bevi")
+  senhaBevi       String    @map("senha_bevi")
+  senhaRelatorio  String    @map("senha_relatorio")
+
+  // Bancos selecionados para sync
+  // Ex: [{ financeira: "FACTA", convenio: "INSS", formaContrato: "Novo", ativo: true }]
+  bancosSelecionados  Json   @default("[]") @map("bancos_selecionados") @db.JsonB
+
+  // Estado
+  ultimaSync      DateTime?  @map("ultima_sync")
+  statusSync      String     @default("idle") @map("status_sync") // idle, running, error, success
+  erroSync        String?    @map("erro_sync")
+
+  // Cron automático
+  syncAutomatico  Boolean    @default(false) @map("sync_automatico")
+  horarioSync     String     @default("06:00") @map("horario_sync")
+
+  createdAt       DateTime   @default(now()) @map("created_at")
+  updatedAt       DateTime   @updatedAt @map("updated_at")
+
+  empresa         Empresa    @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  historico       SyncTabelaLog[]
+
+  @@map("sync_tabela_config")
+  @@schema("public")
+}
+
+model SyncTabelaLog {
+  id            String   @id @default(uuid()) @db.Uuid
+  configId      String   @map("config_id") @db.Uuid
+
+  financeira    String
+  convenio      String
+  formaContrato String   @map("forma_contrato")
+
+  status        String   // success, error
+  tabelasTotal  Int      @default(0) @map("tabelas_total")
+  inseridas     Int      @default(0)
+  atualizadas   Int      @default(0)
+  erro          String?
+  tempoMs       Int      @default(0) @map("tempo_ms")
+
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  config        SyncTabelaConfig @relation(fields: [configId], references: [id], onDelete: Cascade)
+
+  @@index([configId, createdAt(sort: Desc)])
+  @@map("sync_tabela_log")
   @@schema("public")
 }

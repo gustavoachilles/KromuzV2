@@ -23,7 +23,7 @@ export function SidebarNav({ permissoes }: { permissoes: Permissoes }) {
   const p = (mod: string) => permissoes[mod] === true;
 
   // Detect which section has active route to auto-open it
-  const crmPaths = ["/leads", "/esteira", "/comissoes", "/metas", "/ranking", "/inbox", "/inbox/dashboard", "/inbox/mensagens-rapidas", "/recuperacao", "/marketing", "/canais", "/calendario", "/automacoes", "/dashboard-financeiro", "/vendedores", "/dashboard-vendedores"];
+  const crmPaths = ["/leads", "/esteira", "/comissoes", "/comissoes/sincronizar", "/metas", "/ranking", "/inbox", "/inbox/dashboard", "/inbox/mensagens-rapidas", "/recuperacao", "/marketing", "/canais", "/calendario", "/automacoes", "/dashboard-financeiro", "/vendedores", "/dashboard-vendedores"];
   const inteligenciaPaths = ["/simulador", "/motor-regras", "/roteiros", "/mapa-portabilidade", "/conhecimento"];
   const cadastroPaths = ["/regras", "/bancos", "/produtos", "/convenios", "/credenciais", "/importacao"];
   const sistemaPaths = ["/relatorios", "/auditoria", "/sla", "/configuracoes", "/assinatura"];
@@ -105,6 +105,9 @@ export function SidebarNav({ permissoes }: { permissoes: Permissoes }) {
           )}
           {p("comissoes") && (
             <NavLink isSubItem href="/comissoes" icon={<DollarSign className="h-4 w-4" />} active={pathname === "/comissoes"}>Comissões</NavLink>
+          )}
+          {p("comissoes") && (
+            <NavLink isSubItem href="/comissoes/sincronizar" icon={<RefreshCcw className="h-4 w-4" />} active={pathname === "/comissoes/sincronizar"}>Sincronizar Tabelas</NavLink>
           )}
           {p("leads") && (
             <NavLink isSubItem href="/inbox/dashboard" icon={<BarChart3 className="h-4 w-4" />} active={pathname === "/inbox/dashboard"}>Dash Atendimento</NavLink>
