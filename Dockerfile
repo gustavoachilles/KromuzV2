@@ -38,8 +38,8 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 COPY prisma ./prisma/
 
-# Instala as dependências do projeto (isso vai disparar o postinstall: prisma generate)
-RUN npm install
+# Instala as dependências (usando legacy-peer-deps para ignorar conflitos de versão do React 19)
+RUN npm install --legacy-peer-deps
 
 # Copia o restante do código
 COPY . .
