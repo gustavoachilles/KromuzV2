@@ -1,9 +1,10 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   KeyRound, ExternalLink, Plus, X, Loader2, Eye, EyeOff,
   Building2, Shield, Search, Copy, Check, Globe, User, Lock,
-  Pencil, Users, LayoutGrid, List, Wifi, WifiOff, AlertCircle
+  Pencil, Users, LayoutGrid, List, Wifi, WifiOff, AlertCircle,
+  Zap, RefreshCw, Server, Activity, CheckCircle2, XCircle, Clock, AlertTriangle
 } from "lucide-react";
 
 type Banco = {
@@ -25,6 +26,18 @@ type Credencial = {
   senha: string;
   observacoes: string;
   funcionario: string;
+};
+
+type IntegracaoStatus = {
+  nome: string;
+  status: "online" | "error" | "unconfigured" | "checking";
+  ambiente?: string;
+  baseUrl?: string;
+  tokenValido?: boolean;
+  servicos?: string[];
+  nota?: string;
+  erro?: string;
+  expiresIn?: number;
 };
 
 // URLs de login conhecidos dos bancos
@@ -56,6 +69,156 @@ function guessLoginUrl(bancoNome: string): string {
 }
 
 const DEFAULT_FUNCIONARIOS = ["Gustavo", "Wandeyr", "Walckiria"];
+
+// ────────────────────────────────────────────────────────────
+// Integration Status Panel
+// ────────────────────────────────────────────────────────────
+function IntegrationStatusPanel() {
+  const [integracoes, setIntegracoes] = useState<Record<string, IntegracaoStatus>>({
+    facta: { nome: "Facta Financeira", status: "checking", servicos: ["INSS", "FGTS", "CLT"] },
+    v8: { nome: "V8 Sistema", status: "checking", servicos: ["Consulta CPF", "Dados Funcionais", "Margem INSS"] },
+  });
+  const [lastCheck, setLastCheck] = useState<Date | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  const checkStatus = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/integracoes/status");
+      if (res.ok) {
+        const data = await res.json();
+        setIntegracoes(data.integracoes || {});
+        setLastCheck(new Date());
+      }
+    } catch {
+      // silently fail
+    }
+    setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    checkStatus();
+  }, [checkStatus]);
+
+  const statusConfig = {
+    online:       { icon: CheckCircle2, color: "text-emerald-500", bg: "bg-emerald-500/10", border: "border-emerald-500/20", pulse: "bg-emerald-500", label: "Online" },
+    error:        { icon: XCircle,      color: "text-red-500",     bg: "bg-red-500/10",     border: "border-red-500/20",     pulse: "bg-red-500",     label: "Erro" },
+    unconfigured: { icon: AlertTriangle,color: "text-amber-500",   bg: "bg-amber-500/10",   border: "border-amber-500/20",   pulse: "bg-amber-500",   label: "Não Configurado" },
+    checking:     { icon: Loader2,      color: "text-zinc-400",    bg: "bg-zinc-500/10",    border: "border-zinc-500/20",    pulse: "bg-zinc-400",    label: "Verificando..." },
+  };
+
+  const integrationIcons: Record<string, string> = {
+    facta: "💳",
+    v8: "🖥️",
+  };
+
+  return (
+    <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 overflow-hidden">
+      {/* Header */}
+      <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-100 dark:border-zinc-800">
+        <div className="flex items-center gap-3">
+          <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg shadow-violet-500/20">
+            <Zap className="h-4.5 w-4.5 text-white" />
+          </div>
+          <div>
+            <h2 className="text-sm font-bold tracking-tight">Integrações API</h2>
+            <p className="text-[11px] text-zinc-400">Status de conexão em tempo real</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-3">
+          {lastCheck && (
+            <span className="text-[10px] text-zinc-400 flex items-center gap-1">
+              <Clock className="h-3 w-3" />
+              {lastCheck.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+            </span>
+          )}
+          <button
+            onClick={checkStatus}
+            disabled={loading}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition disabled:opacity-50"
+          >
+            <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
+            Verificar
+          </button>
+        </div>
+      </div>
+
+      {/* Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-0 divide-y md:divide-y-0 md:divide-x divide-zinc-100 dark:divide-zinc-800">
+        {Object.entries(integracoes).map(([key, integ]) => {
+          const cfg = statusConfig[integ.status] || statusConfig.checking;
+          const StatusIcon = cfg.icon;
+
+          return (
+            <div key={key} className="p-5 relative group">
+              {/* Top row: icon + name + status */}
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl">{integrationIcons[key] || "🔌"}</span>
+                  <div>
+                    <h3 className="font-semibold text-sm">{integ.nome}</h3>
+                    {integ.ambiente && (
+                      <span className={`inline-flex items-center gap-1 mt-0.5 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                        integ.ambiente.toLowerCase().includes("homol")
+                          ? "bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400"
+                          : "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400"
+                      }`}>
+                        <Server className="h-2.5 w-2.5" />
+                        {integ.ambiente}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Status pill */}
+                <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold ${cfg.bg} ${cfg.color} border ${cfg.border}`}>
+                  {/* Animated pulse dot */}
+                  <span className="relative flex h-2 w-2">
+                    {integ.status === "online" && (
+                      <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${cfg.pulse} opacity-75`} />
+                    )}
+                    <span className={`relative inline-flex rounded-full h-2 w-2 ${cfg.pulse}`} />
+                  </span>
+                  <StatusIcon className={`h-3 w-3 ${integ.status === "checking" ? "animate-spin" : ""}`} />
+                  {cfg.label}
+                </div>
+              </div>
+
+              {/* Services */}
+              {integ.servicos && integ.servicos.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 mb-3">
+                  {integ.servicos.map(s => (
+                    <span key={s} className="px-2 py-0.5 rounded-md bg-zinc-100 dark:bg-zinc-800 text-[10px] font-medium text-zinc-500 dark:text-zinc-400">
+                      {s}
+                    </span>
+                  ))}
+                </div>
+              )}
+
+              {/* Message */}
+              {(integ.nota || integ.erro) && (
+                <p className={`text-[11px] leading-relaxed ${
+                  integ.erro ? "text-red-500 dark:text-red-400" : "text-zinc-400"
+                }`}>
+                  {integ.erro || integ.nota}
+                </p>
+              )}
+
+              {/* Token info */}
+              {integ.tokenValido && (
+                <div className="mt-2 flex items-center gap-1.5 text-[10px] text-emerald-600 dark:text-emerald-400">
+                  <CheckCircle2 className="h-3 w-3" />
+                  Token válido{integ.expiresIn ? ` · Expira em ${Math.round(integ.expiresIn / 3600)}h` : ""}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 
 export function CredenciaisClient({ bancos, empresaId }: { bancos: Banco[]; empresaId: string }) {
   // Carregar credenciais do localStorage (não vai para o banco por segurança)
@@ -278,6 +441,9 @@ export function CredenciaisClient({ bancos, empresaId }: { bancos: Banco[]; empr
           <h1 className="text-3xl font-bold tracking-tight">Painel de Credenciais</h1>
           <p className="text-sm text-zinc-500 mt-1">Gerencie seus logins de bancos, promotoras e sistemas em um só lugar.</p>
         </div>
+
+        {/* ── Integrações API Panel ── */}
+        <IntegrationStatusPanel />
 
         {/* Funcionário Tabs */}
         <div className="flex items-center gap-2 flex-wrap">
