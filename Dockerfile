@@ -1,5 +1,5 @@
 # Usa uma imagem oficial do Node.js baseada em Debian (suporta o Chrome)
-FROM node:18-bullseye-slim
+FROM node:22-bookworm-slim
 
 # Instala as dependências do sistema necessárias para o Chrome / Puppeteer e OpenSSL para o Prisma
 RUN apt-get update && apt-get install -y \
