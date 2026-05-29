@@ -4,7 +4,7 @@ import { useState, useMemo } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Brain, FileText, Layers, Settings, Calculator, BookOpen, BarChart3, Shield, Package, ScrollText, Kanban, Users, DollarSign, Target, Trophy, Upload, ArrowRightLeft, PieChart, CreditCard, Inbox as InboxIcon, Megaphone, RefreshCcw, MessageSquare, GraduationCap, Clock, Activity, LayoutDashboard, KeyRound, ChevronDown, AlertTriangle, UserCheck, Receipt, Palmtree, FolderOpen, CalendarDays, Gavel, Eye, Bell, Repeat, Zap } from "lucide-react";
+import { Brain, FileText, Layers, Settings, Calculator, BookOpen, BarChart3, Shield, Package, ScrollText, Kanban, Users, DollarSign, Target, Trophy, Upload, ArrowRightLeft, PieChart, CreditCard, Inbox as InboxIcon, Megaphone, RefreshCcw, MessageSquare, GraduationCap, Clock, Activity, LayoutDashboard, KeyRound, ChevronDown, AlertTriangle, UserCheck, Receipt, Palmtree, FolderOpen, CalendarDays, Gavel, Eye, Bell, Repeat, Zap, Table2 } from "lucide-react";
 import type { Permissoes } from "@/lib/permissions";
 
 // ── Category color mapping ──
@@ -23,7 +23,7 @@ export function SidebarNav({ permissoes }: { permissoes: Permissoes }) {
   const p = (mod: string) => permissoes[mod] === true;
 
   // Detect which section has active route to auto-open it
-  const crmPaths = ["/leads", "/esteira", "/comissoes", "/comissoes/sincronizar", "/metas", "/ranking", "/inbox", "/inbox/dashboard", "/inbox/mensagens-rapidas", "/recuperacao", "/marketing", "/canais", "/calendario", "/automacoes", "/dashboard-financeiro", "/vendedores", "/dashboard-vendedores"];
+  const crmPaths = ["/leads", "/esteira", "/comissoes", "/comissoes/sincronizar", "/comissoes/tabelas", "/metas", "/ranking", "/inbox", "/inbox/dashboard", "/inbox/mensagens-rapidas", "/recuperacao", "/marketing", "/canais", "/calendario", "/automacoes", "/dashboard-financeiro", "/vendedores", "/dashboard-vendedores"];
   const inteligenciaPaths = ["/simulador", "/motor-regras", "/roteiros", "/mapa-portabilidade", "/conhecimento"];
   const cadastroPaths = ["/regras", "/bancos", "/produtos", "/convenios", "/credenciais", "/importacao"];
   const sistemaPaths = ["/relatorios", "/auditoria", "/sla", "/configuracoes", "/assinatura"];
@@ -108,6 +108,9 @@ export function SidebarNav({ permissoes }: { permissoes: Permissoes }) {
           )}
           {p("comissoes") && (
             <NavLink isSubItem href="/comissoes/sincronizar" icon={<RefreshCcw className="h-4 w-4" />} active={pathname === "/comissoes/sincronizar"}>Sincronizar Tabelas</NavLink>
+          )}
+          {p("comissoes") && (
+            <NavLink isSubItem href="/comissoes/tabelas" icon={<Table2 className="h-4 w-4" />} active={pathname === "/comissoes/tabelas"}>Tabelas de Comissão</NavLink>
           )}
           {p("leads") && (
             <NavLink isSubItem href="/inbox/dashboard" icon={<BarChart3 className="h-4 w-4" />} active={pathname === "/inbox/dashboard"}>Dash Atendimento</NavLink>
