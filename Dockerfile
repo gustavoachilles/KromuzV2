@@ -47,6 +47,13 @@ COPY . .
 # Gera o client do Prisma
 RUN npx prisma generate
 
+# Declara as variáveis de ambiente necessárias para o build do Next.js
+ARG NEXT_PUBLIC_SUPABASE_URL
+ENV NEXT_PUBLIC_SUPABASE_URL=$NEXT_PUBLIC_SUPABASE_URL
+
+ARG NEXT_PUBLIC_SUPABASE_ANON_KEY
+ENV NEXT_PUBLIC_SUPABASE_ANON_KEY=$NEXT_PUBLIC_SUPABASE_ANON_KEY
+
 # Faz o build do Next.js
 RUN npm run build
 
