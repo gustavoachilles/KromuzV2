@@ -43,20 +43,23 @@ type SyncConfig = {
   horarioSync: string;
 };
 
-const BANCOS_DISPONIVEIS: BancoConfig[] = [
-  { financeira: "FACTA", convenio: "INSS", formaContrato: "Novo", ativo: false },
-  { financeira: "FACTA", convenio: "INSS", formaContrato: "Refin", ativo: false },
-  { financeira: "FACTA", convenio: "INSS", formaContrato: "Port", ativo: false },
-  { financeira: "PAN", convenio: "INSS", formaContrato: "Novo", ativo: false },
-  { financeira: "PAN", convenio: "INSS", formaContrato: "Refin", ativo: false },
-  { financeira: "BMG", convenio: "INSS", formaContrato: "Novo", ativo: false },
-  { financeira: "BMG", convenio: "INSS", formaContrato: "Refin", ativo: false },
-  { financeira: "OLÉ", convenio: "INSS", formaContrato: "Novo", ativo: false },
-  { financeira: "SAFRA", convenio: "INSS", formaContrato: "Novo", ativo: false },
-  { financeira: "MASTER", convenio: "INSS", formaContrato: "Novo", ativo: false },
-  { financeira: "C6", convenio: "INSS", formaContrato: "Novo", ativo: false },
-  { financeira: "ITAÚ", convenio: "INSS", formaContrato: "Novo", ativo: false },
+// Gera automaticamente todas as combinações de banco × convênio × forma contrato
+const FINANCEIRAS = [
+  "FACTA", "PAN", "BMG", "OLÉ", "SAFRA", "MASTER", "C6", "ITAÚ",
+  "DAYCOVAL", "MERCANTIL", "CREFISA", "BANRISUL", "PARANÁ BANCO",
+  "PRESENÇA", "SANTANA", "LOTUS", "UPP", "CAIXA", "BB",
 ];
+const CONVENIOS = ["INSS", "SIAPE", "GOV FEDERAL", "GOV ESTADUAL", "FGTS", "LOAS/BPC"];
+const FORMAS_CONTRATO = ["Novo", "Port", "Refin", "Port+Refin", "Cartão", "Cartão Benefício"];
+
+const BANCOS_DISPONIVEIS: BancoConfig[] = [];
+for (const financeira of FINANCEIRAS) {
+  for (const convenio of CONVENIOS) {
+    for (const formaContrato of FORMAS_CONTRATO) {
+      BANCOS_DISPONIVEIS.push({ financeira, convenio, formaContrato, ativo: false });
+    }
+  }
+}
 
 const financeiraCores: Record<string, string> = {
   FACTA: "from-blue-500 to-blue-700",
@@ -67,6 +70,17 @@ const financeiraCores: Record<string, string> = {
   MASTER: "from-red-500 to-red-700",
   C6: "from-gray-700 to-gray-900",
   "ITAÚ": "from-cyan-500 to-cyan-700",
+  DAYCOVAL: "from-indigo-500 to-indigo-700",
+  MERCANTIL: "from-teal-500 to-teal-700",
+  CREFISA: "from-rose-500 to-rose-700",
+  BANRISUL: "from-sky-500 to-sky-700",
+  "PARANÁ BANCO": "from-amber-500 to-amber-700",
+  "PRESENÇA": "from-fuchsia-500 to-fuchsia-700",
+  SANTANA: "from-lime-600 to-lime-800",
+  LOTUS: "from-violet-500 to-violet-700",
+  UPP: "from-pink-500 to-pink-700",
+  CAIXA: "from-blue-600 to-blue-900",
+  BB: "from-yellow-400 to-yellow-600",
 };
 
 function formatDate(d: string | null) {
@@ -189,7 +203,16 @@ export function SincronizarClient() {
     setBancos(prev => prev.map((b, i) => i === idx ? { ...b, ativo: !b.ativo } : b));
   }
 
+  // Filtros para a grid de bancos
+  const [filtroFinanceira, setFiltroFinanceira] = useState("todos");
+  const [filtroConvenio, setFiltroConvenio] = useState("todos");
+
   const bancosAtivos = bancos.filter(b => b.ativo);
+  const bancosFiltrados = bancos.filter(b => {
+    if (filtroFinanceira !== "todos" && b.financeira !== filtroFinanceira) return false;
+    if (filtroConvenio !== "todos" && b.convenio !== filtroConvenio) return false;
+    return true;
+  });
   const isAnySyncing = syncing !== null || syncingAll;
 
   if (loading) {
@@ -355,8 +378,25 @@ export function SincronizarClient() {
               {bancosAtivos.length} selecionados
             </span>
           </div>
-          <div className="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {bancos.map((banco, idx) => {
+
+          {/* Filtros */}
+          <div className="px-6 py-3 border-b border-zinc-100 dark:border-zinc-800 flex flex-wrap gap-3 items-center bg-zinc-50/50 dark:bg-zinc-800/30">
+            <select value={filtroFinanceira} onChange={e => setFiltroFinanceira(e.target.value)}
+              className="px-3 py-2 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-sm font-medium">
+              <option value="todos">Todas Financeiras ({FINANCEIRAS.length})</option>
+              {FINANCEIRAS.map(f => <option key={f} value={f}>{f}</option>)}
+            </select>
+            <select value={filtroConvenio} onChange={e => setFiltroConvenio(e.target.value)}
+              className="px-3 py-2 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-sm font-medium">
+              <option value="todos">Todos Convênios ({CONVENIOS.length})</option>
+              {CONVENIOS.map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
+            <span className="text-xs text-zinc-400 ml-auto">{bancosFiltrados.length} combinações</span>
+          </div>
+
+          <div className="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 max-h-[500px] overflow-y-auto">
+            {bancosFiltrados.map((banco) => {
+              const globalIdx = bancos.findIndex(b => b.financeira === banco.financeira && b.convenio === banco.convenio && b.formaContrato === banco.formaContrato);
               const cor = financeiraCores[banco.financeira] || "from-zinc-500 to-zinc-700";
               const isSyncingThis = syncing === banco.financeira;
               const lastLog = historico.find(
@@ -371,7 +411,7 @@ export function SincronizarClient() {
                       ? "border-brand/30 bg-brand/5 dark:bg-brand/5 ring-1 ring-brand/20"
                       : "border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700"
                   }`}
-                  onClick={() => toggleBanco(idx)}
+                  onClick={() => toggleBanco(globalIdx)}
                 >
                   <div className="flex items-start gap-3">
                     <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${cor} flex items-center justify-center text-white text-xs font-bold shrink-0`}>
