@@ -87,21 +87,110 @@ export function MesaClient({ sessao, propostas, leadsHoje, ultimasPropostas=[], 
   // ── Nova Proposta Manual ──
   const [novaPropostaModal, setNovaPropostaModal] = useState(false);
   const [novaPropostaSaving, setNovaPropostaSaving] = useState(false);
-  const [novaPropostaForm, setNovaPropostaForm] = useState({
-    clienteNome: "",
-    clienteCpf: "",
-    clienteTelefone: "",
+  const [npBancos, setNpBancos] = useState<{id:string;nome:string}[]>([]);
+  const [npConvenios, setNpConvenios] = useState<{id:string;nome:string}[]>([]);
+  const [npBancosLoaded, setNpBancosLoaded] = useState(false);
+
+  // Busca de cliente
+  const [clienteQuery, setClienteQuery] = useState("");
+  const [clienteResults, setClienteResults] = useState<any[]>([]);
+  const [clienteSearching, setClienteSearching] = useState(false);
+  const [clienteSelecionado, setClienteSelecionado] = useState<any>(null);
+  const [showClienteDropdown, setShowClienteDropdown] = useState(false);
+  const searchTimeout = useState<NodeJS.Timeout | null>(null);
+
+  const [npForm, setNpForm] = useState({
+    clienteNome: "", clienteCpf: "", clienteTelefone: "",
     tipoOperacao: "EMPRESTIMO_CONSIGNADO",
+    bancoNome: "", bancoOrigem: "", convenioNome: "",
+    valorLiberado: "", valorParcela: "",
+    prazo: "", taxaJuros: "", saldoDevedor: "",
+    observacoes: "", leadId: "",
   });
 
+  const updateNp = (field: string, value: string) => setNpForm(prev => ({ ...prev, [field]: value }));
+
+  // Abrir modal e carregar bancos/convênios
+  const abrirNovaPropostaModal = async () => {
+    setNovaPropostaModal(true);
+    setClienteSelecionado(null);
+    setClienteQuery("");
+    setNpForm({
+      clienteNome: "", clienteCpf: "", clienteTelefone: "",
+      tipoOperacao: "EMPRESTIMO_CONSIGNADO",
+      bancoNome: "", bancoOrigem: "", convenioNome: "",
+      valorLiberado: "", valorParcela: "",
+      prazo: "", taxaJuros: "", saldoDevedor: "",
+      observacoes: "", leadId: "",
+    });
+    if (!npBancosLoaded) {
+      try {
+        const [bRes, cRes] = await Promise.all([fetch("/api/bancos"), fetch("/api/convenios")]);
+        if (bRes.ok) setNpBancos((await bRes.json()).map((b: any) => ({ id: b.id, nome: b.nome })));
+        if (cRes.ok) setNpConvenios((await cRes.json()).map((c: any) => ({ id: c.id, nome: c.nome })));
+        setNpBancosLoaded(true);
+      } catch {}
+    }
+  };
+
+  // Buscar clientes com debounce
+  const buscarClientes = (query: string) => {
+    setClienteQuery(query);
+    setShowClienteDropdown(true);
+    if (searchTimeout[0]) clearTimeout(searchTimeout[0]);
+    if (query.length < 2) { setClienteResults([]); return; }
+    searchTimeout[0] = setTimeout(async () => {
+      setClienteSearching(true);
+      try {
+        const res = await fetch(`/api/leads/buscar?q=${encodeURIComponent(query)}`);
+        if (res.ok) setClienteResults(await res.json());
+      } catch {}
+      setClienteSearching(false);
+    }, 300);
+  };
+
+  const selecionarCliente = (lead: any) => {
+    setClienteSelecionado(lead);
+    setClienteQuery(lead.nome);
+    setShowClienteDropdown(false);
+    setNpForm(prev => ({
+      ...prev,
+      clienteNome: lead.nome,
+      clienteCpf: lead.cpf || "",
+      clienteTelefone: lead.telefone || "",
+      leadId: lead.id,
+    }));
+  };
+
+  const limparCliente = () => {
+    setClienteSelecionado(null);
+    setClienteQuery("");
+    setNpForm(prev => ({ ...prev, clienteNome: "", clienteCpf: "", clienteTelefone: "", leadId: "" }));
+  };
+
   const salvarNovaProposta = async () => {
-    if (!novaPropostaForm.clienteNome) return alert("Preencha o nome do cliente");
+    if (!npForm.clienteNome) return alert("Preencha o nome do cliente");
     setNovaPropostaSaving(true);
     try {
+      const payload: any = {
+        clienteNome: npForm.clienteNome,
+        clienteCpf: npForm.clienteCpf || undefined,
+        clienteTelefone: npForm.clienteTelefone || undefined,
+        tipoOperacao: npForm.tipoOperacao,
+        bancoNome: npForm.bancoNome || undefined,
+        bancoOrigem: npForm.bancoOrigem || undefined,
+        convenioNome: npForm.convenioNome || undefined,
+        valorLiberado: npForm.valorLiberado ? parseFloat(npForm.valorLiberado) : undefined,
+        valorParcela: npForm.valorParcela ? parseFloat(npForm.valorParcela) : undefined,
+        prazo: npForm.prazo ? parseInt(npForm.prazo) : undefined,
+        taxaJuros: npForm.taxaJuros ? parseFloat(npForm.taxaJuros) : undefined,
+        observacoes: npForm.observacoes || undefined,
+        leadId: npForm.leadId || undefined,
+      };
       const res = await fetch("/api/propostas", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(novaPropostaForm),
+        body: JSON.stringify(payload),
       });
       if (res.ok) {
         const p = await res.json();
@@ -573,7 +662,7 @@ export function MesaClient({ sessao, propostas, leadsHoje, ultimasPropostas=[], 
             <p className="text-xs text-zinc-500 mt-0.5">Coeficientes e Prazos</p>
           </button>
           {/* Botão Nova Proposta Manual */}
-          <button onClick={() => setNovaPropostaModal(true)} className="group rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 text-left hover:shadow-md hover:border-orange-400 transition">
+          <button onClick={abrirNovaPropostaModal} className="group rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 text-left hover:shadow-md hover:border-orange-400 transition">
             <div className="flex items-center gap-3 mb-2">
               <div className="h-9 w-9 rounded-lg bg-orange-50 dark:bg-orange-900/20 text-orange-600 flex items-center justify-center group-hover:scale-110 transition"><Briefcase className="h-5 w-5"/></div>
               <ArrowRight className="h-4 w-4 text-zinc-300 ml-auto group-hover:text-orange-500 group-hover:translate-x-1 transition"/>
@@ -831,9 +920,10 @@ export function MesaClient({ sessao, propostas, leadsHoje, ultimasPropostas=[], 
       {/* ══════════ MODAL NOVA PROPOSTA MANUAL ══════════ */}
       {novaPropostaModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={() => setNovaPropostaModal(false)}>
-          <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-2xl w-full max-w-md mx-4 overflow-hidden" onClick={e => e.stopPropagation()}>
-            <div className="px-6 py-4 border-b border-zinc-100 dark:border-zinc-800 flex items-center justify-between">
-              <h2 className="font-bold flex items-center gap-2">
+          <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-2xl w-full max-w-2xl mx-4 max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}>
+            {/* Header */}
+            <div className="px-6 py-4 border-b border-zinc-100 dark:border-zinc-800 flex items-center justify-between shrink-0">
+              <h2 className="font-bold flex items-center gap-2 text-lg">
                 <Briefcase className="h-5 w-5 text-orange-500" />
                 Nova Proposta Manual
               </h2>
@@ -841,61 +931,195 @@ export function MesaClient({ sessao, propostas, leadsHoje, ultimasPropostas=[], 
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <div className="p-6 space-y-4">
-              <div>
-                <label className="text-xs font-semibold text-zinc-500 uppercase">Nome do Cliente *</label>
-                <input
-                  type="text"
-                  value={novaPropostaForm.clienteNome}
-                  onChange={e => setNovaPropostaForm({ ...novaPropostaForm, clienteNome: e.target.value })}
-                  placeholder="Ex: João da Silva"
-                  className="mt-1 w-full px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/50 focus:outline-none focus:ring-2 focus:ring-orange-500/50 transition"
-                />
+
+            {/* Body */}
+            <div className="p-6 space-y-5 overflow-y-auto flex-1">
+              {/* ─── BUSCAR CLIENTE ─── */}
+              <div className="relative">
+                <label className="text-xs font-semibold text-zinc-500 uppercase">Buscar Cliente *</label>
+                {clienteSelecionado ? (
+                  <div className="mt-1 flex items-center gap-3 px-4 py-3 rounded-xl border border-emerald-300 dark:border-emerald-700 bg-emerald-50 dark:bg-emerald-900/20">
+                    <CheckCircle2 className="h-5 w-5 text-emerald-500 shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-sm truncate">{clienteSelecionado.nome}</p>
+                      <p className="text-xs text-zinc-500">{clienteSelecionado.cpf || "Sem CPF"} · {clienteSelecionado.telefone || "Sem telefone"}</p>
+                    </div>
+                    <button onClick={limparCliente} className="text-zinc-400 hover:text-red-500 transition"><X className="h-4 w-4" /></button>
+                  </div>
+                ) : (
+                  <>
+                    <div className="relative mt-1">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
+                      <input
+                        type="text"
+                        value={clienteQuery}
+                        onChange={e => buscarClientes(e.target.value)}
+                        onFocus={() => clienteResults.length > 0 && setShowClienteDropdown(true)}
+                        onBlur={() => setTimeout(() => setShowClienteDropdown(false), 200)}
+                        placeholder="Digite nome, CPF ou telefone..."
+                        className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/50 focus:outline-none focus:ring-2 focus:ring-orange-500/50 transition text-sm"
+                      />
+                      {clienteSearching && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-orange-500" />}
+                    </div>
+                    {/* Dropdown de resultados */}
+                    {showClienteDropdown && clienteQuery.length >= 2 && (
+                      <div className="absolute z-10 mt-1 w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl shadow-xl max-h-48 overflow-y-auto">
+                        {clienteResults.length === 0 && !clienteSearching ? (
+                          <div className="p-3 space-y-2">
+                            <p className="text-xs text-zinc-400 text-center">Nenhum cliente encontrado</p>
+                            <button
+                              onClick={() => {
+                                setShowClienteDropdown(false);
+                                updateNp("clienteNome", clienteQuery);
+                              }}
+                              className="w-full text-left px-3 py-2 rounded-lg bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-300 text-sm font-medium hover:bg-orange-100 transition flex items-center gap-2"
+                            >
+                              <span className="text-lg">+</span> Cadastrar &quot;{clienteQuery}&quot; como novo cliente
+                            </button>
+                          </div>
+                        ) : (
+                          clienteResults.map(lead => (
+                            <button
+                              key={lead.id}
+                              onClick={() => selecionarCliente(lead)}
+                              className="w-full text-left px-4 py-3 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition border-b border-zinc-100 dark:border-zinc-800 last:border-0"
+                            >
+                              <p className="font-semibold text-sm">{lead.nome}</p>
+                              <p className="text-xs text-zinc-500">{lead.cpf || "Sem CPF"} · {lead.telefone || "Sem telefone"}</p>
+                            </button>
+                          ))
+                        )}
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
+
+              {/* ─── DADOS DO CLIENTE (se novo) ─── */}
+              {!clienteSelecionado && npForm.clienteNome && (
+                <div className="rounded-xl border border-dashed border-orange-300 dark:border-orange-700 bg-orange-50/50 dark:bg-orange-950/20 p-4 space-y-3">
+                  <p className="text-xs font-semibold text-orange-600 uppercase flex items-center gap-1">
+                    <span>+</span> Novo Cliente
+                  </p>
+                  <div>
+                    <label className="text-xs font-semibold text-zinc-500 uppercase">Nome *</label>
+                    <input type="text" value={npForm.clienteNome} onChange={e => updateNp("clienteNome", e.target.value)}
+                      className="mt-1 w-full px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-orange-500/50 transition text-sm" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-xs font-semibold text-zinc-500 uppercase">CPF</label>
+                      <input type="text" value={npForm.clienteCpf} onChange={e => updateNp("clienteCpf", formatarCpf(e.target.value))}
+                        placeholder="000.000.000-00"
+                        className="mt-1 w-full px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-orange-500/50 transition text-sm" />
+                    </div>
+                    <div>
+                      <label className="text-xs font-semibold text-zinc-500 uppercase">Telefone</label>
+                      <input type="text" value={npForm.clienteTelefone} onChange={e => updateNp("clienteTelefone", formatarTelefone(e.target.value))}
+                        placeholder="(00) 00000-0000"
+                        className="mt-1 w-full px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-orange-500/50 transition text-sm" />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* ─── TIPO DE OPERAÇÃO + BANCO + CONVÊNIO ─── */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-xs font-semibold text-zinc-500 uppercase">CPF</label>
-                  <input
-                    type="text"
-                    value={novaPropostaForm.clienteCpf}
-                    onChange={e => setNovaPropostaForm({ ...novaPropostaForm, clienteCpf: formatarCpf(e.target.value) })}
-                    placeholder="000.000.000-00"
-                    className="mt-1 w-full px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/50 focus:outline-none focus:ring-2 focus:ring-orange-500/50 transition"
-                  />
+                  <label className="text-xs font-semibold text-zinc-500 uppercase">Tipo de Operação *</label>
+                  <select value={npForm.tipoOperacao} onChange={e => updateNp("tipoOperacao", e.target.value)}
+                    className="mt-1 w-full px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/50 focus:outline-none focus:ring-2 focus:ring-orange-500/50 transition text-sm">
+                    <option value="EMPRESTIMO_CONSIGNADO">Novo</option>
+                    <option value="PORTABILIDADE">Portabilidade</option>
+                    <option value="REFINANCIAMENTO">Refinanciamento</option>
+                    <option value="PORTABILIDADE_REFIN">Port + Refin</option>
+                    <option value="CARTAO_CONSIGNADO">Cartão Consignado</option>
+                    <option value="CARTAO_BENEFICIO">Cartão Benefício</option>
+                  </select>
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-zinc-500 uppercase">Telefone</label>
-                  <input
-                    type="text"
-                    value={novaPropostaForm.clienteTelefone}
-                    onChange={e => setNovaPropostaForm({ ...novaPropostaForm, clienteTelefone: formatarTelefone(e.target.value) })}
-                    placeholder="(00) 00000-0000"
-                    className="mt-1 w-full px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/50 focus:outline-none focus:ring-2 focus:ring-orange-500/50 transition"
-                  />
+                  <label className="text-xs font-semibold text-zinc-500 uppercase">Banco Destino</label>
+                  <select value={npForm.bancoNome} onChange={e => updateNp("bancoNome", e.target.value)}
+                    className="mt-1 w-full px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/50 focus:outline-none focus:ring-2 focus:ring-orange-500/50 transition text-sm">
+                    <option value="">Selecione...</option>
+                    {npBancos.map(b => <option key={b.id} value={b.nome}>{b.nome}</option>)}
+                  </select>
                 </div>
               </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-xs font-semibold text-zinc-500 uppercase">Convênio</label>
+                  <select value={npForm.convenioNome} onChange={e => updateNp("convenioNome", e.target.value)}
+                    className="mt-1 w-full px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/50 focus:outline-none focus:ring-2 focus:ring-orange-500/50 transition text-sm">
+                    <option value="">Selecione...</option>
+                    {npConvenios.map(c => <option key={c.id} value={c.nome}>{c.nome}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-zinc-500 uppercase">Banco Origem {npForm.tipoOperacao.includes("PORT") ? "(Port)" : ""}</label>
+                  <select value={npForm.bancoOrigem} onChange={e => updateNp("bancoOrigem", e.target.value)}
+                    className="mt-1 w-full px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/50 focus:outline-none focus:ring-2 focus:ring-orange-500/50 transition text-sm">
+                    <option value="">Selecione...</option>
+                    {npBancos.map(b => <option key={b.id} value={b.nome}>{b.nome}</option>)}
+                  </select>
+                </div>
+              </div>
+
+              {/* ─── VALORES ─── */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-xs font-semibold text-zinc-500 uppercase">Valor Liberado</label>
+                  <input type="number" step="0.01" value={npForm.valorLiberado} onChange={e => updateNp("valorLiberado", e.target.value)}
+                    placeholder="5000.00"
+                    className="mt-1 w-full px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/50 focus:outline-none focus:ring-2 focus:ring-orange-500/50 transition text-sm" />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-zinc-500 uppercase">Parcela</label>
+                  <input type="number" step="0.01" value={npForm.valorParcela} onChange={e => updateNp("valorParcela", e.target.value)}
+                    placeholder="150.00"
+                    className="mt-1 w-full px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/50 focus:outline-none focus:ring-2 focus:ring-orange-500/50 transition text-sm" />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <label className="text-xs font-semibold text-zinc-500 uppercase">Prazo (meses)</label>
+                  <input type="number" value={npForm.prazo} onChange={e => updateNp("prazo", e.target.value)}
+                    placeholder="84"
+                    className="mt-1 w-full px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/50 focus:outline-none focus:ring-2 focus:ring-orange-500/50 transition text-sm" />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-zinc-500 uppercase">Taxa (%)</label>
+                  <input type="number" step="0.01" value={npForm.taxaJuros} onChange={e => updateNp("taxaJuros", e.target.value)}
+                    placeholder="1.80"
+                    className="mt-1 w-full px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/50 focus:outline-none focus:ring-2 focus:ring-orange-500/50 transition text-sm" />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-zinc-500 uppercase">Saldo Devedor</label>
+                  <input type="number" step="0.01" value={npForm.saldoDevedor} onChange={e => updateNp("saldoDevedor", e.target.value)}
+                    placeholder="25000.00"
+                    className="mt-1 w-full px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/50 focus:outline-none focus:ring-2 focus:ring-orange-500/50 transition text-sm" />
+                </div>
+              </div>
+
+              {/* ─── OBSERVAÇÕES ─── */}
               <div>
-                <label className="text-xs font-semibold text-zinc-500 uppercase">Tipo de Operação *</label>
-                <select
-                  value={novaPropostaForm.tipoOperacao}
-                  onChange={e => setNovaPropostaForm({ ...novaPropostaForm, tipoOperacao: e.target.value })}
-                  className="mt-1 w-full px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/50 focus:outline-none focus:ring-2 focus:ring-orange-500/50 transition"
-                >
-                  <option value="EMPRESTIMO_CONSIGNADO">Novo</option>
-                  <option value="PORTABILIDADE">Portabilidade</option>
-                  <option value="REFINANCIAMENTO">Refinanciamento</option>
-                  <option value="PORTABILIDADE_REFIN">Portabilidade + Refin</option>
-                  <option value="CARTAO_CONSIGNADO">Cartão Consignado</option>
-                  <option value="CARTAO_BENEFICIO">Cartão Benefício</option>
-                </select>
+                <label className="text-xs font-semibold text-zinc-500 uppercase">Observações</label>
+                <textarea value={npForm.observacoes} onChange={e => updateNp("observacoes", e.target.value)}
+                  placeholder="Anotações..."
+                  rows={3}
+                  className="mt-1 w-full px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/50 focus:outline-none focus:ring-2 focus:ring-orange-500/50 transition text-sm resize-none" />
               </div>
             </div>
-            <div className="px-6 py-4 border-t border-zinc-100 dark:border-zinc-800 flex justify-end gap-3">
+
+            {/* Footer */}
+            <div className="px-6 py-4 border-t border-zinc-100 dark:border-zinc-800 flex justify-end gap-3 shrink-0">
               <button onClick={() => setNovaPropostaModal(false)} className="px-4 py-2 font-semibold text-zinc-600 hover:text-zinc-900 transition">Cancelar</button>
               <button
                 onClick={salvarNovaProposta}
-                disabled={novaPropostaSaving || !novaPropostaForm.clienteNome}
-                className="px-6 py-2 bg-orange-600 text-white font-semibold rounded-xl hover:bg-orange-700 transition disabled:opacity-50 flex items-center gap-2"
+                disabled={novaPropostaSaving || !npForm.clienteNome}
+                className="px-6 py-2.5 bg-orange-600 text-white font-semibold rounded-xl hover:bg-orange-700 transition disabled:opacity-50 flex items-center gap-2 shadow-lg shadow-orange-500/25"
               >
                 {novaPropostaSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Briefcase className="h-4 w-4" />}
                 Cadastrar e Abrir
