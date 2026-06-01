@@ -73,7 +73,11 @@ export default async function MesaPage() {
 
   return (
     <MesaClient
-      sessao={{ nomeUsuario: sessao.nomeUsuario, nomeEmpresa: sessao.nomeEmpresa }}
+      sessao={{
+        nomeUsuario: sessao.nomeUsuario,
+        nomeEmpresa: sessao.nomeEmpresa,
+        isAdmin: sessao.perfilSlug === "admin" || sessao.perfilSlug === "gestor" || (sessao as any).isSuperAdmin
+      }}
       propostas={propostas as any}
       leadsHoje={leadsHoje as any}
       ultimasPropostas={ultimasPropostas as any}

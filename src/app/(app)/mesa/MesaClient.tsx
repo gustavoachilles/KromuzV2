@@ -55,7 +55,7 @@ function diasNoStatus(updatedAt: string): number {
 }
 
 export function MesaClient({ sessao, propostas, leadsHoje, ultimasPropostas=[], kpis }: {
-  sessao: { nomeUsuario: string|null; nomeEmpresa: string };
+  sessao: { nomeUsuario: string|null; nomeEmpresa: string; isAdmin?: boolean };
   propostas: Proposta[];
   leadsHoje: LeadHoje[];
   ultimasPropostas?: Proposta[];
@@ -67,7 +67,7 @@ export function MesaClient({ sessao, propostas, leadsHoje, ultimasPropostas=[], 
   const [porPagina, setPorPagina] = useState(10);
   const [pagina, setPagina] = useState(1);
 
-  // ── Consulta Rápida ──
+  // ── Consulta Rápida (CPF) ──
   const [consultaModal, setConsultaModal] = useState(false);
   const [consultaTipo, setConsultaTipo] = useState<"INSS"|"FGTS"|"CLT"|null>(null);
   const [consultaCpf, setConsultaCpf] = useState("");
@@ -75,6 +75,26 @@ export function MesaClient({ sessao, propostas, leadsHoje, ultimasPropostas=[], 
   const [consultaNascimento, setConsultaNascimento] = useState("");
   const [consultaEnviando, setConsultaEnviando] = useState(false);
   const [consultaResultado, setConsultaResultado] = useState<{success:boolean;message:string}|null>(null);
+
+  // ── Consulta de Tabelas ──
+  const [tabelasModalOpen, setTabelasModalOpen] = useState(false);
+  const [tabelas, setTabelas] = useState<any[]>([]);
+  const [tabelasLoading, setTabelasLoading] = useState(false);
+  const [filtroBanco, setFiltroBanco] = useState("");
+  const [filtroPrazo, setFiltroPrazo] = useState("");
+  const [filtroConvenio, setFiltroConvenio] = useState("");
+
+  const abrirConsultaTabelas = async () => {
+    setTabelasModalOpen(true);
+    if (tabelas.length === 0) {
+      setTabelasLoading(true);
+      try {
+        const res = await fetch("/api/tabelas-comissao");
+        if (res.ok) setTabelas(await res.json());
+      } catch (err) {}
+      setTabelasLoading(false);
+    }
+  };
 
   const formatarCpf = (value: string) => {
     const nums = value.replace(/\D/g, "").slice(0, 11);
@@ -487,7 +507,7 @@ export function MesaClient({ sessao, propostas, leadsHoje, ultimasPropostas=[], 
         </section>
 
         {/* Ações Rápidas */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
           {[
             { icon: <Calculator className="h-5 w-5"/>, title: "Nova Simulação", desc: "Upload de HISCON para análise", href: "/simulador" },
             { icon: <Brain className="h-5 w-5"/>, title: "Consultar Regras", desc: "Pergunte à IA sobre qualquer banco", href: "/conhecimento" },
@@ -510,6 +530,15 @@ export function MesaClient({ sessao, propostas, leadsHoje, ultimasPropostas=[], 
             </div>
             <p className="font-semibold text-sm">Consulta Rápida</p>
             <p className="text-xs text-zinc-500 mt-0.5">INSS, FGTS ou CLT via robô</p>
+          </button>
+          {/* Botão Consulta Tabelas */}
+          <button onClick={abrirConsultaTabelas} className="group rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 text-left hover:shadow-md hover:border-violet-400 transition">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="h-9 w-9 rounded-lg bg-violet-50 dark:bg-violet-900/20 text-violet-600 flex items-center justify-center group-hover:scale-110 transition"><List className="h-5 w-5"/></div>
+              <ArrowRight className="h-4 w-4 text-zinc-300 ml-auto group-hover:text-violet-500 group-hover:translate-x-1 transition"/>
+            </div>
+            <p className="font-semibold text-sm">Tabelas da Mesa</p>
+            <p className="text-xs text-zinc-500 mt-0.5">Coeficientes e Prazos</p>
           </button>
         </div>
       </div>
@@ -638,6 +667,122 @@ export function MesaClient({ sessao, propostas, leadsHoje, ultimasPropostas=[], 
                   <><Search className="h-4 w-4" /> Realizar Consulta</>
                 )}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* ══════════ MODAL CONSULTA TABELAS ══════════ */}
+      {tabelasModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={() => setTabelasModalOpen(false)}>
+          <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-2xl w-full max-w-5xl mx-4 flex flex-col max-h-[90vh]" onClick={e => e.stopPropagation()}>
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-100 dark:border-zinc-800 shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-xl bg-violet-100 dark:bg-violet-900/30 text-violet-600 flex items-center justify-center">
+                  <List className="h-5 w-5" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold">Consulta de Tabelas da Mesa</h2>
+                  <p className="text-xs text-zinc-500">Veja coeficientes, taxas e prazos para cotar com o cliente.</p>
+                </div>
+              </div>
+              <button onClick={() => setTabelasModalOpen(false)} className="rounded-xl p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Filtros */}
+            <div className="px-6 py-4 border-b border-zinc-100 dark:border-zinc-800 flex flex-wrap gap-3 items-center shrink-0">
+              <input 
+                type="text" placeholder="Filtrar por banco..." 
+                value={filtroBanco} onChange={e => setFiltroBanco(e.target.value)}
+                className="px-4 py-2 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500"
+              />
+              <input 
+                type="text" placeholder="Convênio / Produto..." 
+                value={filtroConvenio} onChange={e => setFiltroConvenio(e.target.value)}
+                className="px-4 py-2 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500"
+              />
+              <input 
+                type="number" placeholder="Prazo max..." 
+                value={filtroPrazo} onChange={e => setFiltroPrazo(e.target.value)}
+                className="px-4 py-2 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 w-32"
+              />
+              <span className="text-xs text-zinc-400 ml-auto bg-zinc-100 dark:bg-zinc-800 px-3 py-1.5 rounded-full font-medium">
+                {tabelas.filter(t => 
+                  (!filtroBanco || (t.banco?.nome || "").toLowerCase().includes(filtroBanco.toLowerCase())) &&
+                  (!filtroConvenio || (t.convenio?.nome || "").toLowerCase().includes(filtroConvenio.toLowerCase()) || (t.produto?.nomeProduto || "").toLowerCase().includes(filtroConvenio.toLowerCase())) &&
+                  (!filtroPrazo || t.prazo >= parseInt(filtroPrazo))
+                ).length} tabelas
+              </span>
+            </div>
+
+            {/* Tabela de Resultados */}
+            <div className="flex-1 overflow-auto p-6">
+              {tabelasLoading ? (
+                <div className="flex flex-col items-center justify-center py-20 text-zinc-400">
+                  <Loader2 className="h-8 w-8 animate-spin text-violet-500 mb-4" />
+                  <p>Carregando as {tabelas.length > 0 ? "regras" : "centenas de tabelas"}...</p>
+                </div>
+              ) : (
+                <table className="w-full text-left text-sm whitespace-nowrap">
+                  <thead>
+                    <tr className="border-b border-zinc-200 dark:border-zinc-800 text-zinc-500">
+                      <th className="pb-3 font-semibold">Banco</th>
+                      <th className="pb-3 font-semibold">Convênio / Produto</th>
+                      <th className="pb-3 font-semibold">Tabela</th>
+                      <th className="pb-3 font-semibold">Prazo</th>
+                      <th className="pb-3 font-semibold">Taxa</th>
+                      <th className="pb-3 font-semibold text-right">Coeficiente</th>
+                      {sessao.isAdmin && (
+                        <>
+                          <th className="pb-3 font-semibold text-right text-emerald-600">Flat (%)</th>
+                          <th className="pb-3 font-semibold text-right text-emerald-600">Repasse (%)</th>
+                        </>
+                      )}
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800/50">
+                    {tabelas
+                      .filter(t => 
+                        (!filtroBanco || (t.banco?.nome || "").toLowerCase().includes(filtroBanco.toLowerCase())) &&
+                        (!filtroConvenio || (t.convenio?.nome || "").toLowerCase().includes(filtroConvenio.toLowerCase()) || (t.produto?.nomeProduto || "").toLowerCase().includes(filtroConvenio.toLowerCase())) &&
+                        (!filtroPrazo || t.prazo >= parseInt(filtroPrazo))
+                      )
+                      .slice(0, 100) // Limitar renderização para n travar o navegador
+                      .map(t => (
+                        <tr key={t.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition">
+                          <td className="py-3 font-medium">{t.banco?.nome || "—"}</td>
+                          <td className="py-3">
+                            <span className="bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 px-2 py-1 rounded text-xs font-semibold mr-2">{t.convenio?.nome}</span>
+                            {t.produto?.nomeProduto}
+                          </td>
+                          <td className="py-3 text-zinc-600 dark:text-zinc-400 max-w-[200px] truncate" title={t.nome}>{t.nome}</td>
+                          <td className="py-3">{t.prazo}x</td>
+                          <td className="py-3 font-medium">{t.taxaJurosMensal.toFixed(2)}%</td>
+                          <td className="py-3 font-bold text-sky-600 text-right">{t.coeficiente.toFixed(6)}</td>
+                          {sessao.isAdmin && (
+                            <>
+                              <td className="py-3 text-right text-emerald-600">{t.comissaoFlatPct?.toFixed(2) || "0.00"}%</td>
+                              <td className="py-3 text-right text-emerald-600">{t.comissaoRepassePct?.toFixed(2) || "0.00"}%</td>
+                            </>
+                          )}
+                        </tr>
+                      ))}
+                    {tabelas.length > 0 && tabelas.filter(t => 
+                        (!filtroBanco || (t.banco?.nome || "").toLowerCase().includes(filtroBanco.toLowerCase())) &&
+                        (!filtroConvenio || (t.convenio?.nome || "").toLowerCase().includes(filtroConvenio.toLowerCase()) || (t.produto?.nomeProduto || "").toLowerCase().includes(filtroConvenio.toLowerCase())) &&
+                        (!filtroPrazo || t.prazo >= parseInt(filtroPrazo))
+                      ).length > 100 && (
+                      <tr>
+                        <td colSpan={sessao.isAdmin ? 8 : 6} className="py-4 text-center text-zinc-500 italic text-xs bg-zinc-50/50 dark:bg-zinc-800/30">
+                          Mostrando os primeiros 100 resultados. Use os filtros acima para ser mais específico.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              )}
             </div>
           </div>
         </div>
