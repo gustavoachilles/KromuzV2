@@ -84,6 +84,38 @@ export function MesaClient({ sessao, propostas, leadsHoje, ultimasPropostas=[], 
   const [filtroPrazo, setFiltroPrazo] = useState("");
   const [filtroConvenio, setFiltroConvenio] = useState("");
 
+  // ── Nova Proposta Manual ──
+  const [novaPropostaModal, setNovaPropostaModal] = useState(false);
+  const [novaPropostaSaving, setNovaPropostaSaving] = useState(false);
+  const [novaPropostaForm, setNovaPropostaForm] = useState({
+    clienteNome: "",
+    clienteCpf: "",
+    clienteTelefone: "",
+    tipoOperacao: "EMPRESTIMO_CONSIGNADO",
+  });
+
+  const salvarNovaProposta = async () => {
+    if (!novaPropostaForm.clienteNome) return alert("Preencha o nome do cliente");
+    setNovaPropostaSaving(true);
+    try {
+      const res = await fetch("/api/propostas", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(novaPropostaForm),
+      });
+      if (res.ok) {
+        const p = await res.json();
+        router.push(`/esteira?proposta=${p.id}`);
+      } else {
+        const err = await res.json();
+        alert(err.error || "Erro ao criar proposta");
+      }
+    } catch (e) {
+      alert("Erro na requisição");
+    }
+    setNovaPropostaSaving(false);
+  };
+
   const abrirConsultaTabelas = async () => {
     setTabelasModalOpen(true);
     if (tabelas.length === 0) {
@@ -507,7 +539,7 @@ export function MesaClient({ sessao, propostas, leadsHoje, ultimasPropostas=[], 
         </section>
 
         {/* Ações Rápidas */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
           {[
             { icon: <Calculator className="h-5 w-5"/>, title: "Nova Simulação", desc: "Upload de HISCON para análise", href: "/simulador" },
             { icon: <Brain className="h-5 w-5"/>, title: "Consultar Regras", desc: "Pergunte à IA sobre qualquer banco", href: "/conhecimento" },
@@ -539,6 +571,15 @@ export function MesaClient({ sessao, propostas, leadsHoje, ultimasPropostas=[], 
             </div>
             <p className="font-semibold text-sm">Tabelas da Mesa</p>
             <p className="text-xs text-zinc-500 mt-0.5">Coeficientes e Prazos</p>
+          </button>
+          {/* Botão Nova Proposta Manual */}
+          <button onClick={() => setNovaPropostaModal(true)} className="group rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 text-left hover:shadow-md hover:border-orange-400 transition">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="h-9 w-9 rounded-lg bg-orange-50 dark:bg-orange-900/20 text-orange-600 flex items-center justify-center group-hover:scale-110 transition"><Briefcase className="h-5 w-5"/></div>
+              <ArrowRight className="h-4 w-4 text-zinc-300 ml-auto group-hover:text-orange-500 group-hover:translate-x-1 transition"/>
+            </div>
+            <p className="font-semibold text-sm">Nova Proposta</p>
+            <p className="text-xs text-zinc-500 mt-0.5">Cadastro Manual</p>
           </button>
         </div>
       </div>
@@ -783,6 +824,82 @@ export function MesaClient({ sessao, propostas, leadsHoje, ultimasPropostas=[], 
                   </tbody>
                 </table>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+      {/* ══════════ MODAL NOVA PROPOSTA MANUAL ══════════ */}
+      {novaPropostaModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={() => setNovaPropostaModal(false)}>
+          <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-2xl w-full max-w-md mx-4 overflow-hidden" onClick={e => e.stopPropagation()}>
+            <div className="px-6 py-4 border-b border-zinc-100 dark:border-zinc-800 flex items-center justify-between">
+              <h2 className="font-bold flex items-center gap-2">
+                <Briefcase className="h-5 w-5 text-orange-500" />
+                Nova Proposta Manual
+              </h2>
+              <button onClick={() => setNovaPropostaModal(false)} className="text-zinc-400 hover:text-zinc-600 transition">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="text-xs font-semibold text-zinc-500 uppercase">Nome do Cliente *</label>
+                <input
+                  type="text"
+                  value={novaPropostaForm.clienteNome}
+                  onChange={e => setNovaPropostaForm({ ...novaPropostaForm, clienteNome: e.target.value })}
+                  placeholder="Ex: João da Silva"
+                  className="mt-1 w-full px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/50 focus:outline-none focus:ring-2 focus:ring-orange-500/50 transition"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-xs font-semibold text-zinc-500 uppercase">CPF</label>
+                  <input
+                    type="text"
+                    value={novaPropostaForm.clienteCpf}
+                    onChange={e => setNovaPropostaForm({ ...novaPropostaForm, clienteCpf: formatarCpf(e.target.value) })}
+                    placeholder="000.000.000-00"
+                    className="mt-1 w-full px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/50 focus:outline-none focus:ring-2 focus:ring-orange-500/50 transition"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-zinc-500 uppercase">Telefone</label>
+                  <input
+                    type="text"
+                    value={novaPropostaForm.clienteTelefone}
+                    onChange={e => setNovaPropostaForm({ ...novaPropostaForm, clienteTelefone: formatarTelefone(e.target.value) })}
+                    placeholder="(00) 00000-0000"
+                    className="mt-1 w-full px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/50 focus:outline-none focus:ring-2 focus:ring-orange-500/50 transition"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-zinc-500 uppercase">Tipo de Operação *</label>
+                <select
+                  value={novaPropostaForm.tipoOperacao}
+                  onChange={e => setNovaPropostaForm({ ...novaPropostaForm, tipoOperacao: e.target.value })}
+                  className="mt-1 w-full px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/50 focus:outline-none focus:ring-2 focus:ring-orange-500/50 transition"
+                >
+                  <option value="EMPRESTIMO_CONSIGNADO">Novo</option>
+                  <option value="PORTABILIDADE">Portabilidade</option>
+                  <option value="REFINANCIAMENTO">Refinanciamento</option>
+                  <option value="PORTABILIDADE_REFIN">Portabilidade + Refin</option>
+                  <option value="CARTAO_CONSIGNADO">Cartão Consignado</option>
+                  <option value="CARTAO_BENEFICIO">Cartão Benefício</option>
+                </select>
+              </div>
+            </div>
+            <div className="px-6 py-4 border-t border-zinc-100 dark:border-zinc-800 flex justify-end gap-3">
+              <button onClick={() => setNovaPropostaModal(false)} className="px-4 py-2 font-semibold text-zinc-600 hover:text-zinc-900 transition">Cancelar</button>
+              <button
+                onClick={salvarNovaProposta}
+                disabled={novaPropostaSaving || !novaPropostaForm.clienteNome}
+                className="px-6 py-2 bg-orange-600 text-white font-semibold rounded-xl hover:bg-orange-700 transition disabled:opacity-50 flex items-center gap-2"
+              >
+                {novaPropostaSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Briefcase className="h-4 w-4" />}
+                Cadastrar e Abrir
+              </button>
             </div>
           </div>
         </div>
