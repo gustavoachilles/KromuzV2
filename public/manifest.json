@@ -1,0 +1,26 @@
+{
+  "name": "Kromuz CRM",
+  "short_name": "Kromuz",
+  "description": "Plataforma de Alta Performance para Correspondentes Bancários",
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#ffffff",
+  "theme_color": "#7c3aed",
+  "icons": [
+    {
+      "src": "/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["business", "productivity", "finance"],
+  "dir": "ltr",
+  "lang": "pt-BR"
+}

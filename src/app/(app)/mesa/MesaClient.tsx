@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import {
   LayoutDashboard, Clock, CheckCircle2, AlertTriangle, Phone,
@@ -97,7 +97,7 @@ export function MesaClient({ sessao, propostas, leadsHoje, ultimasPropostas=[], 
   const [clienteSearching, setClienteSearching] = useState(false);
   const [clienteSelecionado, setClienteSelecionado] = useState<any>(null);
   const [showClienteDropdown, setShowClienteDropdown] = useState(false);
-  const searchTimeout = useState<NodeJS.Timeout | null>(null);
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const [npForm, setNpForm] = useState({
     clienteNome: "", clienteCpf: "", clienteTelefone: "",
@@ -137,9 +137,9 @@ export function MesaClient({ sessao, propostas, leadsHoje, ultimasPropostas=[], 
   const buscarClientes = (query: string) => {
     setClienteQuery(query);
     setShowClienteDropdown(true);
-    if (searchTimeout[0]) clearTimeout(searchTimeout[0]);
+    if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
     if (query.length < 2) { setClienteResults([]); return; }
-    searchTimeout[0] = setTimeout(async () => {
+    searchTimeoutRef.current = setTimeout(async () => {
       setClienteSearching(true);
       try {
         const res = await fetch(`/api/leads/buscar?q=${encodeURIComponent(query)}`);
