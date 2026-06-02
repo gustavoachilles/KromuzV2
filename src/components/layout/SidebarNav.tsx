@@ -4,7 +4,7 @@ import { useState, useMemo } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Brain, FileText, Layers, Settings, Calculator, BookOpen, BarChart3, Shield, Package, ScrollText, Kanban, Users, DollarSign, Target, Trophy, Upload, ArrowRightLeft, PieChart, CreditCard, Inbox as InboxIcon, Megaphone, RefreshCcw, MessageSquare, GraduationCap, Clock, Activity, LayoutDashboard, KeyRound, ChevronDown, AlertTriangle, UserCheck, Receipt, Palmtree, FolderOpen, CalendarDays, Gavel, Eye, Bell, Repeat, Zap, Table2 } from "lucide-react";
+import { Brain, FileText, Layers, Settings, Calculator, BookOpen, BarChart3, Shield, Package, ScrollText, Kanban, Users, DollarSign, Target, Trophy, Upload, ArrowRightLeft, PieChart, CreditCard, Inbox as InboxIcon, Megaphone, RefreshCcw, MessageSquare, GraduationCap, Clock, Activity, LayoutDashboard, KeyRound, ChevronDown, AlertTriangle, UserCheck, Receipt, Palmtree, FolderOpen, CalendarDays, Gavel, Eye, Bell, Repeat, Zap, Table2, Building2 } from "lucide-react";
 import type { Permissoes } from "@/lib/permissions";
 
 // ── Category color mapping ──
@@ -191,6 +191,7 @@ export function SidebarNav({ permissoes }: { permissoes: Permissoes }) {
             <>
               <NavLink isSubItem href="/bancos" icon={<Layers className="h-4 w-4" />} active={pathname.startsWith("/bancos")}>Bancos</NavLink>
               <NavLink isSubItem href="/convenios" icon={<Shield className="h-4 w-4" />} active={pathname.startsWith("/convenios")}>Convênios</NavLink>
+              <NavLink isSubItem href="/promotoras" icon={<Building2 className="h-4 w-4" />} active={pathname.startsWith("/promotoras")}>Promotoras</NavLink>
               <NavLink isSubItem href="/credenciais" icon={<KeyRound className="h-4 w-4" />} active={pathname === "/credenciais"}>Credenciais</NavLink>
             </>
           )}
