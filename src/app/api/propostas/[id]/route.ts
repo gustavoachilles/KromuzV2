@@ -37,6 +37,25 @@ const AtualizarPropostaSchema = z.object({
   convenioNome: z.string().optional(),
   bancoOrigem: z.string().nullable().optional(),
   saldoDevedor: z.number().nullable().optional(),
+  
+  promotoraId: z.string().uuid().optional().nullable(),
+  tabelaId: z.string().uuid().optional().nullable(),
+  codigoPropostaBanco: z.string().optional().nullable(),
+  digitadaEm: z.coerce.date().optional().nullable(),
+  pagaEm: z.coerce.date().optional().nullable(),
+
+  parcelaAtual: z.number().optional().nullable(),
+  prazoAtual: z.number().int().optional().nullable(),
+  parcelasPagas: z.number().int().optional().nullable(),
+  parcelasEmAberto: z.number().int().optional().nullable(),
+  troco: z.number().optional().nullable(),
+
+  formaPagamento: z.string().optional().nullable(),
+  bancoPagamento: z.string().optional().nullable(),
+  agenciaPagamento: z.string().optional().nullable(),
+  contaPagamento: z.string().optional().nullable(),
+  chavePix: z.string().optional().nullable(),
+  tipoChavePix: z.string().optional().nullable(),
 });
 
 // PATCH /api/propostas/[id] — edita proposta / muda status

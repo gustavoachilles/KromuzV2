@@ -26,26 +26,48 @@ export async function GET(req: Request) {
 
 const CriarPropostaSchema = z.object({
   clienteNome: z.string().min(2),
-  clienteCpf: z.string().optional(),
-  clienteTelefone: z.string().optional(),
-  numeroBeneficio: z.string().optional(),
-  especieBeneficio: z.number().int().optional(),
+  clienteCpf: z.string().optional().nullable(),
+  clienteTelefone: z.string().optional().nullable(),
+  numeroBeneficio: z.string().optional().nullable(),
+  especieBeneficio: z.number().int().optional().nullable(),
   tipoOperacao: z.enum([
     "EMPRESTIMO_CONSIGNADO", "REFINANCIAMENTO", "PORTABILIDADE",
     "PORTABILIDADE_REFIN", "CARTAO_CONSIGNADO", "CARTAO_BENEFICIO",
-  ]),
-  bancoId: z.string().uuid().optional(),
-  leadId: z.string().uuid().optional(),
-  bancoNome: z.string().optional(),
-  bancoOrigem: z.string().optional(),
-  produtoNome: z.string().optional(),
-  convenioNome: z.string().optional(),
-  valorParcela: z.number().optional(),
-  valorLiberado: z.number().optional(),
-  saldoDevedor: z.number().optional(),
-  prazo: z.number().int().optional(),
-  taxaJuros: z.number().optional(),
-  observacoes: z.string().optional(),
+  ]).optional().nullable(),
+  bancoId: z.string().uuid().optional().nullable(),
+  leadId: z.string().uuid().optional().nullable(),
+  bancoNome: z.string().optional().nullable(),
+  bancoOrigem: z.string().optional().nullable(),
+  produtoNome: z.string().optional().nullable(),
+  convenioNome: z.string().optional().nullable(),
+  valorParcela: z.number().optional().nullable(),
+  valorLiberado: z.number().optional().nullable(),
+  saldoDevedor: z.number().optional().nullable(),
+  prazo: z.number().int().optional().nullable(),
+  taxaJuros: z.number().optional().nullable(),
+  observacoes: z.string().optional().nullable(),
+  
+  // Referências
+  promotoraId: z.string().uuid().optional().nullable(),
+  tabelaId: z.string().uuid().optional().nullable(),
+  codigoPropostaBanco: z.string().optional().nullable(),
+  digitadaEm: z.coerce.date().optional().nullable(),
+  pagaEm: z.coerce.date().optional().nullable(),
+
+  // Portabilidade
+  parcelaAtual: z.number().optional().nullable(),
+  prazoAtual: z.number().int().optional().nullable(),
+  parcelasPagas: z.number().int().optional().nullable(),
+  parcelasEmAberto: z.number().int().optional().nullable(),
+  troco: z.number().optional().nullable(),
+
+  // Pagamento
+  formaPagamento: z.string().optional().nullable(),
+  bancoPagamento: z.string().optional().nullable(),
+  agenciaPagamento: z.string().optional().nullable(),
+  contaPagamento: z.string().optional().nullable(),
+  chavePix: z.string().optional().nullable(),
+  tipoChavePix: z.string().optional().nullable(),
 });
 
 // POST /api/propostas — cria proposta
@@ -76,6 +98,26 @@ export async function POST(req: NextRequest) {
         prazo: body.prazo,
         taxaJuros: body.taxaJuros,
         observacoes: body.observacoes,
+        
+        promotoraId: body.promotoraId,
+        tabelaId: body.tabelaId,
+        codigoPropostaBanco: body.codigoPropostaBanco,
+        digitadaEm: body.digitadaEm,
+        pagaEm: body.pagaEm,
+        
+        parcelaAtual: body.parcelaAtual,
+        prazoAtual: body.prazoAtual,
+        parcelasPagas: body.parcelasPagas,
+        parcelasEmAberto: body.parcelasEmAberto,
+        troco: body.troco,
+        
+        formaPagamento: body.formaPagamento,
+        bancoPagamento: body.bancoPagamento,
+        agenciaPagamento: body.agenciaPagamento,
+        contaPagamento: body.contaPagamento,
+        chavePix: body.chavePix,
+        tipoChavePix: body.tipoChavePix,
+
         vendedorEmail: sessao.email,
         vendedorNome: sessao.nomeUsuario,
         status: "RASCUNHO",

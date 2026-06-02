@@ -22,34 +22,34 @@ datasource db {
 // ─────────────────────────────────────────────────────────────────────────────
 
 model Empresa {
-  id              String    @id @default(uuid()) @db.Uuid
-  nomeEmpresa     String    @map("nome_empresa")
-  nomeFantasia    String?   @map("nome_fantasia")
-  cpfCnpj         String?   @map("cpf_cnpj")
-  status          String    @default("teste")
-  planoSlug       String    @default("beta") @map("plano_slug")
-  diasTrial       Int       @default(14) @map("dias_trial")
-  dataTrialFim    DateTime? @map("data_trial_fim") @db.Date
-  nivelPlataforma String    @default("inicio") @map("nivel_plataforma")
-  logoUrl         String?   @map("logo_url")
-  corPrimaria     String?   @map("cor_primaria")
-  telefone        String?
-  email           String?
-  inscricaoEstadual String? @map("inscricao_estadual")
-  inscricaoMunicipal String? @map("inscricao_municipal")
-  cep             String?
-  logradouro      String?
-  numero          String?
-  complemento     String?
-  bairro          String?
-  cidade          String?
-  uf              String?
-  asaasCustomerId String?   @map("asaas_customer_id")
-  statusAssinatura String   @default("ACTIVE") @map("status_assinatura")
-  planoSaasId     String?   @map("plano_saas_id") @db.Uuid
-  regimeTributario String   @default("SIMPLES_NACIONAL") @map("regime_tributario") // SIMPLES_NACIONAL, LUCRO_PRESUMIDO, LUCRO_REAL
-  createdAt       DateTime  @default(now()) @map("created_at")
-  updatedAt       DateTime  @updatedAt @map("updated_at")
+  id                 String    @id @default(uuid()) @db.Uuid
+  nomeEmpresa        String    @map("nome_empresa")
+  nomeFantasia       String?   @map("nome_fantasia")
+  cpfCnpj            String?   @map("cpf_cnpj")
+  status             String    @default("teste")
+  planoSlug          String    @default("beta") @map("plano_slug")
+  diasTrial          Int       @default(14) @map("dias_trial")
+  dataTrialFim       DateTime? @map("data_trial_fim") @db.Date
+  nivelPlataforma    String    @default("inicio") @map("nivel_plataforma")
+  logoUrl            String?   @map("logo_url")
+  corPrimaria        String?   @map("cor_primaria")
+  telefone           String?
+  email              String?
+  inscricaoEstadual  String?   @map("inscricao_estadual")
+  inscricaoMunicipal String?   @map("inscricao_municipal")
+  cep                String?
+  logradouro         String?
+  numero             String?
+  complemento        String?
+  bairro             String?
+  cidade             String?
+  uf                 String?
+  asaasCustomerId    String?   @map("asaas_customer_id")
+  statusAssinatura   String    @default("ACTIVE") @map("status_assinatura")
+  planoSaasId        String?   @map("plano_saas_id") @db.Uuid
+  regimeTributario   String    @default("SIMPLES_NACIONAL") @map("regime_tributario") // SIMPLES_NACIONAL, LUCRO_PRESUMIDO, LUCRO_REAL
+  createdAt          DateTime  @default(now()) @map("created_at")
+  updatedAt          DateTime  @updatedAt @map("updated_at")
 
   bancos               Banco[]
   convenios            Convenio[]
@@ -70,38 +70,39 @@ model Empresa {
   faturasBanco         FaturaBanco[]
   conhecimentoBevi     ConhecimentoBevi[]
 
-  canais               CanalComunicacao[]
-  conversas            Conversa[]
-  campanhas            CampanhaDisparo[]
-  filaRpa              FilaRpa[]
-  campanhasMarketing   CampanhaMarketing[]
-  logsAtividades       LogAtividade[]
-  regrasComissao       RegraComissao[]
-  cargos               Cargo[]
-  funcionarios         Funcionario[]
-  auditLogsRh          AuditLogRH[]
+  canais             CanalComunicacao[]
+  conversas          Conversa[]
+  campanhas          CampanhaDisparo[]
+  filaRpa            FilaRpa[]
+  campanhasMarketing CampanhaMarketing[]
+  logsAtividades     LogAtividade[]
+  regrasComissao     RegraComissao[]
+  cargos             Cargo[]
+  funcionarios       Funcionario[]
+  auditLogsRh        AuditLogRH[]
 
   // ── Módulo Contábil & Fiscal ──
-  contasBancarias      ContaBancariaCF[]
-  categoriasFinanceiras CategoriaFinanceira[]
+  contasBancarias        ContaBancariaCF[]
+  categoriasFinanceiras  CategoriaFinanceira[]
   lancamentosFinanceiros LancamentoFinanceiro[]
-  orcamentos           OrcamentoDepartamento[]
-  transacoesCarteira   TransacaoCarteira[]
+  orcamentos             OrcamentoDepartamento[]
+  transacoesCarteira     TransacaoCarteira[]
 
   // ── Módulo Societário & Patrimônio ──
-  documentosRegulatorios DocumentoRegulatorio[]
+  documentosRegulatorios  DocumentoRegulatorio[]
   certificacoesVendedores CertificacaoVendedor[]
-  ativosImobilizados   AtivoImobilizado[]
-  borderos             BorderoUpload[]
-  mensagensRapidas     MensagemRapida[]
-  tagsConversa         TagConversa[]
-  atividades           Atividade[]
-  automacoesFluxo      AutomacaoFluxo[]
-  campanhasBroadcast   Campanha[]
-  syncTabelaConfig     SyncTabelaConfig?
-  
-  planoSaaS            PlanoSaaS? @relation(fields: [planoSaasId], references: [id])
-  faturasSaaS          FaturaSaaS[]
+  ativosImobilizados      AtivoImobilizado[]
+  borderos                BorderoUpload[]
+  mensagensRapidas        MensagemRapida[]
+  tagsConversa            TagConversa[]
+  atividades              Atividade[]
+  automacoesFluxo         AutomacaoFluxo[]
+  campanhasBroadcast      Campanha[]
+  syncTabelaConfig        SyncTabelaConfig?
+
+  planoSaaS   PlanoSaaS?   @relation(fields: [planoSaasId], references: [id])
+  faturasSaaS FaturaSaaS[]
+  promotoras  Promotora[]
 
   @@index([status])
   @@map("empresa")
@@ -109,77 +110,77 @@ model Empresa {
 }
 
 model UsuarioPerfil {
-  id         String   @id @default(uuid()) @db.Uuid
-  empresaId  String   @map("empresa_id") @db.Uuid
-  authUserId String   @unique @map("auth_user_id") @db.Uuid
-  email               String
-  nome                String?
-  perfilSlug          String   @default("vendedor") @map("perfil_slug")
-  isSuperAdmin        Boolean  @default(false) @map("is_super_admin")
-  cargoId             String?  @map("cargo_id") @db.Uuid
-  avatarUrl           String?  @map("avatar_url")
+  id           String  @id @default(uuid()) @db.Uuid
+  empresaId    String  @map("empresa_id") @db.Uuid
+  authUserId   String  @unique @map("auth_user_id") @db.Uuid
+  email        String
+  nome         String?
+  perfilSlug   String  @default("vendedor") @map("perfil_slug")
+  isSuperAdmin Boolean @default(false) @map("is_super_admin")
+  cargoId      String? @map("cargo_id") @db.Uuid
+  avatarUrl    String? @map("avatar_url")
 
   // Dados Pessoais
-  telefone            String?
-  cpf                 String?
-  dataNascimento      DateTime? @map("data_nascimento") @db.Date
-  rg                  String?
-  orgaoEmissor        String?  @map("orgao_emissor")
-  genero              String?  // M, F, Outro
-  estadoCivil         String?  @map("estado_civil")
-  timeFavorito        String?  @map("time_favorito")
-  fotoUrl             String?  @map("foto_url")
+  telefone       String?
+  cpf            String?
+  dataNascimento DateTime? @map("data_nascimento") @db.Date
+  rg             String?
+  orgaoEmissor   String?   @map("orgao_emissor")
+  genero         String? // M, F, Outro
+  estadoCivil    String?   @map("estado_civil")
+  timeFavorito   String?   @map("time_favorito")
+  fotoUrl        String?   @map("foto_url")
 
   // Endereço
-  cep                 String?
-  logradouro          String?
-  numero              String?
-  complemento         String?
-  bairro              String?
-  cidade              String?
-  uf                  String?
+  cep         String?
+  logradouro  String?
+  numero      String?
+  complemento String?
+  bairro      String?
+  cidade      String?
+  uf          String?
 
   // Dados Bancários
-  bancoNome           String?  @map("banco_nome")
-  bancoAgencia        String?  @map("banco_agencia")
-  bancoConta          String?  @map("banco_conta")
-  bancoTipoConta      String?  @map("banco_tipo_conta") // corrente, poupanca
-  chavePix            String?  @map("chave_pix")
-  tipoChavePix        String?  @map("tipo_chave_pix") // cpf, email, telefone, aleatoria
+  bancoNome      String? @map("banco_nome")
+  bancoAgencia   String? @map("banco_agencia")
+  bancoConta     String? @map("banco_conta")
+  bancoTipoConta String? @map("banco_tipo_conta") // corrente, poupanca
+  chavePix       String? @map("chave_pix")
+  tipoChavePix   String? @map("tipo_chave_pix") // cpf, email, telefone, aleatoria
 
   // Contratação
   dataContratacao     DateTime? @map("data_contratacao") @db.Date
   dataDesligamento    DateTime? @map("data_desligamento") @db.Date
   observacoesPessoais String?   @map("observacoes_pessoais") @db.Text
   documentosUrls      Json?     @map("documentos_urls") @db.JsonB // [{nome, url, tipo}]
-  
+
   // Regras de Remuneração
-  tipoRemuneracao     String   @default("SEM_COMISSAO") @map("tipo_remuneracao") // SEM_COMISSAO, PERCENTUAL_FIXO, FAIXAS_META
-  baseCalculoComissao String   @default("VOLUME") @map("base_calculo_comissao") // VOLUME, LUCRO_LOJA
-  salarioFixo         Float?   @map("salario_fixo")
-  percentualFixo      Float?   @map("percentual_fixo")
-  regrasFaixas        Json?    @map("regras_faixas") // Array de objetos { minVolume, percentual }
+  tipoRemuneracao     String @default("SEM_COMISSAO") @map("tipo_remuneracao") // SEM_COMISSAO, PERCENTUAL_FIXO, FAIXAS_META
+  baseCalculoComissao String @default("VOLUME") @map("base_calculo_comissao") // VOLUME, LUCRO_LOJA
+  salarioFixo         Float? @map("salario_fixo")
+  percentualFixo      Float? @map("percentual_fixo")
+  regrasFaixas        Json?  @map("regras_faixas") // Array de objetos { minVolume, percentual }
 
   // Rede de Parceiros (Master / Sub)
-  masterId            String?  @map("master_id") @db.Uuid
-  percentualSplitMaster Float? @map("percentual_split_master") // ex: 20% fica pro Master
+  masterId              String? @map("master_id") @db.Uuid
+  percentualSplitMaster Float?  @map("percentual_split_master") // ex: 20% fica pro Master
 
   // Controle de Horário de Acesso
-  horarioInicio       String?  @map("horario_inicio")   // "08:00"
-  horarioFim          String?  @map("horario_fim")      // "18:00"
-  diasAcesso          Json?    @map("dias_acesso")      // ["seg","ter","qua","qui","sex"]
+  horarioInicio String? @map("horario_inicio") // "08:00"
+  horarioFim    String? @map("horario_fim") // "18:00"
+  diasAcesso    Json?   @map("dias_acesso") // ["seg","ter","qua","qui","sex"]
 
-  ativo               Boolean  @default(true)
-  createdAt           DateTime @default(now()) @map("created_at")
-  updatedAt           DateTime @updatedAt @map("updated_at")
+  ativo     Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
-  empresa Empresa @relation(fields: [empresaId], references: [id], onDelete: Cascade)
-  cargo   Cargo?  @relation(fields: [cargoId], references: [id], onDelete: SetNull)
-  conversas Conversa[]
+  empresa        Empresa        @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  cargo          Cargo?         @relation(fields: [cargoId], references: [id], onDelete: SetNull)
+  conversas      Conversa[]
   logsAtividades LogAtividade[]
-  
-  master              UsuarioPerfil? @relation("RedeParceiros", fields: [masterId], references: [id], onDelete: SetNull)
-  subCorretores       UsuarioPerfil[] @relation("RedeParceiros")
+
+  master        UsuarioPerfil?  @relation("RedeParceiros", fields: [masterId], references: [id], onDelete: SetNull)
+  subCorretores UsuarioPerfil[] @relation("RedeParceiros")
 
   @@index([empresaId])
   @@index([authUserId])
@@ -188,19 +189,19 @@ model UsuarioPerfil {
 }
 
 model Cargo {
-  id          String   @id @default(uuid()) @db.Uuid
-  empresaId   String   @map("empresa_id") @db.Uuid
-  nome        String
-  slug        String
-  descricao   String?
-  permissoes  Json     @default("{}") @db.JsonB
-  isDefault   Boolean  @default(false) @map("is_default")
-  isSistema   Boolean  @default(false) @map("is_sistema")
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  id         String   @id @default(uuid()) @db.Uuid
+  empresaId  String   @map("empresa_id") @db.Uuid
+  nome       String
+  slug       String
+  descricao  String?
+  permissoes Json     @default("{}") @db.JsonB
+  isDefault  Boolean  @default(false) @map("is_default")
+  isSistema  Boolean  @default(false) @map("is_sistema")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
 
-  empresa     Empresa        @relation(fields: [empresaId], references: [id], onDelete: Cascade)
-  usuarios    UsuarioPerfil[]
+  empresa  Empresa         @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  usuarios UsuarioPerfil[]
 
   @@unique([empresaId, slug])
   @@index([empresaId])
@@ -337,23 +338,23 @@ model ProdutoCredito {
 // ─────────────────────────────────────────────────────────────────────────────
 
 model TabelaCoeficiente {
-  id                 String   @id @default(uuid()) @db.Uuid
-  empresaId          String   @map("empresa_id") @db.Uuid
-  bancoId            String   @map("banco_id") @db.Uuid
-  produtoId          String   @map("produto_id") @db.Uuid
-  convenioId         String?  @map("convenio_id") @db.Uuid
-  
-  nome               String
-  prazo              Int
-  taxaJurosMensal    Float    @map("taxa_juros_mensal")
-  coeficiente        Float
-  
-  comissaoFlatPct    Float?   @map("comissao_flat_pct")
-  comissaoRepassePct Float?   @map("comissao_repasse_pct")
-  
-  ativo              Boolean  @default(true)
-  createdAt          DateTime @default(now()) @map("created_at")
-  updatedAt          DateTime @updatedAt @map("updated_at")
+  id         String  @id @default(uuid()) @db.Uuid
+  empresaId  String  @map("empresa_id") @db.Uuid
+  bancoId    String  @map("banco_id") @db.Uuid
+  produtoId  String  @map("produto_id") @db.Uuid
+  convenioId String? @map("convenio_id") @db.Uuid
+
+  nome            String
+  prazo           Int
+  taxaJurosMensal Float  @map("taxa_juros_mensal")
+  coeficiente     Float
+
+  comissaoFlatPct    Float? @map("comissao_flat_pct")
+  comissaoRepassePct Float? @map("comissao_repasse_pct")
+
+  ativo     Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   empresa  Empresa        @relation(fields: [empresaId], references: [id], onDelete: Cascade)
   banco    Banco          @relation(fields: [bancoId], references: [id], onDelete: Cascade)
@@ -388,8 +389,8 @@ model RegraProdutoCredito {
   analfabetoPermitido         Boolean? @map("analfabeto_permitido")
 
   // Regras de Convênio / UF
-  ufBloqueadas   String[] @default([]) @map("uf_bloqueadas")
-  ddbMinimoDias  Int?     @map("ddb_minimo_dias") // IN100
+  ufBloqueadas  String[] @default([]) @map("uf_bloqueadas")
+  ddbMinimoDias Int?     @map("ddb_minimo_dias") // IN100
 
   margemPadraoPct Float? @map("margem_padrao_pct")
   margemLoasPct   Float? @map("margem_loas_pct")
@@ -464,20 +465,20 @@ model RegraProdutoCredito {
 }
 
 model RoteiroOperacional {
-  id              String   @id @default(uuid()) @db.Uuid
-  empresaId       String   @map("empresa_id") @db.Uuid
-  bancoId         String   @map("banco_id") @db.Uuid
-  bancoNome       String   @map("banco_nome")
+  id              String  @id @default(uuid()) @db.Uuid
+  empresaId       String  @map("empresa_id") @db.Uuid
+  bancoId         String  @map("banco_id") @db.Uuid
+  bancoNome       String  @map("banco_nome")
   produto         String
   titulo          String
   descricao       String?
-  versaoAtual     String   @default("1.0") @map("versao_atual")
-  status          String   @default("rascunho")
-  arquivoPdfUrl   String?  @map("arquivo_pdf_url")
-  regrasExtraidas Int      @default(0) @map("regras_extraidas")
+  versaoAtual     String  @default("1.0") @map("versao_atual")
+  status          String  @default("rascunho")
+  arquivoPdfUrl   String? @map("arquivo_pdf_url")
+  regrasExtraidas Int     @default(0) @map("regras_extraidas")
 
-  createdAt       DateTime @default(now()) @map("created_at")
-  updatedAt       DateTime @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   empresa Empresa @relation(fields: [empresaId], references: [id], onDelete: Cascade)
   banco   Banco   @relation(fields: [bancoId], references: [id], onDelete: Cascade)
@@ -492,25 +493,25 @@ model RoteiroOperacional {
 // ─────────────────────────────────────────────────────────────────────────────
 
 model FaturaBanco {
-  id              String   @id @default(uuid()) @db.Uuid
-  empresaId       String   @map("empresa_id") @db.Uuid
-  bancoNome       String   @map("banco_nome")
-  
-  codigoLote      String   @unique @map("codigo_lote") // Ex: LOTE-PAN-001
-  status          String   @default("PENDENTE") // PENDENTE, PAGA, CANCELADA
-  
-  dataEmissao     DateTime @default(now()) @map("data_emissao")
-  dataVencimento  DateTime? @map("data_vencimento")
-  dataPagamento   DateTime? @map("data_pagamento")
-  
-  valorTotal      Float    @map("valor_total")
-  observacoes     String?
-  
-  createdAt       DateTime @default(now()) @map("created_at")
-  updatedAt       DateTime @updatedAt @map("updated_at")
+  id        String @id @default(uuid()) @db.Uuid
+  empresaId String @map("empresa_id") @db.Uuid
+  bancoNome String @map("banco_nome")
 
-  propostas       Proposta[]
-  empresa         Empresa  @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  codigoLote String @unique @map("codigo_lote") // Ex: LOTE-PAN-001
+  status     String @default("PENDENTE") // PENDENTE, PAGA, CANCELADA
+
+  dataEmissao    DateTime  @default(now()) @map("data_emissao")
+  dataVencimento DateTime? @map("data_vencimento")
+  dataPagamento  DateTime? @map("data_pagamento")
+
+  valorTotal  Float   @map("valor_total")
+  observacoes String?
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  propostas Proposta[]
+  empresa   Empresa    @relation(fields: [empresaId], references: [id], onDelete: Cascade)
 
   @@index([empresaId, bancoNome, status])
   @@map("fatura_banco")
@@ -554,11 +555,11 @@ model AuditLog {
   empresaId    String   @map("empresa_id") @db.Uuid
   usuarioEmail String   @map("usuario_email")
   usuarioNome  String?  @map("usuario_nome")
-  acao         String   // criou, editou, deletou, importou, vinculou, desvinculou
-  entidade     String   // regra, banco, produto, convenio, tabela, empresa, usuario
+  acao         String // criou, editou, deletou, importou, vinculou, desvinculou
+  entidade     String // regra, banco, produto, convenio, tabela, empresa, usuario
   entidadeId   String?  @map("entidade_id") @db.Uuid
   entidadeNome String?  @map("entidade_nome")
-  detalhes     Json?    @db.JsonB  // campos alterados { campo: { de: ..., para: ... } }
+  detalhes     Json?    @db.JsonB // campos alterados { campo: { de: ..., para: ... } }
   ip           String?
   createdAt    DateTime @default(now()) @map("created_at")
 
@@ -588,40 +589,40 @@ enum StatusProposta {
 }
 
 model Proposta {
-  id              String         @id @default(uuid()) @db.Uuid
-  empresaId       String         @map("empresa_id") @db.Uuid
-  bancoId         String?        @map("banco_id") @db.Uuid
-  produtoId       String?        @map("produto_id") @db.Uuid
-  convenioId      String?        @map("convenio_id") @db.Uuid
-  leadId          String?        @map("lead_id") @db.Uuid
+  id         String  @id @default(uuid()) @db.Uuid
+  empresaId  String  @map("empresa_id") @db.Uuid
+  bancoId    String? @map("banco_id") @db.Uuid
+  produtoId  String? @map("produto_id") @db.Uuid
+  convenioId String? @map("convenio_id") @db.Uuid
+  leadId     String? @map("lead_id") @db.Uuid
 
   // Cliente
-  clienteNome     String         @map("cliente_nome")
-  clienteCpf      String?        @map("cliente_cpf")
-  clienteTelefone String?        @map("cliente_telefone")
-  numeroBeneficio String?        @map("numero_beneficio")
-  especieBeneficio Int?          @map("especie_beneficio")
+  clienteNome      String  @map("cliente_nome")
+  clienteCpf       String? @map("cliente_cpf")
+  clienteTelefone  String? @map("cliente_telefone")
+  numeroBeneficio  String? @map("numero_beneficio")
+  especieBeneficio Int?    @map("especie_beneficio")
 
   // Operação
-  tipoOperacao    String?        @map("tipo_operacao")
-  status          StatusProposta @default(RASCUNHO)
-  integradaBanco  Boolean        @default(false) @map("integrada_banco")
-  codigoPropostaBanco String?    @map("codigo_proposta_banco")
-  valorParcela    Float?         @map("valor_parcela")
-  valorLiberado   Float?         @map("valor_liberado")
-  prazo           Int?
-  taxaJuros       Float?         @map("taxa_juros")
-  valorComissao   Float?         @map("valor_comissao")
+  tipoOperacao        String?        @map("tipo_operacao")
+  status              StatusProposta @default(RASCUNHO)
+  integradaBanco      Boolean        @default(false) @map("integrada_banco")
+  codigoPropostaBanco String?        @map("codigo_proposta_banco")
+  valorParcela        Float?         @map("valor_parcela")
+  valorLiberado       Float?         @map("valor_liberado")
+  prazo               Int?
+  taxaJuros           Float?         @map("taxa_juros")
+  valorComissao       Float?         @map("valor_comissao")
 
   // Meta
-  bancoNome       String?        @map("banco_nome")
-  produtoNome     String?        @map("produto_nome")
-  convenioNome    String?        @map("convenio_nome")
-  vendedorEmail   String?        @map("vendedor_email")
-  vendedorNome    String?        @map("vendedor_nome")
+  bancoNome     String? @map("banco_nome")
+  produtoNome   String? @map("produto_nome")
+  convenioNome  String? @map("convenio_nome")
+  vendedorEmail String? @map("vendedor_email")
+  vendedorNome  String? @map("vendedor_nome")
 
   // Rastreio de Gargalos
-  historicoStatus Json?    @map("historico_status") @db.JsonB @default("[]")
+  historicoStatus Json? @default("[]") @map("historico_status") @db.JsonB
 
   // Portabilidade — Controle Operacional
   bancoOrigem          String?   @map("banco_origem")
@@ -631,22 +632,41 @@ model Proposta {
   saldoRetornado       Boolean   @default(false) @map("saldo_retornado")
   dataProximoRetorno   DateTime? @map("data_proximo_retorno")
 
-  observacoes     String?
-  promotora       String?
-  tabela          String?
-  
-  // Datas do funil
-  digitadaEm      DateTime?      @map("digitada_em")
-  aprovadaEm      DateTime?      @map("aprovada_em")
-  pagaEm          DateTime?      @map("paga_em")
-  canceladaEm     DateTime?      @map("cancelada_em")
+  observacoes String?
+  promotora   String?
+  tabela      String?
 
-  createdAt       DateTime       @default(now()) @map("created_at")
-  updatedAt       DateTime       @updatedAt @map("updated_at")
+  // Referências para Tabela e Promotora
+  promotoraId String? @map("promotora_id") @db.Uuid
+  tabelaId    String? @map("tabela_id") @db.Uuid
+
+  // Portabilidade (extras)
+  parcelaAtual     Float? @map("parcela_atual")
+  prazoAtual       Int?   @map("prazo_atual")
+  parcelasPagas    Int?   @map("parcelas_pagas")
+  parcelasEmAberto Int?   @map("parcelas_em_aberto")
+  troco            Float?
+
+  // Dados de Pagamento
+  formaPagamento   String? @map("forma_pagamento")
+  bancoPagamento   String? @map("banco_pagamento")
+  agenciaPagamento String? @map("agencia_pagamento")
+  contaPagamento   String? @map("conta_pagamento")
+  chavePix         String? @map("chave_pix")
+  tipoChavePix     String? @map("tipo_chave_pix")
+
+  // Datas do funil
+  digitadaEm  DateTime? @map("digitada_em")
+  aprovadaEm  DateTime? @map("aprovada_em")
+  pagaEm      DateTime? @map("paga_em")
+  canceladaEm DateTime? @map("cancelada_em")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   // Links Financeiros
-  faturaBancoId   String?        @map("fatura_banco_id") @db.Uuid
-  faturaBanco     FaturaBanco?   @relation(fields: [faturaBancoId], references: [id])
+  faturaBancoId String?      @map("fatura_banco_id") @db.Uuid
+  faturaBanco   FaturaBanco? @relation(fields: [faturaBancoId], references: [id])
 
   empresa Empresa @relation(fields: [empresaId], references: [id], onDelete: Cascade)
 
@@ -664,85 +684,85 @@ model Proposta {
 // Status foram migrados para pipeline_coluna dinâmico
 
 model Lead {
-  id              String     @id @default(uuid()) @db.Uuid
-  empresaId       String     @map("empresa_id") @db.Uuid
+  id        String @id @default(uuid()) @db.Uuid
+  empresaId String @map("empresa_id") @db.Uuid
 
   // Dados pessoais
-  nome            String
-  cpf             String?
-  telefone        String?
-  email           String?
-  dataNascimento  DateTime?  @map("data_nascimento") @db.Date
-  uf              String?
-  cidade          String?
+  nome           String
+  cpf            String?
+  telefone       String?
+  email          String?
+  dataNascimento DateTime? @map("data_nascimento") @db.Date
+  uf             String?
+  cidade         String?
 
   // Benefício INSS
-  numeroBeneficio String?    @map("numero_beneficio")
-  especieBeneficio Int?      @map("especie_beneficio")
-  margemLivre     Float?     @map("margem_livre")
-  margemRmc       Float?     @map("margem_rmc")
-  margemRcc       Float?     @map("margem_rcc")
+  numeroBeneficio  String? @map("numero_beneficio")
+  especieBeneficio Int?    @map("especie_beneficio")
+  margemLivre      Float?  @map("margem_livre")
+  margemRmc        Float?  @map("margem_rmc")
+  margemRcc        Float?  @map("margem_rcc")
 
   // Pipeline
-  status          String     @default("NOVO")
-  origem          String?    // indicacao, site, whatsapp, importacao, manual
-  canalContato    String?    @map("canal_contato") // whatsapp, telefone, presencial
-  vendedorEmail   String?    @map("vendedor_email")
-  vendedorNome    String?    @map("vendedor_nome")
+  status        String  @default("NOVO")
+  origem        String? // indicacao, site, whatsapp, importacao, manual
+  canalContato  String? @map("canal_contato") // whatsapp, telefone, presencial
+  vendedorEmail String? @map("vendedor_email")
+  vendedorNome  String? @map("vendedor_nome")
 
   // Marketing e UTMs
-  utmSource       String?    @map("utm_source")
-  utmMedium       String?    @map("utm_medium")
-  utmCampaign     String?    @map("utm_campaign")
-  campanhaId      String?    @map("campanha_id") @db.Uuid
-  campanha        CampanhaMarketing? @relation(fields: [campanhaId], references: [id], onDelete: SetNull)
+  utmSource   String?            @map("utm_source")
+  utmMedium   String?            @map("utm_medium")
+  utmCampaign String?            @map("utm_campaign")
+  campanhaId  String?            @map("campanha_id") @db.Uuid
+  campanha    CampanhaMarketing? @relation(fields: [campanhaId], references: [id], onDelete: SetNull)
 
   // Operação potencial
-  tipoOperacao    String?       @map("tipo_operacao")
-  valorLiberado   Float?        @map("valor_liberado")
-  bancoPreferido  String?       @map("banco_preferido")
-  convenioNome    String?       @map("convenio_nome")
+  tipoOperacao   String? @map("tipo_operacao")
+  valorLiberado  Float?  @map("valor_liberado")
+  bancoPreferido String? @map("banco_preferido")
+  convenioNome   String? @map("convenio_nome")
 
   // Financeiro
-  renda           Float?
-  ddb             DateTime?     @db.Date  // Data de Despacho do Benefício
+  renda Float?
+  ddb   DateTime? @db.Date // Data de Despacho do Benefício
 
   // Endereço
-  cep             String?
-  logradouro      String?
-  numero          String?
-  complemento     String?
-  bairro          String?
+  cep         String?
+  logradouro  String?
+  numero      String?
+  complemento String?
+  bairro      String?
 
   // Dados bancários do cliente
-  bancoCliente    String?       @map("banco_cliente")
-  agenciaCliente  String?       @map("agencia_cliente")
-  contaCliente    String?       @map("conta_cliente")
-  tipoContaCliente String?     @map("tipo_conta_cliente")  // CC, CP
+  bancoCliente     String? @map("banco_cliente")
+  agenciaCliente   String? @map("agencia_cliente")
+  contaCliente     String? @map("conta_cliente")
+  tipoContaCliente String? @map("tipo_conta_cliente") // CC, CP
 
   // Importação / Operação
-  dataDigitacao       DateTime?   @map("data_digitacao")
-  codigoPropostaBanco String?     @map("codigo_proposta_banco") // ADE
+  dataDigitacao       DateTime? @map("data_digitacao")
+  codigoPropostaBanco String?   @map("codigo_proposta_banco") // ADE
   promotora           String?
-  parcelaAtual        Float?      @map("parcela_atual")
-  saldoDevedor        Float?      @map("saldo_devedor")
-  retornoSaldo        String?     @map("retorno_saldo")
+  parcelaAtual        Float?    @map("parcela_atual")
+  saldoDevedor        Float?    @map("saldo_devedor")
+  retornoSaldo        String?   @map("retorno_saldo")
   tabela              String?
 
-  observacoes     String?
-  ultimoContato   DateTime?  @map("ultimo_contato")
-  proximoContato  DateTime?  @map("proximo_contato")
-  motivoPerda     String?    @map("motivo_perda")
-  score           Int        @default(0)
+  observacoes    String?
+  ultimoContato  DateTime? @map("ultimo_contato")
+  proximoContato DateTime? @map("proximo_contato")
+  motivoPerda    String?   @map("motivo_perda")
+  score          Int       @default(0)
 
-  createdAt       DateTime   @default(now()) @map("created_at")
-  updatedAt       DateTime   @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
-  empresa Empresa @relation(fields: [empresaId], references: [id], onDelete: Cascade)
-  arquivos LeadArquivo[]
-  conversas Conversa[]
+  empresa        Empresa         @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  arquivos       LeadArquivo[]
+  conversas      Conversa[]
   execucoesFluxo ExecucaoFluxo[]
-  campanhas CampanhaLead[]
+  campanhas      CampanhaLead[]
 
   @@index([empresaId, status])
   @@index([empresaId, vendedorEmail])
@@ -756,11 +776,11 @@ model LeadArquivo {
   leadId    String   @map("lead_id") @db.Uuid
   nome      String
   url       String
-  tipo      String?  // Ex: application/pdf, image/jpeg
-  tamanho   Int?     // bytes
+  tipo      String? // Ex: application/pdf, image/jpeg
+  tamanho   Int? // bytes
   createdAt DateTime @default(now()) @map("created_at")
 
-  lead      Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  lead Lead @relation(fields: [leadId], references: [id], onDelete: Cascade)
 
   @@index([leadId])
   @@map("lead_arquivo")
@@ -783,28 +803,27 @@ model PipelineColuna {
   @@schema("public")
 }
 
-
 // ─────────────────────────────────────────────────────────────────────────────
 // METAS (Sprint 16)
 // ─────────────────────────────────────────────────────────────────────────────
 
 model Meta {
-  id              String   @id @default(uuid()) @db.Uuid
-  empresaId       String   @map("empresa_id") @db.Uuid
+  id        String @id @default(uuid()) @db.Uuid
+  empresaId String @map("empresa_id") @db.Uuid
 
-  vendedorEmail   String   @map("vendedor_email")
-  vendedorNome    String?  @map("vendedor_nome")
-  mes             Int      // 1-12
-  ano             Int
+  vendedorEmail String  @map("vendedor_email")
+  vendedorNome  String? @map("vendedor_nome")
+  mes           Int // 1-12
+  ano           Int
 
   // Metas
-  metaPropostas   Int?     @map("meta_propostas")    // qtd propostas pagas
-  metaVolume      Float?   @map("meta_volume")       // R$ liberado
-  metaLeads       Int?     @map("meta_leads")        // qtd leads convertidos
-  metaComissao    Float?   @map("meta_comissao")     // R$ comissão
+  metaPropostas Int?   @map("meta_propostas") // qtd propostas pagas
+  metaVolume    Float? @map("meta_volume") // R$ liberado
+  metaLeads     Int?   @map("meta_leads") // qtd leads convertidos
+  metaComissao  Float? @map("meta_comissao") // R$ comissão
 
-  createdAt       DateTime @default(now()) @map("created_at")
-  updatedAt       DateTime @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   empresa Empresa @relation(fields: [empresaId], references: [id], onDelete: Cascade)
 
@@ -846,51 +865,50 @@ model SimulacaoCredito {
 // ─────────────────────────────────────────────────────────────────────────────
 
 model ConhecimentoBevi {
-  id              String   @id @default(uuid()) @db.Uuid
-  empresaId       String   @map("empresa_id") @db.Uuid // Permite isolar conhecimento por tenant se necessário
-  
-  categoria       String   // INSS, FGTS, SIAPE, etc.
-  pasta           String   // Nome do banco ou órgão (Icred, Pan, Acre, etc.)
-  tituloArtigo    String   @map("titulo_artigo")
-  urlOrigem       String   @map("url_origem")
-  
-  conteudoChunk   String   @map("conteudo_chunk") @db.Text // Pedaço do Markdown
-  
-  // Usamos Unsupported("vector") no Prisma client para pgvector
-  embedding       Unsupported("vector(768)")? // Tamanho do vetor Gemini flash/Google
-  
-  createdAt       DateTime @default(now()) @map("created_at")
+  id        String @id @default(uuid()) @db.Uuid
+  empresaId String @map("empresa_id") @db.Uuid // Permite isolar conhecimento por tenant se necessário
 
-  empresa         Empresa  @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  categoria    String // INSS, FGTS, SIAPE, etc.
+  pasta        String // Nome do banco ou órgão (Icred, Pan, Acre, etc.)
+  tituloArtigo String @map("titulo_artigo")
+  urlOrigem    String @map("url_origem")
+
+  conteudoChunk String @map("conteudo_chunk") @db.Text // Pedaço do Markdown
+
+  // Usamos Unsupported("vector") no Prisma client para pgvector
+  embedding Unsupported("vector(768)")? // Tamanho do vetor Gemini flash/Google
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  empresa Empresa @relation(fields: [empresaId], references: [id], onDelete: Cascade)
 
   @@index([empresaId, categoria])
   @@map("conhecimento_bevi")
   @@schema("public")
 }
 
-
 // ─────────────────────────────────────────────────────────────────────────────
 // OMNICHANNEL & AUTOMAÇÃO DE IA (Sprint 18)
 // ─────────────────────────────────────────────────────────────────────────────
 
 model CanalComunicacao {
-  id              String   @id @default(uuid()) @db.Uuid
-  empresaId       String   @map("empresa_id") @db.Uuid
-  tipo            String   // WHATSAPP, INSTAGRAM, FACEBOOK
-  nomeCanal       String   @map("nome_canal") // Ex: "WhatsApp Principal"
-  identificador   String?  // Número ou @ do insta
-  credenciaisApi  Json     @default("{}") @map("credenciais_api") @db.JsonB
-  ativo           Boolean  @default(true)
-  
-  // Configurações de IA
-  botAtivo        Boolean  @default(false) @map("bot_ativo")
-  promptBase      String?  @map("prompt_base") @db.Text
-  
-  createdAt       DateTime @default(now()) @map("created_at")
-  updatedAt       DateTime @updatedAt @map("updated_at")
+  id             String  @id @default(uuid()) @db.Uuid
+  empresaId      String  @map("empresa_id") @db.Uuid
+  tipo           String // WHATSAPP, INSTAGRAM, FACEBOOK
+  nomeCanal      String  @map("nome_canal") // Ex: "WhatsApp Principal"
+  identificador  String? // Número ou @ do insta
+  credenciaisApi Json    @default("{}") @map("credenciais_api") @db.JsonB
+  ativo          Boolean @default(true)
 
-  conversas       Conversa[]
-  empresa         Empresa  @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  // Configurações de IA
+  botAtivo   Boolean @default(false) @map("bot_ativo")
+  promptBase String? @map("prompt_base") @db.Text
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  conversas Conversa[]
+  empresa   Empresa    @relation(fields: [empresaId], references: [id], onDelete: Cascade)
 
   @@index([empresaId, tipo])
   @@map("canal_comunicacao")
@@ -898,49 +916,49 @@ model CanalComunicacao {
 }
 
 model Conversa {
-  id              String   @id @default(uuid()) @db.Uuid
-  empresaId       String   @map("empresa_id") @db.Uuid
-  canalId         String   @map("canal_id") @db.Uuid
-  leadId          String?  @map("lead_id") @db.Uuid
-  
-  clienteNome     String   @map("cliente_nome")
-  clienteContato  String   @map("cliente_contato") // número de telefone ou ID social
-  
-  status          String   @default("AGUARDANDO_IA") // AGUARDANDO_IA, ABERTO, FECHADO
-  vendedorId      String?  @map("vendedor_id") @db.Uuid
-  
-  ultimaMensagem  String?  @map("ultima_mensagem")
-  lida            Boolean  @default(false)
-  naoLidas        Int      @default(0) @map("nao_lidas")
-  
-  // Tags (array de nomes)
-  tags            String[] @default([])
-  
-  // Transferência
-  transferidoPor  String?  @map("transferido_por")
-  departamento    String?  // VENDAS, SUPORTE, FINANCEIRO
-  
-  // Finalização
-  finalizadoPor   String?  @map("finalizado_por")
-  finalizadoEm    DateTime? @map("finalizado_em")
-  motivoFechamento String? @map("motivo_fechamento")
-  
-  // Métricas
-  tempoResposta   Int?     @map("tempo_resposta") // em segundos
-  
-  // Ações de conversa
-  fixada          Boolean  @default(false)
-  arquivada       Boolean  @default(false)
-  bloqueada       Boolean  @default(false)
-  
-  createdAt       DateTime @default(now()) @map("created_at")
-  updatedAt       DateTime @updatedAt @map("updated_at")
+  id        String  @id @default(uuid()) @db.Uuid
+  empresaId String  @map("empresa_id") @db.Uuid
+  canalId   String  @map("canal_id") @db.Uuid
+  leadId    String? @map("lead_id") @db.Uuid
 
-  mensagens       Mensagem[]
-  canal           CanalComunicacao @relation(fields: [canalId], references: [id], onDelete: Cascade)
-  lead            Lead?            @relation(fields: [leadId], references: [id], onDelete: SetNull)
-  vendedor        UsuarioPerfil?   @relation(fields: [vendedorId], references: [id], onDelete: SetNull)
-  empresa         Empresa          @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  clienteNome    String @map("cliente_nome")
+  clienteContato String @map("cliente_contato") // número de telefone ou ID social
+
+  status     String  @default("AGUARDANDO_IA") // AGUARDANDO_IA, ABERTO, FECHADO
+  vendedorId String? @map("vendedor_id") @db.Uuid
+
+  ultimaMensagem String? @map("ultima_mensagem")
+  lida           Boolean @default(false)
+  naoLidas       Int     @default(0) @map("nao_lidas")
+
+  // Tags (array de nomes)
+  tags String[] @default([])
+
+  // Transferência
+  transferidoPor String? @map("transferido_por")
+  departamento   String? // VENDAS, SUPORTE, FINANCEIRO
+
+  // Finalização
+  finalizadoPor    String?   @map("finalizado_por")
+  finalizadoEm     DateTime? @map("finalizado_em")
+  motivoFechamento String?   @map("motivo_fechamento")
+
+  // Métricas
+  tempoResposta Int? @map("tempo_resposta") // em segundos
+
+  // Ações de conversa
+  fixada    Boolean @default(false)
+  arquivada Boolean @default(false)
+  bloqueada Boolean @default(false)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  mensagens Mensagem[]
+  canal     CanalComunicacao @relation(fields: [canalId], references: [id], onDelete: Cascade)
+  lead      Lead?            @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  vendedor  UsuarioPerfil?   @relation(fields: [vendedorId], references: [id], onDelete: SetNull)
+  empresa   Empresa          @relation(fields: [empresaId], references: [id], onDelete: Cascade)
 
   @@index([empresaId, status])
   @@index([empresaId, canalId])
@@ -949,21 +967,21 @@ model Conversa {
 }
 
 model Mensagem {
-  id              String   @id @default(uuid()) @db.Uuid
-  conversaId      String   @map("conversa_id") @db.Uuid
-  
-  remetente       String   // LEAD, VENDEDOR, IA, SISTEMA
-  tipo            String   @default("WHATSAPP") // WHATSAPP, INTERNA
-  conteudo        String   @db.Text
-  tipoConteudo    String   @default("TEXTO") @map("tipo_conteudo") // TEXTO, IMAGEM, AUDIO, ARQUIVO
-  urlMidia        String?  @map("url_midia")
-  
-  lida            Boolean  @default(false)
-  agendadoPara    DateTime? @map("agendado_para")
-  
-  createdAt       DateTime @default(now()) @map("created_at")
+  id         String @id @default(uuid()) @db.Uuid
+  conversaId String @map("conversa_id") @db.Uuid
 
-  conversa        Conversa @relation(fields: [conversaId], references: [id], onDelete: Cascade)
+  remetente    String // LEAD, VENDEDOR, IA, SISTEMA
+  tipo         String  @default("WHATSAPP") // WHATSAPP, INTERNA
+  conteudo     String  @db.Text
+  tipoConteudo String  @default("TEXTO") @map("tipo_conteudo") // TEXTO, IMAGEM, AUDIO, ARQUIVO
+  urlMidia     String? @map("url_midia")
+
+  lida         Boolean   @default(false)
+  agendadoPara DateTime? @map("agendado_para")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  conversa Conversa @relation(fields: [conversaId], references: [id], onDelete: Cascade)
 
   @@index([conversaId, createdAt])
   @@index([agendadoPara])
@@ -972,16 +990,16 @@ model Mensagem {
 }
 
 model MensagemRapida {
-  id          String   @id @default(uuid()) @db.Uuid
-  empresaId   String   @map("empresa_id") @db.Uuid
-  titulo      String
-  conteudo    String   @db.Text
-  atalho      String?  // Ex: "/saudacao", "/preco"
-  categoria   String?  // VENDAS, SUPORTE, GERAL
-  ativo       Boolean  @default(true)
-  createdAt   DateTime @default(now()) @map("created_at")
+  id        String   @id @default(uuid()) @db.Uuid
+  empresaId String   @map("empresa_id") @db.Uuid
+  titulo    String
+  conteudo  String   @db.Text
+  atalho    String? // Ex: "/saudacao", "/preco"
+  categoria String? // VENDAS, SUPORTE, GERAL
+  ativo     Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
 
-  empresa     Empresa  @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  empresa Empresa @relation(fields: [empresaId], references: [id], onDelete: Cascade)
 
   @@index([empresaId])
   @@map("mensagem_rapida")
@@ -989,13 +1007,13 @@ model MensagemRapida {
 }
 
 model TagConversa {
-  id          String   @id @default(uuid()) @db.Uuid
-  empresaId   String   @map("empresa_id") @db.Uuid
-  nome        String
-  cor         String   @default("#6366f1")
-  createdAt   DateTime @default(now()) @map("created_at")
+  id        String   @id @default(uuid()) @db.Uuid
+  empresaId String   @map("empresa_id") @db.Uuid
+  nome      String
+  cor       String   @default("#6366f1")
+  createdAt DateTime @default(now()) @map("created_at")
 
-  empresa     Empresa  @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  empresa Empresa @relation(fields: [empresaId], references: [id], onDelete: Cascade)
 
   @@unique([empresaId, nome])
   @@map("tag_conversa")
@@ -1003,23 +1021,23 @@ model TagConversa {
 }
 
 model CampanhaDisparo {
-  id              String   @id @default(uuid()) @db.Uuid
-  empresaId       String   @map("empresa_id") @db.Uuid
-  canalId         String   @map("canal_id") @db.Uuid
-  
-  nome            String
-  mensagemTemplate String  @map("mensagem_template") @db.Text
-  status          String   @default("AGENDADA") // AGENDADA, EXECUTANDO, CONCLUIDA, CANCELADA
-  
-  dataAgendamento DateTime? @map("data_agendamento")
-  filtrosDeBase   Json     @default("{}") @map("filtros_de_base") @db.JsonB
-  
-  leadsAtingidos  Int      @default(0) @map("leads_atingidos")
-  
-  createdAt       DateTime @default(now()) @map("created_at")
-  updatedAt       DateTime @updatedAt @map("updated_at")
+  id        String @id @default(uuid()) @db.Uuid
+  empresaId String @map("empresa_id") @db.Uuid
+  canalId   String @map("canal_id") @db.Uuid
 
-  empresa         Empresa  @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  nome             String
+  mensagemTemplate String @map("mensagem_template") @db.Text
+  status           String @default("AGENDADA") // AGENDADA, EXECUTANDO, CONCLUIDA, CANCELADA
+
+  dataAgendamento DateTime? @map("data_agendamento")
+  filtrosDeBase   Json      @default("{}") @map("filtros_de_base") @db.JsonB
+
+  leadsAtingidos Int @default(0) @map("leads_atingidos")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  empresa Empresa @relation(fields: [empresaId], references: [id], onDelete: Cascade)
 
   @@index([empresaId, status])
   @@map("campanha_disparo")
@@ -1031,35 +1049,35 @@ model CampanhaDisparo {
 // ─────────────────────────────────────────────────────────────────────────────
 
 model PlanoSaaS {
-  id              String   @id @default(uuid()) @db.Uuid
-  nome            String
-  precoMensal     Float    @map("preco_mensal")
-  limiteUsuarios  Int      @default(5) @map("limite_usuarios")
-  limiteLeads     Int      @default(1000) @map("limite_leads")
-  limiteDisparos  Int      @default(0) @map("limite_disparos")
-  
-  empresas        Empresa[]
+  id             String @id @default(uuid()) @db.Uuid
+  nome           String
+  precoMensal    Float  @map("preco_mensal")
+  limiteUsuarios Int    @default(5) @map("limite_usuarios")
+  limiteLeads    Int    @default(1000) @map("limite_leads")
+  limiteDisparos Int    @default(0) @map("limite_disparos")
 
-  createdAt       DateTime @default(now()) @map("created_at")
-  updatedAt       DateTime @updatedAt @map("updated_at")
+  empresas Empresa[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("plano_saas")
   @@schema("public")
 }
 
 model FaturaSaaS {
-  id              String   @id @default(uuid()) @db.Uuid
-  empresaId       String   @map("empresa_id") @db.Uuid
-  asaasInvoiceId  String?  @map("asaas_invoice_id")
-  valor           Float
-  status          String   @default("PENDING") // PENDING, PAID, OVERDUE
-  vencimento      DateTime @db.Date
-  linkPagamento   String?  @map("link_pagamento")
-  
-  empresa         Empresa  @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  id             String   @id @default(uuid()) @db.Uuid
+  empresaId      String   @map("empresa_id") @db.Uuid
+  asaasInvoiceId String?  @map("asaas_invoice_id")
+  valor          Float
+  status         String   @default("PENDING") // PENDING, PAID, OVERDUE
+  vencimento     DateTime @db.Date
+  linkPagamento  String?  @map("link_pagamento")
 
-  createdAt       DateTime @default(now()) @map("created_at")
-  updatedAt       DateTime @updatedAt @map("updated_at")
+  empresa Empresa @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   @@index([empresaId])
   @@index([status])
@@ -1072,17 +1090,17 @@ model FaturaSaaS {
 // ─────────────────────────────────────────────────────────────────────────────
 
 model FilaRpa {
-  id              String   @id @default(uuid()) @db.Uuid
-  empresaId       String   @map("empresa_id") @db.Uuid
-  tipo            String   // EXTRACAO_INSS, DIGITACAO_PROPOSTA
-  referenciaId    String   @map("referencia_id") @db.Uuid // Lead ID ou Proposta ID
-  payload         Json     @default("{}") @db.JsonB
-  status          String   @default("PENDENTE") // PENDENTE, PROCESSANDO, CONCLUIDO, FALHA
-  tentativas      Int      @default(0)
-  logs            String?  @db.Text
-  resultadoUrl    String?  @map("resultado_url")
-  createdAt       DateTime @default(now()) @map("created_at")
-  updatedAt       DateTime @updatedAt @map("updated_at")
+  id           String   @id @default(uuid()) @db.Uuid
+  empresaId    String   @map("empresa_id") @db.Uuid
+  tipo         String // EXTRACAO_INSS, DIGITACAO_PROPOSTA
+  referenciaId String   @map("referencia_id") @db.Uuid // Lead ID ou Proposta ID
+  payload      Json     @default("{}") @db.JsonB
+  status       String   @default("PENDENTE") // PENDENTE, PROCESSANDO, CONCLUIDO, FALHA
+  tentativas   Int      @default(0)
+  logs         String?  @db.Text
+  resultadoUrl String?  @map("resultado_url")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
 
   empresa Empresa @relation(fields: [empresaId], references: [id], onDelete: Cascade)
 
@@ -1092,16 +1110,16 @@ model FilaRpa {
 }
 
 model CampanhaMarketing {
-  id              String   @id @default(uuid()) @db.Uuid
-  empresaId       String   @map("empresa_id") @db.Uuid
-  nome            String
-  origem          String   // FACEBOOK, GOOGLE
-  custoTotal      Float    @default(0) @map("custo_total")
-  leadsGerados    Int      @default(0) @map("leads_gerados")
-  dataInicio      DateTime @map("data_inicio")
-  dataFim         DateTime? @map("data_fim")
-  ativo           Boolean  @default(true)
-  createdAt       DateTime @default(now()) @map("created_at")
+  id           String    @id @default(uuid()) @db.Uuid
+  empresaId    String    @map("empresa_id") @db.Uuid
+  nome         String
+  origem       String // FACEBOOK, GOOGLE
+  custoTotal   Float     @default(0) @map("custo_total")
+  leadsGerados Int       @default(0) @map("leads_gerados")
+  dataInicio   DateTime  @map("data_inicio")
+  dataFim      DateTime? @map("data_fim")
+  ativo        Boolean   @default(true)
+  createdAt    DateTime  @default(now()) @map("created_at")
 
   empresa Empresa @relation(fields: [empresaId], references: [id], onDelete: Cascade)
   leads   Lead[]
@@ -1112,18 +1130,18 @@ model CampanhaMarketing {
 }
 
 model LogAtividade {
-  id              String   @id @default(uuid()) @db.Uuid
-  empresaId       String   @map("empresa_id") @db.Uuid
-  usuarioId       String   @map("usuario_id") @db.Uuid
-  tipo            String   // ALTERACAO_STATUS, VISUALIZACAO_DADOS, LOGIN, CRIACAO
-  recurso         String   // LEAD, PROPOSTA, USUARIO
-  recursoId       String   @map("recurso_id")
-  descricao       String   @db.Text
-  ip              String?
-  userAgent       String?  @map("user_agent")
-  createdAt       DateTime @default(now()) @map("created_at")
+  id        String   @id @default(uuid()) @db.Uuid
+  empresaId String   @map("empresa_id") @db.Uuid
+  usuarioId String   @map("usuario_id") @db.Uuid
+  tipo      String // ALTERACAO_STATUS, VISUALIZACAO_DADOS, LOGIN, CRIACAO
+  recurso   String // LEAD, PROPOSTA, USUARIO
+  recursoId String   @map("recurso_id")
+  descricao String   @db.Text
+  ip        String?
+  userAgent String?  @map("user_agent")
+  createdAt DateTime @default(now()) @map("created_at")
 
-  empresa Empresa @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  empresa Empresa       @relation(fields: [empresaId], references: [id], onDelete: Cascade)
   usuario UsuarioPerfil @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
 
   @@index([empresaId, recurso, recursoId])
@@ -1154,66 +1172,66 @@ model RegraComissao {
 // ─────────────────────────────────────────────────────────────────────────────
 
 model Funcionario {
-  id                String    @id @default(uuid()) @db.Uuid
-  empresaId         String    @map("empresa_id") @db.Uuid
+  id        String @id @default(uuid()) @db.Uuid
+  empresaId String @map("empresa_id") @db.Uuid
 
   // Dados Pessoais
-  nome              String
-  cpf               String
-  rg                String?
-  dataNascimento    DateTime? @map("data_nascimento") @db.Date
-  telefone          String?
-  email             String?
-  fotoUrl           String?   @map("foto_url")
-  genero            String?   // M, F, OUTRO
-  estadoCivil       String?   @map("estado_civil")
-  escolaridade      String?
-  nomeMae           String?   @map("nome_mae")
+  nome           String
+  cpf            String
+  rg             String?
+  dataNascimento DateTime? @map("data_nascimento") @db.Date
+  telefone       String?
+  email          String?
+  fotoUrl        String?   @map("foto_url")
+  genero         String? // M, F, OUTRO
+  estadoCivil    String?   @map("estado_civil")
+  escolaridade   String?
+  nomeMae        String?   @map("nome_mae")
 
   // Endereço
-  cep               String?
-  logradouro        String?
-  numero            String?
-  complemento       String?
-  bairro            String?
-  cidade            String?
-  uf                String?
+  cep         String?
+  logradouro  String?
+  numero      String?
+  complemento String?
+  bairro      String?
+  cidade      String?
+  uf          String?
 
   // Regime de Contratação: CLT, PJ, ESTAGIARIO, INFORMAL
-  regimeContratacao String    @map("regime_contratacao")
+  regimeContratacao String @map("regime_contratacao")
 
   // Dados CLT
-  ctpsNumero        String?   @map("ctps_numero")
-  ctpsSerie         String?   @map("ctps_serie")
-  pisPasep          String?   @map("pis_pasep")
-  dataAdmissao      DateTime? @map("data_admissao") @db.Date
-  dataDemissao      DateTime? @map("data_demissao") @db.Date
+  ctpsNumero   String?   @map("ctps_numero")
+  ctpsSerie    String?   @map("ctps_serie")
+  pisPasep     String?   @map("pis_pasep")
+  dataAdmissao DateTime? @map("data_admissao") @db.Date
+  dataDemissao DateTime? @map("data_demissao") @db.Date
 
   // Função e Jornada
-  cargoFuncao       String?   @map("cargo_funcao") // Ex: Promotor de Vendas, Telemarketing, Atendente
-  cbo               String?   // Código Brasileiro de Ocupações
-  tipoJornada       String    @default("PADRAO_8H") @map("tipo_jornada") // TELEMARKETING_6H, PADRAO_8H, ESTAGIO_6H
-  horasDiarias      Int       @default(8) @map("horas_diarias")
-  horasSemanais     Int       @default(44) @map("horas_semanais")
+  cargoFuncao   String? @map("cargo_funcao") // Ex: Promotor de Vendas, Telemarketing, Atendente
+  cbo           String? // Código Brasileiro de Ocupações
+  tipoJornada   String  @default("PADRAO_8H") @map("tipo_jornada") // TELEMARKETING_6H, PADRAO_8H, ESTAGIO_6H
+  horasDiarias  Int     @default(8) @map("horas_diarias")
+  horasSemanais Int     @default(44) @map("horas_semanais")
 
   // Remuneração
-  salarioBase       Float?    @map("salario_base")
-  valeTransporte    Boolean   @default(false) @map("vale_transporte")
-  valeAlimentacao   Float?    @map("vale_alimentacao")
-  planoSaude        Boolean   @default(false) @map("plano_saude")
-  outrosBeneficios  Json?     @map("outros_beneficios") @db.JsonB
-  tipoComissao      String?   @map("tipo_comissao") // PERCENTUAL, FIXO, FAIXAS
-  percentualComissao Float?   @map("percentual_comissao")
+  salarioBase        Float?  @map("salario_base")
+  valeTransporte     Boolean @default(false) @map("vale_transporte")
+  valeAlimentacao    Float?  @map("vale_alimentacao")
+  planoSaude         Boolean @default(false) @map("plano_saude")
+  outrosBeneficios   Json?   @map("outros_beneficios") @db.JsonB
+  tipoComissao       String? @map("tipo_comissao") // PERCENTUAL, FIXO, FAIXAS
+  percentualComissao Float?  @map("percentual_comissao")
 
   // Dados PJ (quando regime = PJ)
-  cnpjPj            String?   @map("cnpj_pj")
-  razaoSocialPj     String?   @map("razao_social_pj")
-  valorMensalPj     Float?    @map("valor_mensal_pj")
+  cnpjPj        String? @map("cnpj_pj")
+  razaoSocialPj String? @map("razao_social_pj")
+  valorMensalPj Float?  @map("valor_mensal_pj")
 
   // Sindicato / CCT
-  sindicatoNome     String?   @map("sindicato_nome")
-  cctVigente        String?   @map("cct_vigente")
-  pisoSalarialCct   Float?    @map("piso_salarial_cct")
+  sindicatoNome   String? @map("sindicato_nome")
+  cctVigente      String? @map("cct_vigente")
+  pisoSalarialCct Float?  @map("piso_salarial_cct")
 
   // Estágio (quando regime = ESTAGIARIO)
   instituicaoEnsino String?   @map("instituicao_ensino")
@@ -1222,29 +1240,29 @@ model Funcionario {
   dataFimEstagio    DateTime? @map("data_fim_estagio") @db.Date
 
   // Dados Bancários do Funcionário
-  bancoNome         String?   @map("banco_nome")
-  bancoAgencia      String?   @map("banco_agencia")
-  bancoConta        String?   @map("banco_conta")
-  bancoTipoConta    String?   @map("banco_tipo_conta") // corrente, poupanca
-  chavePix          String?   @map("chave_pix")
+  bancoNome      String? @map("banco_nome")
+  bancoAgencia   String? @map("banco_agencia")
+  bancoConta     String? @map("banco_conta")
+  bancoTipoConta String? @map("banco_tipo_conta") // corrente, poupanca
+  chavePix       String? @map("chave_pix")
 
   // Status e Risco
-  status            String    @default("ATIVO") // ATIVO, INATIVO, FERIAS, AFASTADO, DESLIGADO
-  nivelRisco        String    @default("BAIXO") @map("nivel_risco") // BAIXO, MEDIO, ALTO, EXTREMO
-  passivoEstimado   Float     @default(0) @map("passivo_estimado")
+  status          String @default("ATIVO") // ATIVO, INATIVO, FERIAS, AFASTADO, DESLIGADO
+  nivelRisco      String @default("BAIXO") @map("nivel_risco") // BAIXO, MEDIO, ALTO, EXTREMO
+  passivoEstimado Float  @default(0) @map("passivo_estimado")
 
-  observacoes       String?   @db.Text
+  observacoes String? @db.Text
 
-  createdAt         DateTime  @default(now()) @map("created_at")
-  updatedAt         DateTime  @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
-  empresa           Empresa   @relation(fields: [empresaId], references: [id], onDelete: Cascade)
-  registrosPonto    RegistroPonto[]
-  pausasNr17        PausaNR17[]
-  ferias            FeriasFuncionario[]
-  documentos        DocumentoFuncionario[]
-  holerites         HoleriteProjetado[]
-  passivos          PassivoTrabalhista[]
+  empresa        Empresa                @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  registrosPonto RegistroPonto[]
+  pausasNr17     PausaNR17[]
+  ferias         FeriasFuncionario[]
+  documentos     DocumentoFuncionario[]
+  holerites      HoleriteProjetado[]
+  passivos       PassivoTrabalhista[]
 
   @@unique([empresaId, cpf])
   @@index([empresaId, status])
@@ -1254,36 +1272,36 @@ model Funcionario {
 }
 
 model RegistroPonto {
-  id              String    @id @default(uuid()) @db.Uuid
-  funcionarioId   String    @map("funcionario_id") @db.Uuid
-  data            DateTime  @db.Date
+  id            String   @id @default(uuid()) @db.Uuid
+  funcionarioId String   @map("funcionario_id") @db.Uuid
+  data          DateTime @db.Date
 
   // Batidas
-  entrada         DateTime?
-  saidaAlmoco     DateTime? @map("saida_almoco")
-  retornoAlmoco   DateTime? @map("retorno_almoco")
-  saida           DateTime?
+  entrada       DateTime?
+  saidaAlmoco   DateTime? @map("saida_almoco")
+  retornoAlmoco DateTime? @map("retorno_almoco")
+  saida         DateTime?
 
   // Cálculos automáticos
-  horasTrabalhadas Float?   @map("horas_trabalhadas")
-  horasExtras     Float?    @map("horas_extras")
-  horasNoturnas   Float?    @map("horas_noturnas")
-  atraso          Float?    // minutos de atraso
-  falta           Boolean   @default(false)
-  justificativa   String?
+  horasTrabalhadas Float?  @map("horas_trabalhadas")
+  horasExtras      Float?  @map("horas_extras")
+  horasNoturnas    Float?  @map("horas_noturnas")
+  atraso           Float? // minutos de atraso
+  falta            Boolean @default(false)
+  justificativa    String?
 
   // Metadados
-  ipEntrada       String?   @map("ip_entrada")
-  ipSaida         String?   @map("ip_saida")
-  geoEntrada      String?   @map("geo_entrada") // lat,lng
-  geoSaida        String?   @map("geo_saida")
+  ipEntrada  String? @map("ip_entrada")
+  ipSaida    String? @map("ip_saida")
+  geoEntrada String? @map("geo_entrada") // lat,lng
+  geoSaida   String? @map("geo_saida")
 
-  observacoes     String?
-  createdAt       DateTime  @default(now()) @map("created_at")
-  updatedAt       DateTime  @updatedAt @map("updated_at")
+  observacoes String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
 
-  funcionario     Funcionario @relation(fields: [funcionarioId], references: [id], onDelete: Cascade)
-  pausas          PausaNR17[]
+  funcionario Funcionario @relation(fields: [funcionarioId], references: [id], onDelete: Cascade)
+  pausas      PausaNR17[]
 
   @@unique([funcionarioId, data])
   @@index([funcionarioId, data])
@@ -1292,20 +1310,20 @@ model RegistroPonto {
 }
 
 model PausaNR17 {
-  id              String    @id @default(uuid()) @db.Uuid
-  funcionarioId   String    @map("funcionario_id") @db.Uuid
-  registroPontoId String    @map("registro_ponto_id") @db.Uuid
+  id              String @id @default(uuid()) @db.Uuid
+  funcionarioId   String @map("funcionario_id") @db.Uuid
+  registroPontoId String @map("registro_ponto_id") @db.Uuid
 
-  tipoPausa       String    @map("tipo_pausa") // PAUSA_10MIN_1, PAUSA_10MIN_2, REFEICAO_20MIN
-  inicio          DateTime
-  fim             DateTime?
-  duracaoMinutos  Float?    @map("duracao_minutos")
-  cumprida        Boolean   @default(false)
+  tipoPausa      String    @map("tipo_pausa") // PAUSA_10MIN_1, PAUSA_10MIN_2, REFEICAO_20MIN
+  inicio         DateTime
+  fim            DateTime?
+  duracaoMinutos Float?    @map("duracao_minutos")
+  cumprida       Boolean   @default(false)
 
-  createdAt       DateTime  @default(now()) @map("created_at")
+  createdAt DateTime @default(now()) @map("created_at")
 
-  funcionario     Funcionario   @relation(fields: [funcionarioId], references: [id], onDelete: Cascade)
-  registroPonto   RegistroPonto @relation(fields: [registroPontoId], references: [id], onDelete: Cascade)
+  funcionario   Funcionario   @relation(fields: [funcionarioId], references: [id], onDelete: Cascade)
+  registroPonto RegistroPonto @relation(fields: [registroPontoId], references: [id], onDelete: Cascade)
 
   @@index([funcionarioId, inicio])
   @@map("pausa_nr17")
@@ -1313,30 +1331,30 @@ model PausaNR17 {
 }
 
 model FeriasFuncionario {
-  id                  String    @id @default(uuid()) @db.Uuid
-  funcionarioId       String    @map("funcionario_id") @db.Uuid
+  id            String @id @default(uuid()) @db.Uuid
+  funcionarioId String @map("funcionario_id") @db.Uuid
 
   periodoAquisitivoInicio DateTime @map("periodo_aquisitivo_inicio") @db.Date
   periodoAquisitivoFim    DateTime @map("periodo_aquisitivo_fim") @db.Date
   periodoConcessivoFim    DateTime @map("periodo_concessivo_fim") @db.Date
 
-  diasDireito         Int       @default(30) @map("dias_direito")
-  diasGozados         Int       @default(0)  @map("dias_gozados")
-  diasVendidos        Int       @default(0)  @map("dias_vendidos") // Abono pecuniário (máx 1/3)
+  diasDireito  Int @default(30) @map("dias_direito")
+  diasGozados  Int @default(0) @map("dias_gozados")
+  diasVendidos Int @default(0) @map("dias_vendidos") // Abono pecuniário (máx 1/3)
 
-  dataInicio          DateTime? @map("data_inicio") @db.Date // Quando saiu de férias
-  dataFim             DateTime? @map("data_fim") @db.Date
-  status              String    @default("PENDENTE") // PENDENTE, AGENDADA, EM_GOZO, GOZADA, VENCIDA
+  dataInicio DateTime? @map("data_inicio") @db.Date // Quando saiu de férias
+  dataFim    DateTime? @map("data_fim") @db.Date
+  status     String    @default("PENDENTE") // PENDENTE, AGENDADA, EM_GOZO, GOZADA, VENCIDA
 
-  valorFerias         Float?    @map("valor_ferias")
-  valorTerco          Float?    @map("valor_terco")
-  pagoEmDobro         Boolean   @default(false) @map("pago_em_dobro")
+  valorFerias Float?  @map("valor_ferias")
+  valorTerco  Float?  @map("valor_terco")
+  pagoEmDobro Boolean @default(false) @map("pago_em_dobro")
 
-  observacoes         String?
-  createdAt           DateTime  @default(now()) @map("created_at")
-  updatedAt           DateTime  @updatedAt @map("updated_at")
+  observacoes String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
 
-  funcionario         Funcionario @relation(fields: [funcionarioId], references: [id], onDelete: Cascade)
+  funcionario Funcionario @relation(fields: [funcionarioId], references: [id], onDelete: Cascade)
 
   @@index([funcionarioId, status])
   @@map("ferias_funcionario")
@@ -1344,25 +1362,25 @@ model FeriasFuncionario {
 }
 
 model DocumentoFuncionario {
-  id              String    @id @default(uuid()) @db.Uuid
-  funcionarioId   String    @map("funcionario_id") @db.Uuid
+  id            String @id @default(uuid()) @db.Uuid
+  funcionarioId String @map("funcionario_id") @db.Uuid
 
-  tipo            String    // RG, CPF, CTPS, COMPROVANTE_RESIDENCIA, CONTRATO, LAUDO_MEDICO, CERTIDAO, OUTROS
-  nome            String
-  url             String
-  tamanhoBytes    Int?      @map("tamanho_bytes")
-  mimeType        String?   @map("mime_type")
-  dataValidade    DateTime? @map("data_validade") @db.Date
+  tipo         String // RG, CPF, CTPS, COMPROVANTE_RESIDENCIA, CONTRATO, LAUDO_MEDICO, CERTIDAO, OUTROS
+  nome         String
+  url          String
+  tamanhoBytes Int?      @map("tamanho_bytes")
+  mimeType     String?   @map("mime_type")
+  dataValidade DateTime? @map("data_validade") @db.Date
 
   // Assinatura eletrônica
-  assinado        Boolean   @default(false)
-  dataAssinatura  DateTime? @map("data_assinatura")
-  ipAssinatura    String?   @map("ip_assinatura")
-  hashAssinatura  String?   @map("hash_assinatura")
+  assinado       Boolean   @default(false)
+  dataAssinatura DateTime? @map("data_assinatura")
+  ipAssinatura   String?   @map("ip_assinatura")
+  hashAssinatura String?   @map("hash_assinatura")
 
-  createdAt       DateTime  @default(now()) @map("created_at")
+  createdAt DateTime @default(now()) @map("created_at")
 
-  funcionario     Funcionario @relation(fields: [funcionarioId], references: [id], onDelete: Cascade)
+  funcionario Funcionario @relation(fields: [funcionarioId], references: [id], onDelete: Cascade)
 
   @@index([funcionarioId, tipo])
   @@map("documento_funcionario")
@@ -1370,44 +1388,44 @@ model DocumentoFuncionario {
 }
 
 model HoleriteProjetado {
-  id              String    @id @default(uuid()) @db.Uuid
-  funcionarioId   String    @map("funcionario_id") @db.Uuid
-  mesReferencia   Int       @map("mes_referencia") // 1-12
-  anoReferencia   Int       @map("ano_referencia")
+  id            String @id @default(uuid()) @db.Uuid
+  funcionarioId String @map("funcionario_id") @db.Uuid
+  mesReferencia Int    @map("mes_referencia") // 1-12
+  anoReferencia Int    @map("ano_referencia")
 
   // Proventos
-  salarioBruto    Float     @map("salario_bruto")
-  horasExtrasValor Float    @default(0) @map("horas_extras_valor")
-  horasExtrasQtd  Float     @default(0) @map("horas_extras_qtd")
-  adicionalNoturno Float    @default(0) @map("adicional_noturno")
-  comissao        Float     @default(0)
-  dsrExtras       Float     @default(0) @map("dsr_extras") // DSR sobre horas extras
-  outrosProventos Float     @default(0) @map("outros_proventos")
-  totalProventos  Float     @map("total_proventos")
+  salarioBruto     Float @map("salario_bruto")
+  horasExtrasValor Float @default(0) @map("horas_extras_valor")
+  horasExtrasQtd   Float @default(0) @map("horas_extras_qtd")
+  adicionalNoturno Float @default(0) @map("adicional_noturno")
+  comissao         Float @default(0)
+  dsrExtras        Float @default(0) @map("dsr_extras") // DSR sobre horas extras
+  outrosProventos  Float @default(0) @map("outros_proventos")
+  totalProventos   Float @map("total_proventos")
 
   // Descontos
-  inssAliquota    Float     @map("inss_aliquota")
-  inssValor       Float     @map("inss_valor")
-  irrfBase        Float     @default(0) @map("irrf_base")
-  irrfValor       Float     @default(0) @map("irrf_valor")
-  valeTransporte  Float     @default(0) @map("vale_transporte")
-  valeAlimentacao Float     @default(0) @map("vale_alimentacao_desc")
-  planoSaude      Float     @default(0) @map("plano_saude_desc")
-  faltas          Float     @default(0)
-  outrosDescontos Float     @default(0) @map("outros_descontos")
-  totalDescontos  Float     @map("total_descontos")
+  inssAliquota    Float @map("inss_aliquota")
+  inssValor       Float @map("inss_valor")
+  irrfBase        Float @default(0) @map("irrf_base")
+  irrfValor       Float @default(0) @map("irrf_valor")
+  valeTransporte  Float @default(0) @map("vale_transporte")
+  valeAlimentacao Float @default(0) @map("vale_alimentacao_desc")
+  planoSaude      Float @default(0) @map("plano_saude_desc")
+  faltas          Float @default(0)
+  outrosDescontos Float @default(0) @map("outros_descontos")
+  totalDescontos  Float @map("total_descontos")
 
   // Líquido
-  salarioLiquido  Float     @map("salario_liquido")
+  salarioLiquido Float @map("salario_liquido")
 
   // Encargos Patronais (custo da empresa)
-  fgtsValor       Float     @default(0) @map("fgts_valor")
-  inssPatronal    Float     @default(0) @map("inss_patronal")
-  custoTotalEmpresa Float   @map("custo_total_empresa")
+  fgtsValor         Float @default(0) @map("fgts_valor")
+  inssPatronal      Float @default(0) @map("inss_patronal")
+  custoTotalEmpresa Float @map("custo_total_empresa")
 
-  createdAt       DateTime  @default(now()) @map("created_at")
+  createdAt DateTime @default(now()) @map("created_at")
 
-  funcionario     Funcionario @relation(fields: [funcionarioId], references: [id], onDelete: Cascade)
+  funcionario Funcionario @relation(fields: [funcionarioId], references: [id], onDelete: Cascade)
 
   @@unique([funcionarioId, mesReferencia, anoReferencia])
   @@index([funcionarioId, anoReferencia, mesReferencia])
@@ -1416,13 +1434,13 @@ model HoleriteProjetado {
 }
 
 model PassivoTrabalhista {
-  id              String    @id @default(uuid()) @db.Uuid
-  funcionarioId   String    @map("funcionario_id") @db.Uuid
-  dataCalculo     DateTime  @default(now()) @map("data_calculo") @db.Date
+  id            String   @id @default(uuid()) @db.Uuid
+  funcionarioId String   @map("funcionario_id") @db.Uuid
+  dataCalculo   DateTime @default(now()) @map("data_calculo") @db.Date
 
   // Tempo de vínculo
-  mesesTrabalhados Int      @map("meses_trabalhados")
-  anosTrabalhados  Float    @map("anos_trabalhados")
+  mesesTrabalhados Int   @map("meses_trabalhados")
+  anosTrabalhados  Float @map("anos_trabalhados")
 
   // Componentes do passivo
   fgtsRetroativo      Float @default(0) @map("fgts_retroativo")
@@ -1440,13 +1458,13 @@ model PassivoTrabalhista {
   honorarios          Float @default(0) // Honorários advocatícios (15%)
 
   // Total
-  passivoTotal        Float @map("passivo_total")
-  nivelRisco          String @map("nivel_risco") // BAIXO, MEDIO, ALTO, EXTREMO
+  passivoTotal Float  @map("passivo_total")
+  nivelRisco   String @map("nivel_risco") // BAIXO, MEDIO, ALTO, EXTREMO
 
-  observacoes     String?   @db.Text
-  createdAt       DateTime  @default(now()) @map("created_at")
+  observacoes String?  @db.Text
+  createdAt   DateTime @default(now()) @map("created_at")
 
-  funcionario     Funcionario @relation(fields: [funcionarioId], references: [id], onDelete: Cascade)
+  funcionario Funcionario @relation(fields: [funcionarioId], references: [id], onDelete: Cascade)
 
   @@index([funcionarioId, dataCalculo])
   @@map("passivo_trabalhista")
@@ -1454,28 +1472,28 @@ model PassivoTrabalhista {
 }
 
 model AuditLogRH {
-  id              String    @id @default(uuid()) @db.Uuid
-  empresaId       String    @map("empresa_id") @db.Uuid
-  usuarioId       String    @map("usuario_id") // auth user id
-  usuarioEmail    String    @map("usuario_email")
-  
-  // O que aconteceu
-  acao            String    // CRIAR, EDITAR, EXCLUIR, BATER_PONTO, AGENDAR_FERIAS, etc.
-  entidade        String    // Funcionario, RegistroPonto, FeriasFuncionario, etc.
-  entidadeId      String?   @map("entidade_id")
-  
-  // Detalhes
-  descricao       String    @db.Text
-  dadosAntes      Json?     @map("dados_antes") @db.JsonB   // snapshot antes da mudança
-  dadosDepois     Json?     @map("dados_depois") @db.JsonB  // snapshot depois
-  
-  // Metadados
-  ipAddress       String?   @map("ip_address")
-  userAgent       String?   @map("user_agent")
-  
-  createdAt       DateTime  @default(now()) @map("created_at")
+  id           String @id @default(uuid()) @db.Uuid
+  empresaId    String @map("empresa_id") @db.Uuid
+  usuarioId    String @map("usuario_id") // auth user id
+  usuarioEmail String @map("usuario_email")
 
-  empresa         Empresa   @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  // O que aconteceu
+  acao       String // CRIAR, EDITAR, EXCLUIR, BATER_PONTO, AGENDAR_FERIAS, etc.
+  entidade   String // Funcionario, RegistroPonto, FeriasFuncionario, etc.
+  entidadeId String? @map("entidade_id")
+
+  // Detalhes
+  descricao   String @db.Text
+  dadosAntes  Json?  @map("dados_antes") @db.JsonB // snapshot antes da mudança
+  dadosDepois Json?  @map("dados_depois") @db.JsonB // snapshot depois
+
+  // Metadados
+  ipAddress String? @map("ip_address")
+  userAgent String? @map("user_agent")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  empresa Empresa @relation(fields: [empresaId], references: [id], onDelete: Cascade)
 
   @@index([empresaId, createdAt])
   @@index([entidade, entidadeId])
@@ -1490,21 +1508,21 @@ model AuditLogRH {
 /// Contas Bancárias da empresa (Itaú PJ, Inter PJ, Cora, etc.)
 /// Cada conta mapeia um banco real onde a empresa movimenta dinheiro.
 model ContaBancariaCF {
-  id              String    @id @default(uuid()) @db.Uuid
-  empresaId       String    @map("empresa_id") @db.Uuid
-  nomeBanco       String    @map("nome_banco")           // "Itaú PJ", "Inter PJ"
-  agencia         String?
-  conta           String?
-  tipoConta       String    @default("CORRENTE") @map("tipo_conta") // CORRENTE, POUPANCA, PAGAMENTO
-  chavePix        String?   @map("chave_pix")
-  saldoInicial    Float     @default(0) @map("saldo_inicial")
-  cor             String?                                 // Cor para identificação visual no painel
-  ativo           Boolean   @default(true)
-  createdAt       DateTime  @default(now()) @map("created_at")
-  updatedAt       DateTime  @updatedAt @map("updated_at")
+  id           String   @id @default(uuid()) @db.Uuid
+  empresaId    String   @map("empresa_id") @db.Uuid
+  nomeBanco    String   @map("nome_banco") // "Itaú PJ", "Inter PJ"
+  agencia      String?
+  conta        String?
+  tipoConta    String   @default("CORRENTE") @map("tipo_conta") // CORRENTE, POUPANCA, PAGAMENTO
+  chavePix     String?  @map("chave_pix")
+  saldoInicial Float    @default(0) @map("saldo_inicial")
+  cor          String? // Cor para identificação visual no painel
+  ativo        Boolean  @default(true)
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
 
-  empresa         Empresa   @relation(fields: [empresaId], references: [id], onDelete: Cascade)
-  lancamentos     LancamentoFinanceiro[]
+  empresa     Empresa                @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  lancamentos LancamentoFinanceiro[]
 
   @@index([empresaId, ativo])
   @@map("conta_bancaria_cf")
@@ -1515,21 +1533,21 @@ model ContaBancariaCF {
 /// Suporta até 2 níveis: Grupo > Subcategoria.
 /// Exemplos: "Despesas Fixas" > "Aluguel", "Receitas" > "Comissões Bancárias"
 model CategoriaFinanceira {
-  id              String    @id @default(uuid()) @db.Uuid
-  empresaId       String    @map("empresa_id") @db.Uuid
-  nome            String                                   // "Aluguel", "Software CRM", "Comissões Recebidas"
-  tipo            String                                   // RECEITA, DESPESA, IMPOSTO, TRANSFERENCIA
-  grupo           String?                                  // Agrupador: "Fixas", "Variáveis", "Marketing", "Folha", "Impostos"
-  icone           String?                                  // Ícone Lucide para UI: "building", "monitor", "megaphone"
-  cor             String?                                  // Cor hex para gráficos do DRE
-  ordem           Int       @default(0)
-  ativo           Boolean   @default(true)
-  createdAt       DateTime  @default(now()) @map("created_at")
-  updatedAt       DateTime  @updatedAt @map("updated_at")
+  id        String   @id @default(uuid()) @db.Uuid
+  empresaId String   @map("empresa_id") @db.Uuid
+  nome      String // "Aluguel", "Software CRM", "Comissões Recebidas"
+  tipo      String // RECEITA, DESPESA, IMPOSTO, TRANSFERENCIA
+  grupo     String? // Agrupador: "Fixas", "Variáveis", "Marketing", "Folha", "Impostos"
+  icone     String? // Ícone Lucide para UI: "building", "monitor", "megaphone"
+  cor       String? // Cor hex para gráficos do DRE
+  ordem     Int      @default(0)
+  ativo     Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
-  empresa         Empresa   @relation(fields: [empresaId], references: [id], onDelete: Cascade)
-  lancamentos     LancamentoFinanceiro[]
-  orcamentos      OrcamentoDepartamento[]
+  empresa     Empresa                 @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  lancamentos LancamentoFinanceiro[]
+  orcamentos  OrcamentoDepartamento[]
 
   @@unique([empresaId, nome])
   @@index([empresaId, tipo, ativo])
@@ -1541,51 +1559,51 @@ model CategoriaFinanceira {
 /// Cada registro é uma conta a pagar, conta a receber, ou movimentação já liquidada.
 /// É a base do DRE, do Fluxo de Caixa e do Budget Control.
 model LancamentoFinanceiro {
-  id              String    @id @default(uuid()) @db.Uuid
-  empresaId       String    @map("empresa_id") @db.Uuid
-  categoriaId     String    @map("categoria_id") @db.Uuid
-  contaBancariaId String?   @map("conta_bancaria_id") @db.Uuid
+  id              String  @id @default(uuid()) @db.Uuid
+  empresaId       String  @map("empresa_id") @db.Uuid
+  categoriaId     String  @map("categoria_id") @db.Uuid
+  contaBancariaId String? @map("conta_bancaria_id") @db.Uuid
 
   // Classificação
-  tipo            String                                   // RECEITA, DESPESA, IMPOSTO, TRANSFERENCIA
-  natureza        String    @default("AVULSO")             // AVULSO, RECORRENTE, PARCELADO
-  descricao       String                                   // "Aluguel Sala 3 - Maio/2026"
-  
+  tipo      String // RECEITA, DESPESA, IMPOSTO, TRANSFERENCIA
+  natureza  String @default("AVULSO") // AVULSO, RECORRENTE, PARCELADO
+  descricao String // "Aluguel Sala 3 - Maio/2026"
+
   // Valores
-  valor           Float                                    // Valor absoluto (sempre positivo)
-  valorPago       Float?    @map("valor_pago")             // Quanto foi efetivamente pago (pode divergir)
+  valor     Float // Valor absoluto (sempre positivo)
+  valorPago Float? @map("valor_pago") // Quanto foi efetivamente pago (pode divergir)
 
   // Datas
-  dataCompetencia DateTime  @map("data_competencia") @db.Date  // Mês de competência contábil
-  dataVencimento  DateTime  @map("data_vencimento") @db.Date   // Quando vence
-  dataPagamento   DateTime? @map("data_pagamento") @db.Date    // Quando foi efetivamente pago
+  dataCompetencia DateTime  @map("data_competencia") @db.Date // Mês de competência contábil
+  dataVencimento  DateTime  @map("data_vencimento") @db.Date // Quando vence
+  dataPagamento   DateTime? @map("data_pagamento") @db.Date // Quando foi efetivamente pago
 
   // Status
-  status          String    @default("PENDENTE")           // PENDENTE, PAGO, VENCIDO, CANCELADO
-  formaPagamento  String?   @map("forma_pagamento")        // PIX, BOLETO, DEBITO_AUTOMATICO, CARTAO, DINHEIRO
-  comprovanteUrl  String?   @map("comprovante_url")        // Upload do comprovante
+  status         String  @default("PENDENTE") // PENDENTE, PAGO, VENCIDO, CANCELADO
+  formaPagamento String? @map("forma_pagamento") // PIX, BOLETO, DEBITO_AUTOMATICO, CARTAO, DINHEIRO
+  comprovanteUrl String? @map("comprovante_url") // Upload do comprovante
 
   // Parcelamento
-  parcela         Int?                                     // Parcela atual (ex: 3)
-  totalParcelas   Int?      @map("total_parcelas")         // Total de parcelas (ex: 12)
-  parcelamentoRef String?   @map("parcelamento_ref")       // ID agrupador para vincular todas as parcelas
+  parcela         Int? // Parcela atual (ex: 3)
+  totalParcelas   Int?    @map("total_parcelas") // Total de parcelas (ex: 12)
+  parcelamentoRef String? @map("parcelamento_ref") // ID agrupador para vincular todas as parcelas
 
   // Vínculo com proposta da Esteira (para receitas automáticas)
-  propostaId      String?   @map("proposta_id") @db.Uuid
-  
+  propostaId String? @map("proposta_id") @db.Uuid
+
   // Observações e anexos
-  observacoes     String?
-  tags            String[]  @default([])                    // Tags livres: ["marketing", "filial-centro"]
-  
+  observacoes String?
+  tags        String[] @default([]) // Tags livres: ["marketing", "filial-centro"]
+
   // Controle de quem criou
-  criadoPor       String?   @map("criado_por")             // Email do usuário que lançou
+  criadoPor String? @map("criado_por") // Email do usuário que lançou
 
-  createdAt       DateTime  @default(now()) @map("created_at")
-  updatedAt       DateTime  @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
-  empresa         Empresa            @relation(fields: [empresaId], references: [id], onDelete: Cascade)
-  categoria       CategoriaFinanceira @relation(fields: [categoriaId], references: [id], onDelete: Restrict)
-  contaBancaria   ContaBancariaCF?   @relation(fields: [contaBancariaId], references: [id], onDelete: SetNull)
+  empresa       Empresa             @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  categoria     CategoriaFinanceira @relation(fields: [categoriaId], references: [id], onDelete: Restrict)
+  contaBancaria ContaBancariaCF?    @relation(fields: [contaBancariaId], references: [id], onDelete: SetNull)
 
   @@index([empresaId, tipo, status])
   @@index([empresaId, dataCompetencia])
@@ -1600,19 +1618,19 @@ model LancamentoFinanceiro {
 /// Define limites mensais de gasto por categoria financeira.
 /// Ex: "Marketing" = R$ 5.000/mês. Se ultrapassar, o sistema bloqueia/alerta.
 model OrcamentoDepartamento {
-  id              String    @id @default(uuid()) @db.Uuid
-  empresaId       String    @map("empresa_id") @db.Uuid
-  categoriaId     String    @map("categoria_id") @db.Uuid
-  mes             Int                                       // 1-12
-  ano             Int
-  valorLimite     Float     @map("valor_limite")            // Teto máximo de gasto
+  id               String   @id @default(uuid()) @db.Uuid
+  empresaId        String   @map("empresa_id") @db.Uuid
+  categoriaId      String   @map("categoria_id") @db.Uuid
+  mes              Int // 1-12
+  ano              Int
+  valorLimite      Float    @map("valor_limite") // Teto máximo de gasto
   alertaPercentual Float    @default(80) @map("alerta_percentual") // % do limite para disparar alerta (ex: 80%)
-  travaBloqueio   Boolean   @default(false) @map("trava_bloqueio") // Se true, bloqueia novos lançamentos ao estourar
-  createdAt       DateTime  @default(now()) @map("created_at")
-  updatedAt       DateTime  @updatedAt @map("updated_at")
+  travaBloqueio    Boolean  @default(false) @map("trava_bloqueio") // Se true, bloqueia novos lançamentos ao estourar
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
 
-  empresa         Empresa             @relation(fields: [empresaId], references: [id], onDelete: Cascade)
-  categoria       CategoriaFinanceira @relation(fields: [categoriaId], references: [id], onDelete: Cascade)
+  empresa   Empresa             @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  categoria CategoriaFinanceira @relation(fields: [categoriaId], references: [id], onDelete: Cascade)
 
   @@unique([empresaId, categoriaId, mes, ano])
   @@index([empresaId, ano, mes])
@@ -1629,38 +1647,38 @@ model OrcamentoDepartamento {
 /// Débitos: estornos bancários, vales, adiantamentos, descontos INSS, multas.
 /// O saldo do vendedor = SUM(valor) WHERE tipo = CREDITO - SUM(valor) WHERE tipo = DEBITO.
 model TransacaoCarteira {
-  id              String    @id @default(uuid()) @db.Uuid
-  empresaId       String    @map("empresa_id") @db.Uuid
-  
+  id        String @id @default(uuid()) @db.Uuid
+  empresaId String @map("empresa_id") @db.Uuid
+
   // Identificação do vendedor
-  vendedorEmail   String    @map("vendedor_email")
-  vendedorNome    String?   @map("vendedor_nome")
-  
+  vendedorEmail String  @map("vendedor_email")
+  vendedorNome  String? @map("vendedor_nome")
+
   // Classificação
-  tipo            String                                   // CREDITO, DEBITO
-  categoria       String                                   // COMISSAO, ESTORNO, VALE, ADIANTAMENTO, DESCONTO_INSS, MULTA, SAQUE, AJUSTE
-  descricao       String                                   // "Comissão Proposta #ABC", "Estorno Banco PAN"
-  
+  tipo      String // CREDITO, DEBITO
+  categoria String // COMISSAO, ESTORNO, VALE, ADIANTAMENTO, DESCONTO_INSS, MULTA, SAQUE, AJUSTE
+  descricao String // "Comissão Proposta #ABC", "Estorno Banco PAN"
+
   // Valor (sempre positivo — o tipo define se é entrada ou saída)
-  valor           Float
-  
+  valor Float
+
   // Referências opcionais
-  propostaId      String?   @map("proposta_id") @db.Uuid   // Vínculo com proposta da Esteira
-  bancoNome       String?   @map("banco_nome")              // Banco de origem (para estornos)
-  
+  propostaId String? @map("proposta_id") @db.Uuid // Vínculo com proposta da Esteira
+  bancoNome  String? @map("banco_nome") // Banco de origem (para estornos)
+
   // Status do pagamento (para saques/liquidações)
   statusPagamento String    @default("PENDENTE") @map("status_pagamento") // PENDENTE, LIQUIDADO, CANCELADO
   dataPagamento   DateTime? @map("data_pagamento")
   comprovanteUrl  String?   @map("comprovante_url")
-  
+
   // Metadados
-  criadoPor       String?   @map("criado_por")             // Email de quem registrou
-  observacoes     String?
+  criadoPor   String? @map("criado_por") // Email de quem registrou
+  observacoes String?
 
-  createdAt       DateTime  @default(now()) @map("created_at")
-  updatedAt       DateTime  @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
-  empresa         Empresa   @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  empresa Empresa @relation(fields: [empresaId], references: [id], onDelete: Cascade)
 
   @@index([empresaId, vendedorEmail])
   @@index([empresaId, vendedorEmail, tipo])
@@ -1677,30 +1695,30 @@ model TransacaoCarteira {
 /// Documentos Regulatórios — Alvarás, AVCB, CNDs, Licenças.
 /// O sistema monitora vencimentos e dispara alertas com 60/30/15 dias de antecedência.
 model DocumentoRegulatorio {
-  id              String    @id @default(uuid()) @db.Uuid
-  empresaId       String    @map("empresa_id") @db.Uuid
+  id        String @id @default(uuid()) @db.Uuid
+  empresaId String @map("empresa_id") @db.Uuid
 
-  tipo            String                                   // ALVARA, AVCB, CND_FEDERAL, CND_FGTS, CND_TRABALHISTA, LICENCA_SANITARIA, CERTIFICADO_DIGITAL, CONTRATO_SOCIAL, OUTRO
-  nome            String                                   // "Alvará de Funcionamento 2026"
-  orgaoEmissor    String?   @map("orgao_emissor")          // "Prefeitura Municipal", "Corpo de Bombeiros"
-  numero          String?                                  // Número do documento
-  
-  dataEmissao     DateTime? @map("data_emissao") @db.Date
-  dataVencimento  DateTime? @map("data_vencimento") @db.Date
-  
-  status          String    @default("VIGENTE")            // VIGENTE, VENCIDO, RENOVANDO, CANCELADO
-  arquivoUrl      String?   @map("arquivo_url")            // PDF/imagem em nuvem
-  observacoes     String?
-  
+  tipo         String // ALVARA, AVCB, CND_FEDERAL, CND_FGTS, CND_TRABALHISTA, LICENCA_SANITARIA, CERTIFICADO_DIGITAL, CONTRATO_SOCIAL, OUTRO
+  nome         String // "Alvará de Funcionamento 2026"
+  orgaoEmissor String? @map("orgao_emissor") // "Prefeitura Municipal", "Corpo de Bombeiros"
+  numero       String? // Número do documento
+
+  dataEmissao    DateTime? @map("data_emissao") @db.Date
+  dataVencimento DateTime? @map("data_vencimento") @db.Date
+
+  status      String  @default("VIGENTE") // VIGENTE, VENCIDO, RENOVANDO, CANCELADO
+  arquivoUrl  String? @map("arquivo_url") // PDF/imagem em nuvem
+  observacoes String?
+
   // Alertas
-  alertaEnviado60 Boolean   @default(false) @map("alerta_enviado_60")
-  alertaEnviado30 Boolean   @default(false) @map("alerta_enviado_30")
-  alertaEnviado15 Boolean   @default(false) @map("alerta_enviado_15")
+  alertaEnviado60 Boolean @default(false) @map("alerta_enviado_60")
+  alertaEnviado30 Boolean @default(false) @map("alerta_enviado_30")
+  alertaEnviado15 Boolean @default(false) @map("alerta_enviado_15")
 
-  createdAt       DateTime  @default(now()) @map("created_at")
-  updatedAt       DateTime  @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
-  empresa         Empresa   @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  empresa Empresa @relation(fields: [empresaId], references: [id], onDelete: Cascade)
 
   @@index([empresaId, tipo])
   @@index([empresaId, dataVencimento])
@@ -1712,26 +1730,26 @@ model DocumentoRegulatorio {
 /// Certificações de Vendedores (FEBRABAN/ANEPS) — CA-300, CA-600, etc.
 /// Se a certificação vencer, o sistema bloqueia o vendedor de operar na Esteira.
 model CertificacaoVendedor {
-  id              String    @id @default(uuid()) @db.Uuid
-  empresaId       String    @map("empresa_id") @db.Uuid
-  vendedorEmail   String    @map("vendedor_email")
-  vendedorNome    String?   @map("vendedor_nome")
+  id            String  @id @default(uuid()) @db.Uuid
+  empresaId     String  @map("empresa_id") @db.Uuid
+  vendedorEmail String  @map("vendedor_email")
+  vendedorNome  String? @map("vendedor_nome")
 
-  tipoCertificacao String   @map("tipo_certificacao")      // CA-300, CA-600, ANEPS, SUSEP, CPA-10, CPA-20, OUTRO
-  numero          String?                                  // Número do certificado
-  instituicao     String?                                  // "FEBRABAN", "ANEPS"
-  
-  dataEmissao     DateTime? @map("data_emissao") @db.Date
-  dataVencimento  DateTime  @map("data_vencimento") @db.Date
-  
-  status          String    @default("VIGENTE")            // VIGENTE, VENCIDO, RENOVANDO
-  arquivoUrl      String?   @map("arquivo_url")
-  observacoes     String?
+  tipoCertificacao String  @map("tipo_certificacao") // CA-300, CA-600, ANEPS, SUSEP, CPA-10, CPA-20, OUTRO
+  numero           String? // Número do certificado
+  instituicao      String? // "FEBRABAN", "ANEPS"
 
-  createdAt       DateTime  @default(now()) @map("created_at")
-  updatedAt       DateTime  @updatedAt @map("updated_at")
+  dataEmissao    DateTime? @map("data_emissao") @db.Date
+  dataVencimento DateTime  @map("data_vencimento") @db.Date
 
-  empresa         Empresa   @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  status      String  @default("VIGENTE") // VIGENTE, VENCIDO, RENOVANDO
+  arquivoUrl  String? @map("arquivo_url")
+  observacoes String?
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  empresa Empresa @relation(fields: [empresaId], references: [id], onDelete: Cascade)
 
   @@index([empresaId, vendedorEmail])
   @@index([empresaId, dataVencimento])
@@ -1743,36 +1761,36 @@ model CertificacaoVendedor {
 /// Ativo Imobilizado — Computadores, mesas, ar-condicionado, monitores.
 /// Controle patrimonial com depreciação contábil automática.
 model AtivoImobilizado {
-  id              String    @id @default(uuid()) @db.Uuid
-  empresaId       String    @map("empresa_id") @db.Uuid
+  id        String @id @default(uuid()) @db.Uuid
+  empresaId String @map("empresa_id") @db.Uuid
 
-  nome            String                                   // "Notebook Dell Latitude 5420"
-  categoria       String                                   // INFORMATICA, MOVEIS, ELETRODOMESTICO, VEICULOS, OUTRO
-  numeroPatrimonio String?  @map("numero_patrimonio")      // Etiqueta: "PAT-001"
-  numeroSerie     String?   @map("numero_serie")
-  marca           String?
-  modelo          String?
-  
-  dataAquisicao   DateTime  @map("data_aquisicao") @db.Date
-  valorAquisicao  Float     @map("valor_aquisicao")
-  vidaUtilMeses   Int       @default(60) @map("vida_util_meses")   // Vida útil em meses (ex: 60 = 5 anos)
-  taxaDepreciacao Float     @default(20) @map("taxa_depreciacao")  // % ao ano
-  
-  responsavelEmail String?  @map("responsavel_email")      // Vendedor que está usando
-  responsavelNome String?   @map("responsavel_nome")
-  localizacao     String?                                  // "Sala 3", "Filial Centro"
-  
-  status          String    @default("EM_USO")             // EM_USO, EM_MANUTENCAO, BAIXADO, DISPONIVEL
-  dataBaixa       DateTime? @map("data_baixa") @db.Date
-  motivoBaixa     String?   @map("motivo_baixa")
-  
-  observacoes     String?
-  fotoUrl         String?   @map("foto_url")
+  nome             String // "Notebook Dell Latitude 5420"
+  categoria        String // INFORMATICA, MOVEIS, ELETRODOMESTICO, VEICULOS, OUTRO
+  numeroPatrimonio String? @map("numero_patrimonio") // Etiqueta: "PAT-001"
+  numeroSerie      String? @map("numero_serie")
+  marca            String?
+  modelo           String?
 
-  createdAt       DateTime  @default(now()) @map("created_at")
-  updatedAt       DateTime  @updatedAt @map("updated_at")
+  dataAquisicao   DateTime @map("data_aquisicao") @db.Date
+  valorAquisicao  Float    @map("valor_aquisicao")
+  vidaUtilMeses   Int      @default(60) @map("vida_util_meses") // Vida útil em meses (ex: 60 = 5 anos)
+  taxaDepreciacao Float    @default(20) @map("taxa_depreciacao") // % ao ano
 
-  empresa         Empresa   @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  responsavelEmail String? @map("responsavel_email") // Vendedor que está usando
+  responsavelNome  String? @map("responsavel_nome")
+  localizacao      String? // "Sala 3", "Filial Centro"
+
+  status      String    @default("EM_USO") // EM_USO, EM_MANUTENCAO, BAIXADO, DISPONIVEL
+  dataBaixa   DateTime? @map("data_baixa") @db.Date
+  motivoBaixa String?   @map("motivo_baixa")
+
+  observacoes String?
+  fotoUrl     String? @map("foto_url")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  empresa Empresa @relation(fields: [empresaId], references: [id], onDelete: Cascade)
 
   @@index([empresaId, categoria])
   @@index([empresaId, status])
@@ -1787,26 +1805,26 @@ model AtivoImobilizado {
 
 /// Upload de Borderô Bancário — Arquivo CSV/XLSX enviado pelo banco parceiro.
 model BorderoUpload {
-  id              String    @id @default(uuid()) @db.Uuid
-  empresaId       String    @map("empresa_id") @db.Uuid
-  
-  bancoNome       String    @map("banco_nome")             // "Banco PAN", "BMG", "Itaú Consignado"
-  nomeArquivo     String    @map("nome_arquivo")           // "bordero_pan_mai2026.csv"
-  totalLinhas     Int       @default(0) @map("total_linhas")
-  totalValor      Float     @default(0) @map("total_valor")
-  
+  id        String @id @default(uuid()) @db.Uuid
+  empresaId String @map("empresa_id") @db.Uuid
+
+  bancoNome   String @map("banco_nome") // "Banco PAN", "BMG", "Itaú Consignado"
+  nomeArquivo String @map("nome_arquivo") // "bordero_pan_mai2026.csv"
+  totalLinhas Int    @default(0) @map("total_linhas")
+  totalValor  Float  @default(0) @map("total_valor")
+
   // Resultado do matching
-  matchEncontrados Int      @default(0) @map("match_encontrados")
-  matchNaoEncontrados Int   @default(0) @map("match_nao_encontrados")
-  
-  status          String    @default("PROCESSANDO")        // PROCESSANDO, CONCLUIDO, ERRO
-  enviadoPor      String?   @map("enviado_por")
+  matchEncontrados    Int @default(0) @map("match_encontrados")
+  matchNaoEncontrados Int @default(0) @map("match_nao_encontrados")
 
-  createdAt       DateTime  @default(now()) @map("created_at")
-  updatedAt       DateTime  @updatedAt @map("updated_at")
+  status     String  @default("PROCESSANDO") // PROCESSANDO, CONCLUIDO, ERRO
+  enviadoPor String? @map("enviado_por")
 
-  empresa         Empresa   @relation(fields: [empresaId], references: [id], onDelete: Cascade)
-  linhas          BorderoLinha[]
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  empresa Empresa        @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  linhas  BorderoLinha[]
 
   @@index([empresaId, createdAt(sort: Desc)])
   @@map("bordero_upload")
@@ -1816,28 +1834,28 @@ model BorderoUpload {
 /// Linha individual do Borderô — cada linha é um registro do extrato bancário.
 /// O sistema tenta cruzar (Fuzzy Match) com propostas da Esteira.
 model BorderoLinha {
-  id              String    @id @default(uuid()) @db.Uuid
-  borderoId       String    @map("bordero_id") @db.Uuid
-  
+  id        String @id @default(uuid()) @db.Uuid
+  borderoId String @map("bordero_id") @db.Uuid
+
   // Dados do banco
-  cpfCliente      String?   @map("cpf_cliente")
-  nomeCliente     String?   @map("nome_cliente")
-  contrato        String?                                  // Número do contrato bancário
-  valorLiberado   Float?    @map("valor_liberado")
-  valorComissao   Float?    @map("valor_comissao")
-  dataPagamento   DateTime? @map("data_pagamento") @db.Date
-  produto         String?                                  // "Consignado", "Cartão", "FGTS"
-  
+  cpfCliente    String?   @map("cpf_cliente")
+  nomeCliente   String?   @map("nome_cliente")
+  contrato      String? // Número do contrato bancário
+  valorLiberado Float?    @map("valor_liberado")
+  valorComissao Float?    @map("valor_comissao")
+  dataPagamento DateTime? @map("data_pagamento") @db.Date
+  produto       String? // "Consignado", "Cartão", "FGTS"
+
   // Resultado do match
-  statusMatch     String    @default("PENDENTE") @map("status_match") // MATCH_EXATO, MATCH_FUZZY, NAO_ENCONTRADO, DIVERGENCIA, IGNORADO
-  propostaId      String?   @map("proposta_id") @db.Uuid  // Proposta encontrada na Esteira
-  scoreSimilaridade Float?  @map("score_similaridade")     // 0-100 (% de confiança do match)
-  divergencia     String?                                  // "Valor difere: R$500 vs R$480"
-  observacoes     String?
+  statusMatch       String  @default("PENDENTE") @map("status_match") // MATCH_EXATO, MATCH_FUZZY, NAO_ENCONTRADO, DIVERGENCIA, IGNORADO
+  propostaId        String? @map("proposta_id") @db.Uuid // Proposta encontrada na Esteira
+  scoreSimilaridade Float?  @map("score_similaridade") // 0-100 (% de confiança do match)
+  divergencia       String? // "Valor difere: R$500 vs R$480"
+  observacoes       String?
 
-  createdAt       DateTime  @default(now()) @map("created_at")
+  createdAt DateTime @default(now()) @map("created_at")
 
-  bordero         BorderoUpload @relation(fields: [borderoId], references: [id], onDelete: Cascade)
+  bordero BorderoUpload @relation(fields: [borderoId], references: [id], onDelete: Cascade)
 
   @@index([borderoId])
   @@index([borderoId, statusMatch])
@@ -1847,38 +1865,38 @@ model BorderoLinha {
 
 // ═══ Módulo Calendário de Atividades ═══
 model Atividade {
-  id              String    @id @default(uuid()) @db.Uuid
-  empresaId       String    @map("empresa_id") @db.Uuid
-  
-  titulo          String
-  descricao       String?
-  tipo            String    @default("TAREFA") // TAREFA, LIGACAO, REUNIAO, EMAIL, FOLLOW_UP
-  
-  dataInicio      DateTime  @map("data_inicio")
-  dataFim         DateTime? @map("data_fim")
-  diaInteiro      Boolean   @default(false) @map("dia_inteiro")
-  
-  status          String    @default("PENDENTE") // PENDENTE, CONCLUIDA, CANCELADA
-  prioridade      String    @default("MEDIA") // BAIXA, MEDIA, ALTA, URGENTE
-  cor             String    @default("#6366f1") // Cor no calendário
-  
+  id        String @id @default(uuid()) @db.Uuid
+  empresaId String @map("empresa_id") @db.Uuid
+
+  titulo    String
+  descricao String?
+  tipo      String  @default("TAREFA") // TAREFA, LIGACAO, REUNIAO, EMAIL, FOLLOW_UP
+
+  dataInicio DateTime  @map("data_inicio")
+  dataFim    DateTime? @map("data_fim")
+  diaInteiro Boolean   @default(false) @map("dia_inteiro")
+
+  status     String @default("PENDENTE") // PENDENTE, CONCLUIDA, CANCELADA
+  prioridade String @default("MEDIA") // BAIXA, MEDIA, ALTA, URGENTE
+  cor        String @default("#6366f1") // Cor no calendário
+
   // Vínculo com lead (opcional)
-  leadId          String?   @map("lead_id") @db.Uuid
-  leadNome        String?   @map("lead_nome")
-  
+  leadId   String? @map("lead_id") @db.Uuid
+  leadNome String? @map("lead_nome")
+
   // Responsável
-  responsavelId   String?   @map("responsavel_id") @db.Uuid
-  responsavelNome String?   @map("responsavel_nome")
-  
+  responsavelId   String? @map("responsavel_id") @db.Uuid
+  responsavelNome String? @map("responsavel_nome")
+
   // Lembrete
-  lembrete        Int?      // minutos antes (15, 30, 60, 1440)
-  
-  concluidaEm     DateTime? @map("concluida_em")
-  createdAt       DateTime  @default(now()) @map("created_at")
-  updatedAt       DateTime  @updatedAt @map("updated_at")
-  
-  empresa         Empresa   @relation(fields: [empresaId], references: [id], onDelete: Cascade)
-  
+  lembrete Int? // minutos antes (15, 30, 60, 1440)
+
+  concluidaEm DateTime? @map("concluida_em")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  empresa Empresa @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+
   @@index([empresaId, dataInicio])
   @@index([empresaId, status])
   @@index([empresaId, responsavelId])
@@ -1888,49 +1906,49 @@ model Atividade {
 
 // ═══ Módulo de Automações (Workflow Builder) ═══
 model AutomacaoFluxo {
-  id              String    @id @default(uuid()) @db.Uuid
-  empresaId       String    @map("empresa_id") @db.Uuid
-  
-  nome            String
-  descricao       String?
-  ativo           Boolean   @default(false)
-  
+  id        String @id @default(uuid()) @db.Uuid
+  empresaId String @map("empresa_id") @db.Uuid
+
+  nome      String
+  descricao String?
+  ativo     Boolean @default(false)
+
   // Estrutura do React Flow salva em JSON
-  nodes           Json?     @default("[]")
-  edges           Json?     @default("[]")
-  
-  gatilhoTipo     String?   @map("gatilho_tipo") // Para buscas rápidas (ex: "NOVA_MENSAGEM")
-  
-  createdAt       DateTime  @default(now()) @map("created_at")
-  updatedAt       DateTime  @updatedAt @map("updated_at")
-  
-  empresa         Empresa   @relation(fields: [empresaId], references: [id], onDelete: Cascade)
-  execucoes       ExecucaoFluxo[]
-  
+  nodes Json? @default("[]")
+  edges Json? @default("[]")
+
+  gatilhoTipo String? @map("gatilho_tipo") // Para buscas rápidas (ex: "NOVA_MENSAGEM")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  empresa   Empresa         @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  execucoes ExecucaoFluxo[]
+
   @@index([empresaId])
   @@map("automacao_fluxo")
   @@schema("public")
 }
 
 model ExecucaoFluxo {
-  id              String    @id @default(uuid()) @db.Uuid
-  empresaId       String    @map("empresa_id") @db.Uuid
-  fluxoId         String    @map("fluxo_id") @db.Uuid
-  leadId          String    @map("lead_id") @db.Uuid
-  
-  nodeAtualId     String?   @map("node_atual_id")
-  status          String    @default("RODANDO") // RODANDO, PAUSADO, CONCLUIDO, ERRO
-  
-  aguardandoAte   DateTime? @map("aguardando_ate")
-  variaveis       Json      @default("{}") @db.JsonB
-  
-  createdAt       DateTime  @default(now()) @map("created_at")
-  updatedAt       DateTime  @updatedAt @map("updated_at")
-  
-  empresa         Empresa        @relation(fields: [empresaId], references: [id], onDelete: Cascade)
-  fluxo           AutomacaoFluxo @relation(fields: [fluxoId], references: [id], onDelete: Cascade)
-  lead            Lead           @relation(fields: [leadId], references: [id], onDelete: Cascade)
-  
+  id        String @id @default(uuid()) @db.Uuid
+  empresaId String @map("empresa_id") @db.Uuid
+  fluxoId   String @map("fluxo_id") @db.Uuid
+  leadId    String @map("lead_id") @db.Uuid
+
+  nodeAtualId String? @map("node_atual_id")
+  status      String  @default("RODANDO") // RODANDO, PAUSADO, CONCLUIDO, ERRO
+
+  aguardandoAte DateTime? @map("aguardando_ate")
+  variaveis     Json      @default("{}") @db.JsonB
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  empresa Empresa        @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  fluxo   AutomacaoFluxo @relation(fields: [fluxoId], references: [id], onDelete: Cascade)
+  lead    Lead           @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
   @@index([empresaId])
   @@index([fluxoId])
   @@index([leadId])
@@ -1941,21 +1959,21 @@ model ExecucaoFluxo {
 
 // ═══ Módulo de Campanhas (Broadcast) ═══
 model Campanha {
-  id              String         @id @default(uuid()) @db.Uuid
-  empresaId       String         @map("empresa_id") @db.Uuid
-  
-  nome            String
-  conteudoMensagem String         @map("conteudo_mensagem") @db.Text
-  status          String         @default("RASCUNHO") // RASCUNHO, RODANDO, PAUSADA, CONCLUIDA
-  
-  dataAgendamento DateTime?      @map("data_agendamento")
-  
-  createdAt       DateTime       @default(now()) @map("created_at")
-  updatedAt       DateTime       @updatedAt @map("updated_at")
-  
-  empresa         Empresa        @relation(fields: [empresaId], references: [id], onDelete: Cascade)
-  leads           CampanhaLead[]
-  
+  id        String @id @default(uuid()) @db.Uuid
+  empresaId String @map("empresa_id") @db.Uuid
+
+  nome             String
+  conteudoMensagem String @map("conteudo_mensagem") @db.Text
+  status           String @default("RASCUNHO") // RASCUNHO, RODANDO, PAUSADA, CONCLUIDA
+
+  dataAgendamento DateTime? @map("data_agendamento")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  empresa Empresa        @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  leads   CampanhaLead[]
+
   @@index([empresaId])
   @@index([status])
   @@map("campanha")
@@ -1963,19 +1981,19 @@ model Campanha {
 }
 
 model CampanhaLead {
-  id              String    @id @default(uuid()) @db.Uuid
-  campanhaId      String    @map("campanha_id") @db.Uuid
-  leadId          String    @map("lead_id") @db.Uuid
-  
-  statusEnvio     String    @default("PENDENTE") // PENDENTE, ENVIADO, FALHOU
-  erroLog         String?   @map("erro_log") @db.Text
-  
-  createdAt       DateTime  @default(now()) @map("created_at")
-  updatedAt       DateTime  @updatedAt @map("updated_at")
-  
-  campanha        Campanha  @relation(fields: [campanhaId], references: [id], onDelete: Cascade)
-  lead            Lead      @relation(fields: [leadId], references: [id], onDelete: Cascade)
-  
+  id         String @id @default(uuid()) @db.Uuid
+  campanhaId String @map("campanha_id") @db.Uuid
+  leadId     String @map("lead_id") @db.Uuid
+
+  statusEnvio String  @default("PENDENTE") // PENDENTE, ENVIADO, FALHOU
+  erroLog     String? @map("erro_log") @db.Text
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  campanha Campanha @relation(fields: [campanhaId], references: [id], onDelete: Cascade)
+  lead     Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
   @@index([campanhaId, statusEnvio])
   @@index([leadId])
   @@map("campanha_lead")
@@ -1987,57 +2005,77 @@ model CampanhaLead {
 // ─────────────────────────────────────────────────────────────────────────────
 
 model SyncTabelaConfig {
-  id              String    @id @default(uuid()) @db.Uuid
-  empresaId       String    @unique @map("empresa_id") @db.Uuid
+  id        String @id @default(uuid()) @db.Uuid
+  empresaId String @unique @map("empresa_id") @db.Uuid
 
   // Credenciais Bevi (criptografadas AES-256-GCM)
-  loginBevi       String    @map("login_bevi")
-  senhaBevi       String    @map("senha_bevi")
-  senhaRelatorio  String    @map("senha_relatorio")
+  loginBevi      String @map("login_bevi")
+  senhaBevi      String @map("senha_bevi")
+  senhaRelatorio String @map("senha_relatorio")
 
   // Bancos selecionados para sync
   // Ex: [{ financeira: "FACTA", convenio: "INSS", formaContrato: "Novo", ativo: true }]
-  bancosSelecionados  Json   @default("[]") @map("bancos_selecionados") @db.JsonB
+  bancosSelecionados Json @default("[]") @map("bancos_selecionados") @db.JsonB
 
   // Estado
-  ultimaSync      DateTime?  @map("ultima_sync")
-  statusSync      String     @default("idle") @map("status_sync") // idle, running, error, success
-  erroSync        String?    @map("erro_sync")
+  ultimaSync DateTime? @map("ultima_sync")
+  statusSync String    @default("idle") @map("status_sync") // idle, running, error, success
+  erroSync   String?   @map("erro_sync")
 
   // Cron automático
-  syncAutomatico  Boolean    @default(false) @map("sync_automatico")
-  horarioSync     String     @default("06:00") @map("horario_sync")
+  syncAutomatico Boolean @default(false) @map("sync_automatico")
+  horarioSync    String  @default("06:00") @map("horario_sync")
 
-  createdAt       DateTime   @default(now()) @map("created_at")
-  updatedAt       DateTime   @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
-  empresa         Empresa    @relation(fields: [empresaId], references: [id], onDelete: Cascade)
-  historico       SyncTabelaLog[]
+  empresa   Empresa         @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  historico SyncTabelaLog[]
 
   @@map("sync_tabela_config")
   @@schema("public")
 }
 
 model SyncTabelaLog {
-  id            String   @id @default(uuid()) @db.Uuid
-  configId      String   @map("config_id") @db.Uuid
+  id       String @id @default(uuid()) @db.Uuid
+  configId String @map("config_id") @db.Uuid
 
   financeira    String
   convenio      String
-  formaContrato String   @map("forma_contrato")
+  formaContrato String @map("forma_contrato")
 
-  status        String   // success, error
-  tabelasTotal  Int      @default(0) @map("tabelas_total")
-  inseridas     Int      @default(0)
-  atualizadas   Int      @default(0)
-  erro          String?
-  tempoMs       Int      @default(0) @map("tempo_ms")
+  status       String // success, error
+  tabelasTotal Int     @default(0) @map("tabelas_total")
+  inseridas    Int     @default(0)
+  atualizadas  Int     @default(0)
+  erro         String?
+  tempoMs      Int     @default(0) @map("tempo_ms")
 
-  createdAt     DateTime @default(now()) @map("created_at")
+  createdAt DateTime @default(now()) @map("created_at")
 
-  config        SyncTabelaConfig @relation(fields: [configId], references: [id], onDelete: Cascade)
+  config SyncTabelaConfig @relation(fields: [configId], references: [id], onDelete: Cascade)
 
   @@index([configId, createdAt(sort: Desc)])
   @@map("sync_tabela_log")
+  @@schema("public")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PROMOTORAS
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Promotora {
+  id        String   @id @default(uuid()) @db.Uuid
+  empresaId String   @map("empresa_id") @db.Uuid
+  nome      String
+  cnpj      String?
+  ativo     Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  empresa Empresa @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+
+  @@index([empresaId])
+  @@map("promotora")
   @@schema("public")
 }
