@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
 import {
@@ -26,6 +26,7 @@ import {
   Save
 } from "lucide-react";
 import { toast } from "sonner";
+import { NovaPropostaModal } from "@/components/NovaPropostaModal";
 
 type Proposta = {
   id: string;
@@ -100,24 +101,6 @@ export function EsteiraClient({
   const [atualizando, setAtualizando] = useState<string | null>(null);
   const [porPagina, setPorPagina] = useState(10);
   const [paginaLista, setPaginaLista] = useState(1);
-  const [form, setForm] = useState({
-    clienteNome: "", clienteCpf: "", clienteTelefone: "", email: "",
-    uf: "", cidade: "", numeroBeneficio: "", especieBeneficio: "",
-    margemLivre: "", margemRmc: "", margemRcc: "",
-    tipoOperacao: "Saque FGTS", bancoNome: "", convenioNome: "",
-    valorLiberado: "", valorParcela: "", prazo: "", taxaJuros: "",
-    codigoPropostaBanco: "", promotora: "", tabela: "",
-    bancoOrigem: "", saldoDevedor: "",
-    vendedorNome: "", dataDigitacao: "", observacoes: "",
-  });
-  const emptyForm = { ...form };
-  const [formTab, setFormTab] = useState(0);
-  const [searchResults, setSearchResults] = useState<any[]>([]);
-  const [searchPropostas, setSearchPropostas] = useState<any[]>([]);
-  const [selectedLead, setSelectedLead] = useState<any>(null);
-  const [searching, setSearching] = useState(false);
-  const searchTimeoutRef = useRef<any>(null);
-  const [showSearchDropdown, setShowSearchDropdown] = useState(true);
 
   // Estado do modal de edição
   const [editModal, setEditModal] = useState(false);
@@ -229,92 +212,6 @@ export function EsteiraClient({
     };
   });
   const maxFunnel = Math.max(...funnelData.map((f) => f.count), 1);
-
-  function searchCliente(q: string) {
-    setShowSearchDropdown(true);
-    if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
-    if (q.length < 2) { setSearchResults([]); return; }
-    searchTimeoutRef.current = setTimeout(async () => {
-      setSearching(true);
-      try {
-        const res = await fetch(`/api/leads/buscar?q=${encodeURIComponent(q)}`);
-        if (res.ok) {
-          const data = await res.json();
-          setSearchResults(data);
-        }
-      } catch { setSearchResults([]); }
-      setSearching(false);
-    }, 300);
-  }
-
-  function selecionarLead(lead: any) {
-    setForm(f => ({
-      ...f,
-      clienteNome: lead.nome || "",
-      clienteCpf: lead.cpf || "",
-      clienteTelefone: lead.telefone || "",
-      email: lead.email || "",
-      uf: lead.uf || "",
-      cidade: lead.cidade || "",
-      numeroBeneficio: lead.numeroBeneficio || "",
-      especieBeneficio: lead.especieBeneficio?.toString() || "",
-      margemLivre: lead.margemLivre?.toString() || "",
-      margemRmc: lead.margemRmc?.toString() || "",
-      margemRcc: lead.margemRcc?.toString() || "",
-      tipoOperacao: lead.tipoOperacao || "Saque FGTS",
-      bancoNome: lead.bancoPreferido || "",
-      convenioNome: lead.convenioNome || "",
-      valorLiberado: lead.valorLiberado?.toString() || "",
-      vendedorNome: lead.vendedorNome || "",
-    }));
-    setSelectedLead(lead);
-    setSearchResults([]);
-  }
-
-  async function criarProposta(e: React.FormEvent) {
-    e.preventDefault();
-    setSalvando(true);
-    setErro(null);
-
-    const payload: any = {
-      clienteNome: form.clienteNome,
-      tipoOperacao: form.tipoOperacao || undefined,
-    };
-    if (form.clienteCpf) payload.clienteCpf = form.clienteCpf;
-    if (form.clienteTelefone) payload.clienteTelefone = form.clienteTelefone;
-    if (form.numeroBeneficio) payload.numeroBeneficio = form.numeroBeneficio;
-    if (form.especieBeneficio) payload.especieBeneficio = Number(form.especieBeneficio);
-    if (form.bancoNome) payload.bancoNome = form.bancoNome;
-    if (form.convenioNome) payload.convenioNome = form.convenioNome;
-    if (form.valorLiberado) payload.valorLiberado = Number(form.valorLiberado);
-    if (form.valorParcela) payload.valorParcela = Number(form.valorParcela);
-    if (form.prazo) payload.prazo = Number(form.prazo);
-    if (form.taxaJuros) payload.taxaJuros = Number(form.taxaJuros);
-    if (form.codigoPropostaBanco) payload.codigoPropostaBanco = form.codigoPropostaBanco;
-    if (form.bancoOrigem) payload.bancoOrigem = form.bancoOrigem;
-    if (form.saldoDevedor) payload.saldoDevedor = Number(form.saldoDevedor);
-    if (form.vendedorNome) payload.vendedorNome = form.vendedorNome;
-    if (selectedLead) payload.leadId = selectedLead.id;
-    payload.observacoes = form.observacoes || undefined;
-
-    const res = await fetch("/api/propostas", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-
-    const data = await res.json();
-    if (!res.ok) { setErro(data.error); setSalvando(false); return; }
-
-    setModal(false);
-    setSalvando(false);
-    setForm(emptyForm);
-    setFormTab(0);
-    setSelectedLead(null);
-    setSearchResults([]);
-    setSearchPropostas([]);
-    router.refresh();
-  }
 
   async function mudarStatus(propostaId: string, novoStatus: string) {
     setAtualizando(propostaId);
@@ -662,230 +559,15 @@ export function EsteiraClient({
         </section>
       </div>
 
-      {/* Modal Nova Proposta — Formulário Completo */}
-      {modal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-2xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between p-6 border-b border-zinc-100 dark:border-zinc-800">
-              <h2 className="text-lg font-semibold flex items-center gap-2"><Plus className="h-5 w-5 text-brand"/>Nova Proposta</h2>
-              <button onClick={() => { setModal(false); setFormTab(0); setSelectedLead(null); setSearchResults([]); }} className="text-zinc-400 hover:text-zinc-600 transition">
-                <X className="h-5 w-5" />
-              </button>
-            </div>
+      <NovaPropostaModal
+        open={modal}
+        onClose={() => setModal(false)}
+        onSuccess={() => { setModal(false); toast.success("Proposta criada com sucesso!"); router.refresh(); }}
+        bancos={bancos}
+        convenios={convenios}
+      />
 
-            {/* Tabs */}
-            <div className="flex border-b border-zinc-100 dark:border-zinc-800 px-6">
-              {["👤 Cliente","📋 Operação","💰 Financeiro"].map((t, i) => (
-                <button key={i} onClick={() => setFormTab(i)}
-                  className={`px-4 py-3 text-sm font-medium border-b-2 transition ${formTab === i ? "border-brand text-brand" : "border-transparent text-zinc-400 hover:text-zinc-600"}`}>{t}</button>
-              ))}
-            </div>
 
-            {/* Selected Lead Badge */}
-            {selectedLead && (
-              <div className="mx-6 mt-4 flex items-center gap-2 px-3 py-2 rounded-lg bg-brand/10 border border-brand/20">
-                <CheckCircle2 className="h-4 w-4 text-brand"/>
-                <span className="text-xs font-semibold text-brand">Cliente existente: {selectedLead.nome}</span>
-                <button onClick={() => { setSelectedLead(null); setForm(emptyForm); }} className="ml-auto text-xs text-zinc-400 hover:text-red-500">✕ Limpar</button>
-              </div>
-            )}
-
-            <form onSubmit={criarProposta} className="p-6 space-y-4">
-              {erro && (
-                <div className="rounded-lg bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900 px-4 py-3 text-sm text-red-700 dark:text-red-300">{erro}</div>
-              )}
-
-              {/* TAB 0: Cliente */}
-              {formTab === 0 && (
-                <div className="space-y-4">
-                  <div className="space-y-2 relative">
-                    <label className="text-sm font-medium">Buscar Cliente *</label>
-                    <div className="relative">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
-                      <input required value={form.clienteNome} onChange={(e) => { setForm({ ...form, clienteNome: e.target.value }); searchCliente(e.target.value); }}
-                        onFocus={() => searchResults.length > 0 && setShowSearchDropdown(true)}
-                        onBlur={() => setTimeout(() => setShowSearchDropdown(false), 200)}
-                        placeholder="Digite nome, CPF ou telefone..."
-                        className="w-full pl-10 pr-4 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
-                      {searching && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-brand" />}
-                    </div>
-                    {showSearchDropdown && form.clienteNome.length >= 2 && (
-                      <div className="absolute z-10 top-full left-0 right-0 mt-1 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl shadow-xl max-h-48 overflow-y-auto">
-                        {searchResults.length === 0 && !searching ? (
-                          <div className="p-3 space-y-2">
-                            <p className="text-xs text-zinc-400 text-center">Nenhum cliente encontrado</p>
-                            <button type="button"
-                              onClick={() => { setShowSearchDropdown(false); }}
-                              className="w-full text-left px-3 py-2 rounded-lg bg-brand/10 text-brand text-sm font-medium hover:bg-brand/20 transition flex items-center gap-2">
-                              <Plus className="h-4 w-4" /> Cadastrar &quot;{form.clienteNome}&quot; como novo cliente
-                            </button>
-                          </div>
-                        ) : (
-                          searchResults.map((l: any) => (
-                            <button type="button" key={l.id} onClick={() => { selecionarLead(l); setShowSearchDropdown(false); }}
-                              className="w-full px-4 py-3 text-left hover:bg-brand/5 transition border-b border-zinc-50 dark:border-zinc-800 last:border-0">
-                              <p className="text-sm font-semibold">{l.nome}</p>
-                              <p className="text-[11px] text-zinc-400">{l.cpf || "Sem CPF"} · {l.telefone || "Sem tel"}</p>
-                            </button>
-                          ))
-                        )}
-                      </div>
-                    )}
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium text-zinc-500">CPF</label>
-                      <input value={form.clienteCpf} onChange={(e) => setForm({ ...form, clienteCpf: e.target.value })} placeholder="000.000.000-00"
-                        className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium text-zinc-500">Telefone</label>
-                      <input value={form.clienteTelefone} onChange={(e) => setForm({ ...form, clienteTelefone: e.target.value })} placeholder="(67) 99999-0000"
-                        className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium text-zinc-500">Email</label>
-                      <input value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="email@exemplo.com"
-                        className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium text-zinc-500">UF</label>
-                      <input value={form.uf} onChange={(e) => setForm({ ...form, uf: e.target.value })} placeholder="MS" maxLength={2}
-                        className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* TAB 1: Operação */}
-              {formTab === 1 && (
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Nº Benefício</label>
-                    <input value={form.numeroBeneficio} onChange={(e) => setForm({ ...form, numeroBeneficio: e.target.value })} placeholder="1234567890"
-                      className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Espécie</label>
-                    <input type="number" value={form.especieBeneficio} onChange={(e) => setForm({ ...form, especieBeneficio: e.target.value })} placeholder="41"
-                      className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Tipo Operação</label>
-                    <select value={form.tipoOperacao} onChange={(e) => setForm({ ...form, tipoOperacao: e.target.value })}
-                      className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand">
-                      <option value="EMPRESTIMO_CONSIGNADO">Novo</option>
-                      <option value="PORTABILIDADE">Portabilidade</option>
-                      <option value="REFINANCIAMENTO">Refinanciamento</option>
-                      <option value="PORTABILIDADE_REFIN">Port + Refin</option>
-                      <option value="CARTAO_CONSIGNADO">Cartão Consignado</option>
-                      <option value="CARTAO_BENEFICIO">Cartão Benefício</option>
-                    </select>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Convênio</label>
-                    <select value={form.convenioNome} onChange={(e) => setForm({ ...form, convenioNome: e.target.value })}
-                      className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand">
-                      <option value="">Selecione...</option>
-                      {convenios.map(c => <option key={c.id} value={c.nome}>{c.nome}</option>)}
-                    </select>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-zinc-500">Margem Livre</label>
-                    <input type="number" step="0.01" value={form.margemLivre} onChange={(e) => setForm({ ...form, margemLivre: e.target.value })} placeholder="0.00"
-                      className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-zinc-500">Margem RMC</label>
-                    <input type="number" step="0.01" value={form.margemRmc} onChange={(e) => setForm({ ...form, margemRmc: e.target.value })} placeholder="0.00"
-                      className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
-                  </div>
-                  <div className="space-y-2 col-span-2">
-                    <label className="text-sm font-medium text-zinc-500">Margem RCC</label>
-                    <input type="number" step="0.01" value={form.margemRcc} onChange={(e) => setForm({ ...form, margemRcc: e.target.value })} placeholder="0.00"
-                      className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
-                  </div>
-                </div>
-              )}
-
-              {/* TAB 2: Financeiro */}
-              {formTab === 2 && (
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Banco Destino</label>
-                    <select value={form.bancoNome} onChange={(e) => setForm({ ...form, bancoNome: e.target.value })}
-                      className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand">
-                      <option value="">Selecione...</option>
-                      {bancos.map(b => <option key={b.id} value={b.nome}>{b.nome}</option>)}
-                    </select>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-zinc-500">Promotora</label>
-                    <input value={form.promotora} onChange={(e) => setForm({ ...form, promotora: e.target.value })} placeholder="BEVI, Novo Saque..."
-                      className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Valor Liberado</label>
-                    <input type="number" step="0.01" value={form.valorLiberado} onChange={(e) => setForm({ ...form, valorLiberado: e.target.value })} placeholder="5000.00"
-                      className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-zinc-500">Parcela</label>
-                    <input type="number" step="0.01" value={form.valorParcela} onChange={(e) => setForm({ ...form, valorParcela: e.target.value })} placeholder="150.00"
-                      className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-zinc-500">ADE / Contrato</label>
-                    <input value={form.codigoPropostaBanco} onChange={(e) => setForm({ ...form, codigoPropostaBanco: e.target.value })} placeholder="0207381481/ACD"
-                      className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-zinc-500">Vendedor</label>
-                    <input value={form.vendedorNome} onChange={(e) => setForm({ ...form, vendedorNome: e.target.value })} placeholder="Nome do vendedor"
-                      className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-zinc-500">Banco Origem {form.tipoOperacao.includes("PORT") ? "(Port)" : ""}</label>
-                    <select value={form.bancoOrigem} onChange={(e) => setForm({ ...form, bancoOrigem: e.target.value })}
-                      className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand">
-                      <option value="">Selecione...</option>
-                      {bancos.map(b => <option key={b.id} value={b.nome}>{b.nome}</option>)}
-                    </select>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-zinc-500">Saldo Devedor</label>
-                    <input type="number" step="0.01" value={form.saldoDevedor} onChange={(e) => setForm({ ...form, saldoDevedor: e.target.value })} placeholder="0.00"
-                      className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
-                  </div>
-                  <div className="space-y-2 col-span-2">
-                    <label className="text-sm font-medium text-zinc-500">Observações</label>
-                    <textarea value={form.observacoes} onChange={(e) => setForm({ ...form, observacoes: e.target.value })} placeholder="Notas sobre a proposta..." rows={2}
-                      className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand resize-none" />
-                  </div>
-                </div>
-              )}
-
-              {/* Navigation + Submit */}
-              <div className="flex justify-between pt-2 border-t border-zinc-100 dark:border-zinc-800">
-                <button type="button" onClick={() => setFormTab(Math.max(0, formTab - 1))} disabled={formTab === 0}
-                  className="px-4 py-2 text-sm text-zinc-500 hover:text-zinc-900 disabled:opacity-30 transition">← Anterior</button>
-                <div className="flex gap-2">
-                  {formTab < 2 ? (
-                    <button type="button" onClick={() => setFormTab(formTab + 1)}
-                      className="px-5 py-2.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-sm font-semibold hover:bg-zinc-200 transition">Próximo →</button>
-                  ) : (
-                    <button type="submit" disabled={salvando}
-                      className="flex items-center gap-2 rounded-xl bg-brand px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-brand/25 hover:opacity-95 disabled:opacity-50 transition">
-                      {salvando ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-                      {salvando ? "Criando..." : "Criar Proposta"}
-                    </button>
-                  )}
-                </div>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
 
       {/* Modal Edição */}
       {editModal && (
