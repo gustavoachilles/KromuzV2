@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
 import {
@@ -79,11 +79,13 @@ export function EsteiraClient({
   contagens,
   tiposOperacao = [],
   convenios = [],
+  bancos = [],
 }: {
   propostas: Proposta[];
   contagens: Contagem[];
   tiposOperacao?: string[];
   convenios?: { id: string; nome: string }[];
+  bancos?: { id: string; nome: string }[];
 }) {
   const router = useRouter();
   const [propostas, setPropostas] = useState(propostasIniciais);
@@ -114,7 +116,8 @@ export function EsteiraClient({
   const [searchPropostas, setSearchPropostas] = useState<any[]>([]);
   const [selectedLead, setSelectedLead] = useState<any>(null);
   const [searching, setSearching] = useState(false);
-  const searchTimeout = useState<any>(null);
+  const searchTimeoutRef = useRef<any>(null);
+  const [showSearchDropdown, setShowSearchDropdown] = useState(true);
 
   // Estado do modal de edição
   const [editModal, setEditModal] = useState(false);
@@ -227,16 +230,21 @@ export function EsteiraClient({
   });
   const maxFunnel = Math.max(...funnelData.map((f) => f.count), 1);
 
-  async function searchCliente(q: string) {
-    if (q.length < 3) { setSearchResults([]); return; }
-    setSearching(true);
-    try {
-      const res = await fetch(`/api/leads/search?q=${encodeURIComponent(q)}`);
-      const data = await res.json();
-      setSearchResults(data.leads || []);
-      setSearchPropostas(data.propostas || []);
-    } catch { setSearchResults([]); }
-    setSearching(false);
+  function searchCliente(q: string) {
+    setShowSearchDropdown(true);
+    if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
+    if (q.length < 2) { setSearchResults([]); return; }
+    searchTimeoutRef.current = setTimeout(async () => {
+      setSearching(true);
+      try {
+        const res = await fetch(`/api/leads/buscar?q=${encodeURIComponent(q)}`);
+        if (res.ok) {
+          const data = await res.json();
+          setSearchResults(data);
+        }
+      } catch { setSearchResults([]); }
+      setSearching(false);
+    }, 300);
   }
 
   function selecionarLead(lead: any) {
@@ -691,26 +699,43 @@ export function EsteiraClient({
               {formTab === 0 && (
                 <div className="space-y-4">
                   <div className="space-y-2 relative">
-                    <label className="text-sm font-medium">Nome do Cliente *</label>
-                    <input required value={form.clienteNome} onChange={(e) => { setForm({ ...form, clienteNome: e.target.value }); searchCliente(e.target.value); }} placeholder="Digite para buscar cliente existente..."
-                      className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
-                    {searching && <p className="text-xs text-zinc-400 mt-1">Buscando...</p>}
-                    {searchResults.length > 0 && (
+                    <label className="text-sm font-medium">Buscar Cliente *</label>
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
+                      <input required value={form.clienteNome} onChange={(e) => { setForm({ ...form, clienteNome: e.target.value }); searchCliente(e.target.value); }}
+                        onFocus={() => searchResults.length > 0 && setShowSearchDropdown(true)}
+                        onBlur={() => setTimeout(() => setShowSearchDropdown(false), 200)}
+                        placeholder="Digite nome, CPF ou telefone..."
+                        className="w-full pl-10 pr-4 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
+                      {searching && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-brand" />}
+                    </div>
+                    {showSearchDropdown && form.clienteNome.length >= 2 && (
                       <div className="absolute z-10 top-full left-0 right-0 mt-1 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl shadow-xl max-h-48 overflow-y-auto">
-                        {searchResults.map((l: any) => (
-                          <button type="button" key={l.id} onClick={() => selecionarLead(l)}
-                            className="w-full px-4 py-3 text-left hover:bg-brand/5 transition border-b border-zinc-50 dark:border-zinc-800 last:border-0">
-                            <p className="text-sm font-semibold">{l.nome}</p>
-                            <p className="text-[11px] text-zinc-400">{l.cpf || "Sem CPF"} · {l.telefone || "Sem tel"} · Score: {l.score}</p>
-                          </button>
-                        ))}
+                        {searchResults.length === 0 && !searching ? (
+                          <div className="p-3 space-y-2">
+                            <p className="text-xs text-zinc-400 text-center">Nenhum cliente encontrado</p>
+                            <button type="button"
+                              onClick={() => { setShowSearchDropdown(false); }}
+                              className="w-full text-left px-3 py-2 rounded-lg bg-brand/10 text-brand text-sm font-medium hover:bg-brand/20 transition flex items-center gap-2">
+                              <Plus className="h-4 w-4" /> Cadastrar &quot;{form.clienteNome}&quot; como novo cliente
+                            </button>
+                          </div>
+                        ) : (
+                          searchResults.map((l: any) => (
+                            <button type="button" key={l.id} onClick={() => { selecionarLead(l); setShowSearchDropdown(false); }}
+                              className="w-full px-4 py-3 text-left hover:bg-brand/5 transition border-b border-zinc-50 dark:border-zinc-800 last:border-0">
+                              <p className="text-sm font-semibold">{l.nome}</p>
+                              <p className="text-[11px] text-zinc-400">{l.cpf || "Sem CPF"} · {l.telefone || "Sem tel"}</p>
+                            </button>
+                          ))
+                        )}
                       </div>
                     )}
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <label className="text-sm font-medium text-zinc-500">CPF</label>
-                      <input value={form.clienteCpf} onChange={(e) => { setForm({ ...form, clienteCpf: e.target.value }); if (e.target.value.length >= 9) searchCliente(e.target.value.replace(/\D/g,"")); }} placeholder="000.000.000-00"
+                      <input value={form.clienteCpf} onChange={(e) => setForm({ ...form, clienteCpf: e.target.value })} placeholder="000.000.000-00"
                         className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
                     </div>
                     <div className="space-y-2">
@@ -729,22 +754,6 @@ export function EsteiraClient({
                         className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
                     </div>
                   </div>
-
-                  {/* Histórico do Cliente */}
-                  {selectedLead && searchPropostas.length > 0 && (
-                    <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800/30 p-4 mt-2">
-                      <h3 className="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2">📜 Histórico ({searchPropostas.length} negócios)</h3>
-                      <div className="space-y-1.5 max-h-32 overflow-y-auto">
-                        {searchPropostas.map((p: any) => (
-                          <div key={p.id} className="flex items-center justify-between text-[11px]">
-                            <span className="font-medium truncate">{p.bancoNome || "—"} · {p.tipoOperacao || "—"}</span>
-                            <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${p.status==="PAGA"?"bg-emerald-100 text-emerald-700":p.status==="CANCELADA"?"bg-zinc-100 text-zinc-500":"bg-amber-100 text-amber-700"}`}>{p.status}</span>
-                            <span className="font-bold tabular-nums text-emerald-600">{p.valorLiberado ? `R$ ${p.valorLiberado.toLocaleString("pt-BR")}` : "—"}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
                 </div>
               )}
 
@@ -763,13 +772,23 @@ export function EsteiraClient({
                   </div>
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Tipo Operação</label>
-                    <input value={form.tipoOperacao} onChange={(e) => setForm({ ...form, tipoOperacao: e.target.value })} placeholder="Saque FGTS, Margem Nova..."
-                      className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
+                    <select value={form.tipoOperacao} onChange={(e) => setForm({ ...form, tipoOperacao: e.target.value })}
+                      className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand">
+                      <option value="EMPRESTIMO_CONSIGNADO">Novo</option>
+                      <option value="PORTABILIDADE">Portabilidade</option>
+                      <option value="REFINANCIAMENTO">Refinanciamento</option>
+                      <option value="PORTABILIDADE_REFIN">Port + Refin</option>
+                      <option value="CARTAO_CONSIGNADO">Cartão Consignado</option>
+                      <option value="CARTAO_BENEFICIO">Cartão Benefício</option>
+                    </select>
                   </div>
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Convênio</label>
-                    <input value={form.convenioNome} onChange={(e) => setForm({ ...form, convenioNome: e.target.value })} placeholder="INSS, FGTS, SIAPE..."
-                      className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
+                    <select value={form.convenioNome} onChange={(e) => setForm({ ...form, convenioNome: e.target.value })}
+                      className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand">
+                      <option value="">Selecione...</option>
+                      {convenios.map(c => <option key={c.id} value={c.nome}>{c.nome}</option>)}
+                    </select>
                   </div>
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-zinc-500">Margem Livre</label>
@@ -793,9 +812,12 @@ export function EsteiraClient({
               {formTab === 2 && (
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Banco</label>
-                    <input value={form.bancoNome} onChange={(e) => setForm({ ...form, bancoNome: e.target.value })} placeholder="UNNO, Facta, BMG..."
-                      className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
+                    <label className="text-sm font-medium">Banco Destino</label>
+                    <select value={form.bancoNome} onChange={(e) => setForm({ ...form, bancoNome: e.target.value })}
+                      className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand">
+                      <option value="">Selecione...</option>
+                      {bancos.map(b => <option key={b.id} value={b.nome}>{b.nome}</option>)}
+                    </select>
                   </div>
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-zinc-500">Promotora</label>
@@ -823,9 +845,12 @@ export function EsteiraClient({
                       className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-zinc-500">Banco Origem (Port)</label>
-                    <input value={form.bancoOrigem} onChange={(e) => setForm({ ...form, bancoOrigem: e.target.value })} placeholder="Banco de onde vem"
-                      className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
+                    <label className="text-sm font-medium text-zinc-500">Banco Origem {form.tipoOperacao.includes("PORT") ? "(Port)" : ""}</label>
+                    <select value={form.bancoOrigem} onChange={(e) => setForm({ ...form, bancoOrigem: e.target.value })}
+                      className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand">
+                      <option value="">Selecione...</option>
+                      {bancos.map(b => <option key={b.id} value={b.nome}>{b.nome}</option>)}
+                    </select>
                   </div>
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-zinc-500">Saldo Devedor</label>
@@ -898,18 +923,27 @@ export function EsteiraClient({
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-zinc-500">Banco</label>
-                  <input value={editForm.bancoNome} onChange={(e) => setEditForm({ ...editForm, bancoNome: e.target.value })} placeholder="BMG, Pan..."
-                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
+                  <select value={editForm.bancoNome} onChange={(e) => setEditForm({ ...editForm, bancoNome: e.target.value })}
+                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand">
+                    <option value="">Selecione...</option>
+                    {bancos.map(b => <option key={b.id} value={b.nome}>{b.nome}</option>)}
+                  </select>
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-zinc-500">Convênio</label>
-                  <input value={editForm.convenioNome} onChange={(e) => setEditForm({ ...editForm, convenioNome: e.target.value })} placeholder="INSS, SIAPE..."
-                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
+                  <select value={editForm.convenioNome} onChange={(e) => setEditForm({ ...editForm, convenioNome: e.target.value })}
+                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand">
+                    <option value="">Selecione...</option>
+                    {convenios.map(c => <option key={c.id} value={c.nome}>{c.nome}</option>)}
+                  </select>
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-zinc-500">Banco Origem (Port)</label>
-                  <input value={editForm.bancoOrigem} onChange={(e) => setEditForm({ ...editForm, bancoOrigem: e.target.value })} placeholder="Banco de onde vem"
-                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand" />
+                  <label className="text-sm font-medium text-zinc-500">Banco Origem</label>
+                  <select value={editForm.bancoOrigem} onChange={(e) => setEditForm({ ...editForm, bancoOrigem: e.target.value })}
+                    className="w-full rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand">
+                    <option value="">Selecione...</option>
+                    {bancos.map(b => <option key={b.id} value={b.nome}>{b.nome}</option>)}
+                  </select>
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-zinc-500">Valor Liberado</label>

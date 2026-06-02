@@ -42,5 +42,11 @@ export default async function EsteiraPage() {
     orderBy: { nome: "asc" }
   });
 
-  return <EsteiraClient propostas={propostas} contagens={contagens} tiposOperacao={tiposOperacao} convenios={convenios} />;
+  const bancos = await prisma.banco.findMany({
+    where: { empresaId: sessao.empresaId },
+    select: { id: true, nome: true },
+    orderBy: { nome: "asc" }
+  });
+
+  return <EsteiraClient propostas={propostas} contagens={contagens} tiposOperacao={tiposOperacao} convenios={convenios} bancos={bancos} />;
 }

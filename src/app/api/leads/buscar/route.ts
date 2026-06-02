@@ -10,20 +10,27 @@ export async function GET(req: Request) {
   const q = url.searchParams.get("q")?.trim();
   if (!q || q.length < 2) return Response.json([]);
 
+  const digitos = q.replace(/\D/g, "");
+  const orConditions: any[] = [
+    { nome: { contains: q, mode: "insensitive" } },
+  ];
+  // Só busca por CPF/telefone se o texto tiver dígitos
+  if (digitos.length >= 3) {
+    orConditions.push({ cpf: { contains: digitos } });
+    orConditions.push({ telefone: { contains: digitos } });
+  }
+
   const leads = await prisma.lead.findMany({
     where: {
       empresaId: sessao.empresaId,
-      OR: [
-        { nome: { contains: q, mode: "insensitive" } },
-        { cpf: { contains: q.replace(/\D/g, "") } },
-        { telefone: { contains: q.replace(/\D/g, "") } },
-      ],
+      OR: orConditions,
     },
     select: {
       id: true,
       nome: true,
       cpf: true,
       telefone: true,
+      email: true,
       numeroBeneficio: true,
       especieBeneficio: true,
     },
