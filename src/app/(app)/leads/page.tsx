@@ -9,7 +9,7 @@ export const metadata = {
   description: "Gerencie seus leads de crédito consignado.",
 };
 
-export default async function LeadsPage({ searchParams }: { searchParams: { [key: string]: string | string[] | undefined } }) {
+export default async function LeadsPage() {
   const sessao = await getSessionEmpresa();
 
   // Busca colunas do pipeline para a empresa
@@ -61,7 +61,5 @@ export default async function LeadsPage({ searchParams }: { searchParams: { [key
     })
   ]);
 
-  const abrirNovoModal = searchParams?.novo === "true";
-
-  return <LeadsClient leads={leads as any} contagens={contagens} colunas={colunas} bancos={bancos} convenios={convenios} perfilUsuario={sessao.perfilSlug} abrirNovoModal={abrirNovoModal} />;
+  return <LeadsClient leads={leads as any} contagens={contagens} colunas={colunas} bancos={bancos} convenios={convenios} perfilUsuario={sessao.perfilSlug} />;
 }

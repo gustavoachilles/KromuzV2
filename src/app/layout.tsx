@@ -17,7 +17,6 @@ export const metadata: Metadata = {
   title: "Kromuz V2 — Plataforma de Crédito Consignado",
   description: "Motor de regras com IA, simulador HISCON e gestão de crédito consignado.",
   manifest: "/manifest.json",
-  themeColor: "#7c3aed",
   appleWebApp: {
     capable: true,
     title: "Kromuz CRM",
@@ -34,7 +33,6 @@ export const viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
-  themeColor: "#7c3aed",
 };
 
 export default function RootLayout({

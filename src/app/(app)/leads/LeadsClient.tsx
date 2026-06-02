@@ -170,7 +170,6 @@ export function LeadsClient({
   bancos?: { id: string, nome: string }[];
   convenios?: { id: string, nome: string }[];
   perfilUsuario?: string;
-  abrirNovoModal?: boolean;
 }) {
   const router = useRouter();
   const [leads, setLeads] = useState(leadsIniciais);
@@ -387,16 +386,15 @@ export function LeadsClient({
   }, [form.uf]);
 
   useEffect(() => {
-    if (abrirNovoModal) {
-      abrirModalNovo();
-      // Remove o parâmetro 'novo' da URL sem recarregar a página
-      if (typeof window !== 'undefined') {
-        const url = new URL(window.location.href);
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href);
+      if (url.searchParams.get('novo') === 'true') {
+        abrirModalNovo();
         url.searchParams.delete('novo');
         window.history.replaceState({}, '', url.toString());
       }
     }
-  }, [abrirNovoModal]);
+  }, []);
 
   const abrirModalNovo = () => {
     setForm({
