@@ -161,7 +161,8 @@ export function LeadsClient({
   colunas,
   bancos = [],
   convenios = [],
-  perfilUsuario
+  perfilUsuario,
+  abrirNovoModal
 }: {
   leads: Lead[];
   contagens: Contagem[];
@@ -169,6 +170,7 @@ export function LeadsClient({
   bancos?: { id: string, nome: string }[];
   convenios?: { id: string, nome: string }[];
   perfilUsuario?: string;
+  abrirNovoModal?: boolean;
 }) {
   const router = useRouter();
   const [leads, setLeads] = useState(leadsIniciais);
@@ -383,6 +385,18 @@ export function LeadsClient({
       setCidadesIBGE([]);
     }
   }, [form.uf]);
+
+  useEffect(() => {
+    if (abrirNovoModal) {
+      abrirModalNovo();
+      // Remove o parâmetro 'novo' da URL sem recarregar a página
+      if (typeof window !== 'undefined') {
+        const url = new URL(window.location.href);
+        url.searchParams.delete('novo');
+        window.history.replaceState({}, '', url.toString());
+      }
+    }
+  }, [abrirNovoModal]);
 
   const abrirModalNovo = () => {
     setForm({
