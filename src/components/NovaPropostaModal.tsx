@@ -2,8 +2,9 @@
 
 import { useState, useRef, useEffect } from "react";
 import {
-  X, Loader2, Search, CheckCircle2, Briefcase, ExternalLink, PlusCircle, CreditCard, Wallet, Banknote
+  X, Loader2, Search, CheckCircle2, Briefcase, ExternalLink, PlusCircle, CreditCard, Wallet, Banknote, Users
 } from "lucide-react";
+import { LeadFormModal } from "./LeadFormModal";
 
 type BancoOption = { id: string; nome: string };
 type ConvenioOption = { id: string; nome: string };
@@ -28,6 +29,8 @@ export function NovaPropostaModal({
   const [clienteSelecionado, setClienteSelecionado] = useState<any>(null);
   const [showDropdown, setShowDropdown] = useState(false);
   const searchRef = useRef<NodeJS.Timeout | null>(null);
+
+  const [showLeadFormModal, setShowLeadFormModal] = useState(false);
 
   // ── Dados auxiliares (Tabelas e Promotoras) ──
   const [tabelas, setTabelas] = useState<any[]>([]);
@@ -110,7 +113,7 @@ export function NovaPropostaModal({
 
   const abrirCadastroLead = () => {
     setShowDropdown(false);
-    window.open("/leads?novo=true", "_blank");
+    setShowLeadFormModal(true);
   };
 
   const salvarProposta = async () => {
@@ -195,26 +198,30 @@ export function NovaPropostaModal({
                 {clienteSearching && <Loader2 className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-orange-500" />}
                 
                 {showDropdown && clienteQuery.length >= 2 && (
-                  <div className="absolute z-10 mt-2 w-full bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl shadow-2xl max-h-56 overflow-y-auto">
-                    {clienteResults.length === 0 && !clienteSearching ? (
-                      <div className="p-4 space-y-3">
-                        <p className="text-sm text-zinc-500 text-center font-medium">Nenhum cliente encontrado</p>
-                        <button onClick={abrirCadastroLead}
-                          className="w-full justify-center px-4 py-2.5 rounded-lg bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400 text-sm font-semibold hover:bg-orange-100 dark:hover:bg-orange-900/40 transition flex items-center gap-2">
-                          <PlusCircle className="h-4 w-4" /> Cadastrar novo cliente completo
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="py-2">
-                        {clienteResults.map(lead => (
-                          <button key={lead.id} onClick={() => selecionarCliente(lead)}
-                            className="w-full text-left px-5 py-3 hover:bg-zinc-50 dark:hover:bg-zinc-700/50 transition border-b border-zinc-100 dark:border-zinc-700/50 last:border-0">
-                            <p className="font-semibold text-sm text-zinc-800 dark:text-zinc-200">{lead.nome}</p>
-                            <p className="text-xs text-zinc-500 mt-0.5">{lead.cpf || "Sem CPF"} · {lead.telefone || "Sem telefone"}</p>
-                          </button>
-                        ))}
-                      </div>
-                    )}
+                  <div className="absolute z-10 mt-2 w-full bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl shadow-2xl flex flex-col overflow-hidden">
+                    <div className="max-h-56 overflow-y-auto">
+                      {clienteResults.length === 0 && !clienteSearching ? (
+                        <div className="p-4 space-y-3">
+                          <p className="text-sm text-zinc-500 text-center font-medium">Nenhum cliente encontrado</p>
+                        </div>
+                      ) : (
+                        <div className="py-2">
+                          {clienteResults.map(lead => (
+                            <button key={lead.id} onClick={() => selecionarCliente(lead)}
+                              className="w-full text-left px-5 py-3 hover:bg-zinc-50 dark:hover:bg-zinc-700/50 transition border-b border-zinc-100 dark:border-zinc-700/50 last:border-0">
+                              <p className="font-semibold text-sm text-zinc-800 dark:text-zinc-200">{lead.nome}</p>
+                              <p className="text-xs text-zinc-500 mt-0.5">{lead.cpf || "Sem CPF"} · {lead.telefone || "Sem telefone"}</p>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    <div className="p-3 bg-zinc-50 dark:bg-zinc-800/80 border-t border-zinc-200 dark:border-zinc-700">
+                      <button onClick={abrirCadastroLead}
+                        className="w-full justify-center px-4 py-2.5 rounded-lg bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400 text-sm font-semibold hover:bg-orange-100 dark:hover:bg-orange-900/40 transition flex items-center gap-2">
+                        <PlusCircle className="h-4 w-4" /> Cadastrar novo cliente
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>
@@ -443,6 +450,19 @@ export function NovaPropostaModal({
           </button>
         </div>
       </div>
+
+      <LeadFormModal
+        open={showLeadFormModal}
+        onClose={() => setShowLeadFormModal(false)}
+        leadSelecionado={null}
+        initialNome={clienteQuery}
+        bancos={bancos}
+        convenios={convenios}
+        onSuccess={(lead) => {
+          selecionarCliente(lead);
+          setShowLeadFormModal(false);
+        }}
+      />
     </div>
   );
 }
