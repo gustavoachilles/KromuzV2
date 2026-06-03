@@ -130,6 +130,288 @@ const INSS_ESPECIES = [
   { id: 99, nome: "Pensão Especial Vitalícia" },
 ];
 
+const BANCOS_BRASIL = [
+  { compe: "001", nome: "Banco do Brasil" },
+  { compe: "003", nome: "Banco da Amazônia" },
+  { compe: "004", nome: "Banco do Nordeste" },
+  { compe: "010", nome: "Credicoamo" },
+  { compe: "011", nome: "Credit Suisse" },
+  { compe: "012", nome: "Banco Inbursa" },
+  { compe: "014", nome: "State Street Brasil" },
+  { compe: "015", nome: "UBS Brasil" },
+  { compe: "016", nome: "Sicoob Creditran" },
+  { compe: "017", nome: "BNY Mellon" },
+  { compe: "018", nome: "Banco Tricury" },
+  { compe: "021", nome: "Banestes" },
+  { compe: "024", nome: "Banco Bandepe" },
+  { compe: "025", nome: "Banco Alfa" },
+  { compe: "029", nome: "Banco Itaú Consignado" },
+  { compe: "033", nome: "Banco Santander" },
+  { compe: "036", nome: "Banco Bradesco BBI" },
+  { compe: "037", nome: "Banco do Estado do Pará" },
+  { compe: "040", nome: "Banco Cargill" },
+  { compe: "041", nome: "Banrisul" },
+  { compe: "047", nome: "Banco do Estado de Sergipe" },
+  { compe: "060", nome: "Confidence Câmbio" },
+  { compe: "062", nome: "Hipercard" },
+  { compe: "063", nome: "Banco Bradescard" },
+  { compe: "064", nome: "Goldman Sachs Brasil" },
+  { compe: "065", nome: "Banco AndBank" },
+  { compe: "066", nome: "Banco Morgan Stanley" },
+  { compe: "069", nome: "Banco Crefisa" },
+  { compe: "070", nome: "BRB - Banco de Brasília" },
+  { compe: "074", nome: "Banco J. Safra" },
+  { compe: "075", nome: "Banco ABN Amro" },
+  { compe: "076", nome: "Banco KDB Brasil" },
+  { compe: "077", nome: "Banco Inter" },
+  { compe: "078", nome: "Haitong Brasil" },
+  { compe: "079", nome: "Banco Original do Agro" },
+  { compe: "080", nome: "B&T Corretora" },
+  { compe: "081", nome: "BBN Banco Brasileiro" },
+  { compe: "082", nome: "Banco Topázio" },
+  { compe: "083", nome: "Banco da China Brasil" },
+  { compe: "084", nome: "Uniprime Norte do Paraná" },
+  { compe: "085", nome: "Cooperativa Central Ailos" },
+  { compe: "089", nome: "Credisan" },
+  { compe: "091", nome: "Unicred Central RS" },
+  { compe: "092", nome: "BRK Financeira" },
+  { compe: "093", nome: "PóloCred" },
+  { compe: "094", nome: "Banco Finaxis" },
+  { compe: "095", nome: "Travelex Banco de Câmbio" },
+  { compe: "096", nome: "Banco B3" },
+  { compe: "097", nome: "Credisis" },
+  { compe: "098", nome: "Credialiança" },
+  { compe: "099", nome: "Uniprime Central" },
+  { compe: "100", nome: "Planner" },
+  { compe: "101", nome: "Renascença" },
+  { compe: "102", nome: "XP Investimentos" },
+  { compe: "104", nome: "Caixa Econômica Federal" },
+  { compe: "105", nome: "Lecca" },
+  { compe: "107", nome: "Banco Bocom BBM" },
+  { compe: "108", nome: "PortoCred" },
+  { compe: "111", nome: "Oliveira Trust" },
+  { compe: "113", nome: "Magliano" },
+  { compe: "114", nome: "Central das Coop. Economia e Crédito" },
+  { compe: "117", nome: "Advanced" },
+  { compe: "119", nome: "Banco Western Union" },
+  { compe: "120", nome: "Banco Rodobens" },
+  { compe: "121", nome: "Banco Agibank" },
+  { compe: "122", nome: "Banco Bradesco BERJ" },
+  { compe: "124", nome: "Banco Woori Bank" },
+  { compe: "125", nome: "Banco Genial" },
+  { compe: "126", nome: "BR Partners" },
+  { compe: "127", nome: "Codepe" },
+  { compe: "128", nome: "MS Bank" },
+  { compe: "129", nome: "UBS Brasil BI" },
+  { compe: "130", nome: "Caruana" },
+  { compe: "131", nome: "Tullett Prebon" },
+  { compe: "132", nome: "ICBC do Brasil" },
+  { compe: "133", nome: "Confederação Nac. Coop. Centrais de Crédito" },
+  { compe: "134", nome: "BGC Liquidez" },
+  { compe: "136", nome: "Unicred do Brasil" },
+  { compe: "137", nome: "Multimoney" },
+  { compe: "138", nome: "Get Money" },
+  { compe: "139", nome: "Intesa Sanpaolo Brasil" },
+  { compe: "140", nome: "Easynvest" },
+  { compe: "142", nome: "Broker Brasil" },
+  { compe: "143", nome: "Treviso" },
+  { compe: "144", nome: "Bexs Banco de Câmbio" },
+  { compe: "145", nome: "Levycam" },
+  { compe: "146", nome: "Guitta" },
+  { compe: "149", nome: "Facta Financeira" },
+  { compe: "157", nome: "ICAP do Brasil" },
+  { compe: "159", nome: "Casa do Crédito" },
+  { compe: "163", nome: "Commerzbank Brasil" },
+  { compe: "169", nome: "Banco Olé Consignado" },
+  { compe: "173", nome: "BRL Trust" },
+  { compe: "174", nome: "Pefisa" },
+  { compe: "177", nome: "Guide" },
+  { compe: "180", nome: "CM Capital Markets" },
+  { compe: "183", nome: "Socred" },
+  { compe: "184", nome: "Banco Itaú BBA" },
+  { compe: "188", nome: "Ativa Investimentos" },
+  { compe: "189", nome: "HS Financeira" },
+  { compe: "190", nome: "Cooperativa de Economia Servicred" },
+  { compe: "191", nome: "Nova Futura" },
+  { compe: "194", nome: "Parmetal" },
+  { compe: "196", nome: "Fair" },
+  { compe: "197", nome: "Stone Pagamentos" },
+  { compe: "208", nome: "Banco BTG Pactual" },
+  { compe: "212", nome: "Banco Original" },
+  { compe: "213", nome: "Banco Arbi" },
+  { compe: "217", nome: "Banco John Deere" },
+  { compe: "218", nome: "Banco BS2" },
+  { compe: "222", nome: "Banco Credit Agricole" },
+  { compe: "224", nome: "Banco Fibra" },
+  { compe: "233", nome: "Banco Cifra" },
+  { compe: "237", nome: "Banco Bradesco" },
+  { compe: "241", nome: "Banco Clássico" },
+  { compe: "243", nome: "Banco Máxima" },
+  { compe: "246", nome: "Banco ABC Brasil" },
+  { compe: "249", nome: "Banco Investcred Unibanco" },
+  { compe: "250", nome: "BCV - Banco de Crédito e Varejo" },
+  { compe: "253", nome: "Bexs Corretora" },
+  { compe: "254", nome: "Paraná Banco" },
+  { compe: "259", nome: "Banco Moneycorp" },
+  { compe: "260", nome: "Nu Pagamentos (Nubank)" },
+  { compe: "265", nome: "Banco Fator" },
+  { compe: "266", nome: "Banco Cédula" },
+  { compe: "268", nome: "Barigui" },
+  { compe: "269", nome: "HSBC Brasil" },
+  { compe: "270", nome: "Sagitur" },
+  { compe: "271", nome: "IB Corretora" },
+  { compe: "272", nome: "AGK Corretora" },
+  { compe: "273", nome: "Cooperativa de Crédito Rural de São Miguel" },
+  { compe: "274", nome: "Money Plus" },
+  { compe: "276", nome: "Banco Senff" },
+  { compe: "278", nome: "Genial Investimentos" },
+  { compe: "279", nome: "Cooperativa de Crédito Rural Coopavel" },
+  { compe: "280", nome: "Avista" },
+  { compe: "281", nome: "Cooperativa de Crédito Rural Coopersul" },
+  { compe: "283", nome: "RB Investimentos" },
+  { compe: "285", nome: "Frente Corretora" },
+  { compe: "286", nome: "Cooperativa de Crédito Rural Ouro Verde" },
+  { compe: "288", nome: "Carol" },
+  { compe: "289", nome: "Decycash" },
+  { compe: "290", nome: "PagSeguro" },
+  { compe: "292", nome: "BS2 Distribuidora" },
+  { compe: "293", nome: "Lastro RDV" },
+  { compe: "296", nome: "Vision" },
+  { compe: "298", nome: "Vips" },
+  { compe: "299", nome: "Banco Sorocred" },
+  { compe: "300", nome: "Banco de la Nación Argentina" },
+  { compe: "301", nome: "BPP Instituição de Pagamento" },
+  { compe: "306", nome: "Portopar" },
+  { compe: "307", nome: "Terra Investimentos" },
+  { compe: "309", nome: "Cambionet" },
+  { compe: "310", nome: "VORTX" },
+  { compe: "311", nome: "Dourada Corretora" },
+  { compe: "312", nome: "Hscm" },
+  { compe: "313", nome: "Amazônia Corretora" },
+  { compe: "315", nome: "PI" },
+  { compe: "318", nome: "Banco BMG" },
+  { compe: "319", nome: "OM" },
+  { compe: "320", nome: "China Construction Bank" },
+  { compe: "321", nome: "Crefaz" },
+  { compe: "322", nome: "Cooperativa de Crédito CCR de Abelardo Luz" },
+  { compe: "323", nome: "Mercado Pago" },
+  { compe: "324", nome: "Cartos" },
+  { compe: "325", nome: "Órama" },
+  { compe: "326", nome: "Parati" },
+  { compe: "329", nome: "QI SCD" },
+  { compe: "330", nome: "Banco Bari" },
+  { compe: "331", nome: "Fram Capital" },
+  { compe: "332", nome: "Acesso Soluções de Pagamento" },
+  { compe: "335", nome: "Banco Digio" },
+  { compe: "336", nome: "Banco C6" },
+  { compe: "340", nome: "Super Pagamentos" },
+  { compe: "341", nome: "Banco Itaú Unibanco" },
+  { compe: "342", nome: "Creditas" },
+  { compe: "343", nome: "FFA" },
+  { compe: "348", nome: "Banco XP" },
+  { compe: "349", nome: "AL5" },
+  { compe: "350", nome: "Cooperativa de Crédito Rural Crehnor" },
+  { compe: "352", nome: "Toro" },
+  { compe: "354", nome: "Necton Investimentos" },
+  { compe: "355", nome: "Ótimo" },
+  { compe: "358", nome: "Midway" },
+  { compe: "359", nome: "Zema Crédito" },
+  { compe: "360", nome: "Trinus Capital" },
+  { compe: "362", nome: "Cielo" },
+  { compe: "363", nome: "Socopa" },
+  { compe: "364", nome: "Gerencianet" },
+  { compe: "365", nome: "Solidus" },
+  { compe: "366", nome: "Banco Société Générale" },
+  { compe: "368", nome: "Banco CSF (Carrefour)" },
+  { compe: "370", nome: "Banco Mizuho" },
+  { compe: "371", nome: "Warren" },
+  { compe: "373", nome: "UP.P" },
+  { compe: "374", nome: "Realize CFI" },
+  { compe: "376", nome: "Banco J.P. Morgan" },
+  { compe: "377", nome: "BMS" },
+  { compe: "378", nome: "BBC Leasing" },
+  { compe: "379", nome: "Cooperforte" },
+  { compe: "380", nome: "PicPay" },
+  { compe: "381", nome: "Banco Mercedes-Benz" },
+  { compe: "382", nome: "Fiducia" },
+  { compe: "383", nome: "Juno" },
+  { compe: "384", nome: "Global SCM" },
+  { compe: "385", nome: "Cooperativa de Crédito Rural Coopnore" },
+  { compe: "386", nome: "Nu Financeira" },
+  { compe: "387", nome: "Banco Toyota" },
+  { compe: "389", nome: "Banco Mercantil do Brasil" },
+  { compe: "390", nome: "Banco GM" },
+  { compe: "391", nome: "Cooperativa de Crédito Rural CCR São Miguel" },
+  { compe: "393", nome: "Banco Volkswagen" },
+  { compe: "394", nome: "Banco Bradesco Financiamentos" },
+  { compe: "395", nome: "F.D'Gold" },
+  { compe: "396", nome: "Hub Pagamentos" },
+  { compe: "397", nome: "Listo" },
+  { compe: "399", nome: "Kirton Bank" },
+  { compe: "400", nome: "Cooperativa de Crédito Rural Cresol" },
+  { compe: "401", nome: "Iugu" },
+  { compe: "403", nome: "Cora" },
+  { compe: "404", nome: "Sumup" },
+  { compe: "406", nome: "Accredito" },
+  { compe: "407", nome: "Índigo Investimentos" },
+  { compe: "408", nome: "Bônuscred" },
+  { compe: "410", nome: "Planner Sociedade de Crédito" },
+  { compe: "411", nome: "Via Certa Financiadora" },
+  { compe: "412", nome: "Banco Capital" },
+  { compe: "413", nome: "Banco BV" },
+  { compe: "414", nome: "Work" },
+  { compe: "416", nome: "Banco Letsbank" },
+  { compe: "418", nome: "Zipdin" },
+  { compe: "419", nome: "Banco Pan" },
+  { compe: "422", nome: "Banco Safra" },
+  { compe: "428", nome: "Cresol Confederação" },
+  { compe: "456", nome: "Banco MUFG Brasil" },
+  { compe: "464", nome: "Banco Sumitomo Mitsui" },
+  { compe: "473", nome: "Banco Caixa Geral" },
+  { compe: "477", nome: "Citibank" },
+  { compe: "479", nome: "Banco ItauBank" },
+  { compe: "487", nome: "Deutsche Bank" },
+  { compe: "488", nome: "JPMorgan Chase" },
+  { compe: "492", nome: "ING Bank" },
+  { compe: "495", nome: "Banco de La Provincia" },
+  { compe: "505", nome: "Banco Credit Suisse" },
+  { compe: "545", nome: "Senso" },
+  { compe: "600", nome: "Banco Luso Brasileiro" },
+  { compe: "604", nome: "Banco Industrial do Brasil" },
+  { compe: "610", nome: "Banco VR" },
+  { compe: "611", nome: "Banco Paulista" },
+  { compe: "612", nome: "Banco Guanabara" },
+  { compe: "613", nome: "Omni Banco" },
+  { compe: "623", nome: "Banco Pan" },
+  { compe: "626", nome: "Banco C6 Consignado" },
+  { compe: "630", nome: "Smartbank" },
+  { compe: "633", nome: "Banco Rendimento" },
+  { compe: "634", nome: "Banco Triângulo" },
+  { compe: "637", nome: "Banco Sofisa" },
+  { compe: "643", nome: "Banco Pine" },
+  { compe: "652", nome: "Itaú Unibanco Holding" },
+  { compe: "653", nome: "Banco Indusval" },
+  { compe: "654", nome: "Banco A.J. Renner" },
+  { compe: "655", nome: "Banco Votorantim (BV)" },
+  { compe: "707", nome: "Banco Daycoval" },
+  { compe: "712", nome: "Banco Ourinvest" },
+  { compe: "735", nome: "Banco Neon" },
+  { compe: "739", nome: "Banco Cetelem" },
+  { compe: "741", nome: "Banco Ribeirão Preto" },
+  { compe: "743", nome: "Banco Semear" },
+  { compe: "745", nome: "Banco Citibank" },
+  { compe: "746", nome: "Banco Modal" },
+  { compe: "747", nome: "Banco Rabobank" },
+  { compe: "748", nome: "Sicredi" },
+  { compe: "751", nome: "Scotiabank Brasil" },
+  { compe: "752", nome: "Banco BNP Paribas" },
+  { compe: "753", nome: "Novo Banco Continental" },
+  { compe: "754", nome: "Banco Sistema" },
+  { compe: "755", nome: "Bank of America Merrill Lynch" },
+  { compe: "756", nome: "Sicoob" },
+  { compe: "757", nome: "Banco KEB Hana" },
+];
+
 type LeadFormModalProps = {
   open: boolean;
   onClose: () => void;
@@ -186,6 +468,11 @@ export function LeadFormModal({
   // Files State
   const [arquivosPendentes, setArquivosPendentes] = useState<File[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Banco Cliente search
+  const [bancoClienteQuery, setBancoClienteQuery] = useState("");
+  const [showBancoDropdown, setShowBancoDropdown] = useState(false);
+  const bancoDropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetch("https://servicodados.ibge.gov.br/api/v1/localidades/estados?orderBy=nome")
@@ -256,6 +543,7 @@ export function LeadFormModal({
       setCpfErro(null);
       setErro(null);
       setTabModal("dados");
+      setBancoClienteQuery("");
     }
   }, [open, leadSelecionado, initialNome]);
 
@@ -843,10 +1131,42 @@ export function LeadFormModal({
 
               <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wider mt-4 mb-1">Dados Bancários do Cliente</h3>
               <div className="grid grid-cols-4 gap-3">
-                <div className="space-y-2">
+                <div className="space-y-2 relative" ref={bancoDropdownRef}>
                   <label className="text-[11px] font-medium text-zinc-700 dark:text-zinc-300">Banco</label>
-                  <input value={form.bancoCliente} onChange={e => setForm({ ...form, bancoCliente: e.target.value })} placeholder="Nome"
+                  <input
+                    value={bancoClienteQuery || form.bancoCliente}
+                    onChange={e => {
+                      const v = e.target.value;
+                      setBancoClienteQuery(v);
+                      setShowBancoDropdown(true);
+                      if (!v) setForm({ ...form, bancoCliente: "" });
+                    }}
+                    onFocus={() => setShowBancoDropdown(true)}
+                    onBlur={() => setTimeout(() => setShowBancoDropdown(false), 200)}
+                    placeholder="Nome ou código"
                     className="w-full rounded-lg border border-zinc-200 bg-white dark:bg-zinc-950 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100" />
+                  {showBancoDropdown && (bancoClienteQuery || "").length >= 1 && (() => {
+                    const q = (bancoClienteQuery || "").toLowerCase();
+                    const filtered = BANCOS_BRASIL.filter(b => b.nome.toLowerCase().includes(q) || b.compe.includes(q)).slice(0, 12);
+                    if (filtered.length === 0) return null;
+                    return (
+                      <div className="absolute z-50 mt-1 w-[280px] bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl shadow-2xl max-h-48 overflow-y-auto">
+                        {filtered.map(b => (
+                          <button key={b.compe} type="button"
+                            onMouseDown={e => {
+                              e.preventDefault();
+                              setForm({ ...form, bancoCliente: `${b.compe} - ${b.nome}` });
+                              setBancoClienteQuery("");
+                              setShowBancoDropdown(false);
+                            }}
+                            className="w-full text-left px-3 py-2 hover:bg-zinc-50 dark:hover:bg-zinc-700/50 transition border-b border-zinc-100 dark:border-zinc-700/50 last:border-0 flex items-center gap-2">
+                            <span className="text-[11px] font-bold text-zinc-400 bg-zinc-100 dark:bg-zinc-700 px-1.5 py-0.5 rounded font-mono">{b.compe}</span>
+                            <span className="text-sm text-zinc-800 dark:text-zinc-200 truncate">{b.nome}</span>
+                          </button>
+                        ))}
+                      </div>
+                    );
+                  })()}
                 </div>
                 <div className="space-y-2">
                   <label className="text-[11px] font-medium text-zinc-700 dark:text-zinc-300">Agência</label>
