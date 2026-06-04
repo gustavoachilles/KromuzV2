@@ -566,8 +566,14 @@ export function SimuladorClient({ empresaId, convenios }: { empresaId: string, c
           margemLivre: cliente.margemLivre || null,
           margemRmc: cliente.margemRmc || null,
           margemRcc: cliente.margemRcc || null,
+          margemExtrapolada: cliente.margemExtrapolada || null,
+          renda: cliente.baseCalculo || null,
           uf: cliente.uf || "",
           ddb: cliente.dataDespachoBeneficio || null,
+          bancoCliente: cliente.bancoPagamento || "",
+          agenciaCliente: cliente.agenciaPagamento || "",
+          contaCliente: cliente.contaPagamento || "",
+          tipoContaCliente: cliente.meioPagamento === "Conta Corrente" ? "CC" : cliente.meioPagamento === "Conta Poupança" ? "CP" : "",
           origem: "simulador_hiscon",
         } as any : null}
         onSuccess={handleCadastroSuccess}

@@ -25,8 +25,14 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
   if (body.margemLivre !== undefined) updateData.margemLivre = body.margemLivre;
   if (body.margemRmc !== undefined) updateData.margemRmc = body.margemRmc;
   if (body.margemRcc !== undefined) updateData.margemRcc = body.margemRcc;
+  if (body.margemExtrapolada !== undefined) updateData.margemExtrapolada = body.margemExtrapolada;
   if (body.numeroBeneficio) updateData.numeroBeneficio = body.numeroBeneficio;
   if (body.especieBeneficio) updateData.especieBeneficio = body.especieBeneficio;
+  if (body.renda) updateData.renda = body.renda;
+  if (body.bancoCliente) updateData.bancoCliente = body.bancoCliente;
+  if (body.agenciaCliente) updateData.agenciaCliente = body.agenciaCliente;
+  if (body.contaCliente) updateData.contaCliente = body.contaCliente;
+  if (body.tipoContaCliente) updateData.tipoContaCliente = body.tipoContaCliente;
 
   const lead = await prisma.lead.update({
     where: { id },

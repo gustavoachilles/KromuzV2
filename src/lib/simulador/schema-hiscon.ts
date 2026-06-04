@@ -29,8 +29,14 @@ export const ExtratoHisconSchema = z.object({
     margens: z.object({
       emprestimo_livre: z.number().describe("Valor de margem disponível para novo empréstimo"),
       cartao_rmc_livre: z.number().describe("Valor de margem disponível para cartão de crédito (RMC)"),
-      cartao_rcc_livre: z.number().describe("Valor de margem disponível para cartão benefício (RCC)")
-    })
+      cartao_rcc_livre: z.number().describe("Valor de margem disponível para cartão benefício (RCC)"),
+      margem_extrapolada: z.number().optional().describe("Valor da MARGEM EXTRAPOLADA (quando total comprometido > máximo permitido)")
+    }),
+    banco_pagamento: z.string().optional().describe("Nome do banco onde o benefício é pago (ex: CAIXA ECONOMICA FEDERAL)"),
+    meio_pagamento: z.string().optional().describe("Meio de pagamento: Conta Corrente ou Conta Poupança"),
+    agencia_pagamento: z.string().optional().describe("Número da agência bancária do pagamento"),
+    conta_pagamento: z.string().optional().describe("Número da conta corrente ou poupança do pagamento"),
+    base_calculo: z.number().optional().describe("Base de cálculo do benefício em R$ (equivalente à renda)")
   }),
   contratos_ativos: z.array(ContratoAtivoSchema).describe("Lista de todos os empréstimos ativos no extrato")
 });

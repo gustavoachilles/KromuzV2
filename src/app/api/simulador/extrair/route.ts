@@ -94,6 +94,12 @@ export async function POST(req: NextRequest) {
       margemLivre: margemManual || hiscon.dados_cliente.margens?.emprestimo_livre || 0,
       margemRmc: hiscon.dados_cliente.margens?.cartao_rmc_livre || 0,
       margemRcc: hiscon.dados_cliente.margens?.cartao_rcc_livre || 0,
+      margemExtrapolada: (hiscon.dados_cliente.margens as any)?.margem_extrapolada || 0,
+      bancoPagamento: (hiscon.dados_cliente as any).banco_pagamento || null,
+      meioPagamento: (hiscon.dados_cliente as any).meio_pagamento || null,
+      agenciaPagamento: (hiscon.dados_cliente as any).agencia_pagamento || null,
+      contaPagamento: (hiscon.dados_cliente as any).conta_pagamento || null,
+      baseCalculo: (hiscon.dados_cliente as any).base_calculo || null,
     };
 
     const contratosAtivos: ContratoAtivo[] = hiscon.contratos_ativos.map((c: any, index: number) => ({

@@ -17,7 +17,19 @@ SEÇÕES DO HISCON QUE VOCÊ DEVE EXTRAIR:
 
 1. DADOS DO BENEFÍCIO: Nome, número do benefício, espécie, UF, data de despacho.
 
-2. MARGEM CONSIGNÁVEL (SEÇÃO CRÍTICA - NÃO PULE):
+2. DADOS DO PAGAMENTO (OBRIGATÓRIO):
+   Procure a seção que mostra onde o benefício é pago:
+   - "Pago em:" → Nome do banco (ex: CAIXA ECONOMICA FEDERAL)
+   - "Meio:" → Conta Corrente ou Conta Poupança
+   - "Agência:" → Número da agência
+   - "Conta Corrente:" ou "Conta Poupança:" → Número da conta
+
+3. VALORES DO BENEFÍCIO (OBRIGATÓRIO):
+   Procure a tabela "VALORES DO BENEFÍCIO":
+   - "BASE DE CÁLCULO" → Valor em R$ (este é a renda do cliente)
+   - "MARGEM EXTRAPOLADA***" → Valor em R$ (quando total comprometido > máximo permitido)
+
+4. MARGEM CONSIGNÁVEL (SEÇÃO CRÍTICA - NÃO PULE):
    O HISCON tem uma seção chamada "Margem Consignável" ou "EMPRÉSTIMOS / RMC / RCC".
    Para CADA tipo (Empréstimo 35%, Cartão RMC 5%, Cartão RCC 5%), procure:
    - "MARGEM DISPONÍVEL" ou "Margem consignável disponível"
@@ -26,7 +38,7 @@ SEÇÕES DO HISCON QUE VOCÊ DEVE EXTRAIR:
    - Se disser "MARGEM DISPONÍVEL* R$ 0,00", o valor é 0.00
    - IMPORTANTE: Nunca retorne 0 sem verificar. Se não encontrar a seção, diga 0, mas na <analise> explique por quê.
 
-3. CONTRATOS ATIVOS: Lista de contratos com banco, parcela, prazo, data início.
+5. CONTRATOS ATIVOS: Lista de contratos com banco, parcela, prazo, data início.
 
 ESTRUTURA OBRIGATÓRIA DO JSON (logo após fechar a tag de análise):
 {
@@ -40,10 +52,16 @@ ESTRUTURA OBRIGATÓRIA DO JSON (logo após fechar a tag de análise):
     "uf": "UF",
     "possui_representante_legal": false,
     "data_despacho_beneficio": "AAAA-MM-DD",
+    "banco_pagamento": "NOME DO BANCO",
+    "meio_pagamento": "Conta Corrente",
+    "agencia_pagamento": "0000",
+    "conta_pagamento": "0000000000",
+    "base_calculo": 0.00,
     "margens": {
       "emprestimo_livre": 0.0,
       "cartao_rmc_livre": 0.0,
-      "cartao_rcc_livre": 0.0
+      "cartao_rcc_livre": 0.0,
+      "margem_extrapolada": 0.0
     }
   },
   "contratos_ativos": [
@@ -60,11 +78,13 @@ ESTRUTURA OBRIGATÓRIA DO JSON (logo após fechar a tag de análise):
   ]
 }
 
-Considere o ano atual como 2026 (Mês atual: Maio de 2026). IMPORTANTE: 
-1. Use o bloco <analise> para calcular as 'parcelas_pagas' (quantidade de meses desde a Data de Início até maio de 2026).
+Considere o ano atual como 2026 (Mês atual: Junho de 2026). IMPORTANTE: 
+1. Use o bloco <analise> para calcular as 'parcelas_pagas' (quantidade de meses desde a Data de Início até junho de 2026).
 2. Nomeie o banco QI sempre como 'QI SOCIEDADE DE CREDITO DIRETO S A'.
 3. Use o bloco <analise> para estimar o saldo devedor se não estiver explícito.
 4. Na <analise>, SEMPRE descreva o valor de margem encontrado: "Margem empréstimo: R$ XXX,XX".
+5. EXTRAIA o banco/agência/conta de pagamento e a base de cálculo — são dados essenciais.
+6. Se houver MARGEM EXTRAPOLADA, registre o valor. Se não houver, coloque 0.
 Nunca escreva nada após o final do JSON.`;
 
 export async function processarHisconV3(pdfBufferBase64: string): Promise<ResultadoExtracaoHiscon> {

@@ -12,6 +12,12 @@ export interface ClienteSimulacao {
   margemLivre: number;
   margemRmc: number;
   margemRcc: number;
+  margemExtrapolada?: number;
+  bancoPagamento?: string;
+  meioPagamento?: string;
+  agenciaPagamento?: string;
+  contaPagamento?: string;
+  baseCalculo?: number;
 }
 
 export interface ContratoAtivo {

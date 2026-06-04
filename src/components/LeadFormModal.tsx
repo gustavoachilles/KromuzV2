@@ -441,7 +441,7 @@ export function LeadFormModal({
     id: "", nome: "", cpf: "", telefone: "", email: "", uf: "", cidade: "",
     dataNascimento: "", renda: "", ddb: "",
     cep: "", logradouro: "", numero: "", complemento: "", bairro: "",
-    numeroBeneficio: "", especieBeneficio: "", margemLivre: "", margemRmc: "", margemRcc: "",
+    numeroBeneficio: "", especieBeneficio: "", margemLivre: "", margemRmc: "", margemRcc: "", margemExtrapolada: "",
     tipoOperacao: "", valorLiberado: "", bancoPreferido: "", convenioNome: "",
     bancoCliente: "", agenciaCliente: "", contaCliente: "", tipoContaCliente: "",
     origem: "manual", canalContato: "", observacoes: "",
@@ -515,6 +515,7 @@ export function LeadFormModal({
           margemLivre: l.margemLivre ? l.margemLivre.toString() : "",
           margemRmc: l.margemRmc ? l.margemRmc.toString() : "",
           margemRcc: l.margemRcc ? l.margemRcc.toString() : "",
+          margemExtrapolada: l.margemExtrapolada ? l.margemExtrapolada.toString() : "",
           tipoOperacao: l.tipoOperacao || "",
           valorLiberado: l.valorLiberado ? l.valorLiberado.toString() : "",
           bancoPreferido: l.bancoPreferido || "",
@@ -533,7 +534,7 @@ export function LeadFormModal({
           id: "", nome: initialNome, cpf: "", telefone: "", email: "", uf: "", cidade: "",
           dataNascimento: "", renda: "", ddb: "",
           cep: "", logradouro: "", numero: "", complemento: "", bairro: "",
-          numeroBeneficio: "", especieBeneficio: "", margemLivre: "", margemRmc: "", margemRcc: "",
+          numeroBeneficio: "", especieBeneficio: "", margemLivre: "", margemRmc: "", margemRcc: "", margemExtrapolada: "",
           tipoOperacao: "", valorLiberado: "", bancoPreferido: "", convenioNome: "",
           bancoCliente: "", agenciaCliente: "", contaCliente: "", tipoContaCliente: "",
           origem: "manual", canalContato: "", observacoes: "", arquivosExistem: []
@@ -686,6 +687,7 @@ export function LeadFormModal({
       margemLivre: payload.margemLivre ? Number(payload.margemLivre.replace(',', '.')) : undefined,
       margemRmc: payload.margemRmc ? Number(payload.margemRmc.replace(',', '.')) : undefined,
       margemRcc: payload.margemRcc ? Number(payload.margemRcc.replace(',', '.')) : undefined,
+      margemExtrapolada: payload.margemExtrapolada ? Number(payload.margemExtrapolada.replace(',', '.')) : undefined,
       renda: payload.renda ? Number(payload.renda) : undefined,
       cep: payload.cep ? payload.cep.replace(/\D/g, '') : undefined,
       arquivos: base64Files.length > 0 ? base64Files : undefined
@@ -1081,7 +1083,7 @@ export function LeadFormModal({
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-4 gap-3">
                 <div className="space-y-2">
                   <label className="text-[11px] font-medium text-zinc-700 dark:text-zinc-300">Livre (R$)</label>
                   <input type="number" step="0.01" value={form.margemLivre} onChange={e => setForm({ ...form, margemLivre: e.target.value })}
@@ -1096,6 +1098,11 @@ export function LeadFormModal({
                   <label className="text-[11px] font-medium text-zinc-700 dark:text-zinc-300">RCC (R$)</label>
                   <input type="number" step="0.01" value={form.margemRcc} onChange={e => setForm({ ...form, margemRcc: e.target.value })}
                     className="w-full rounded-lg border border-zinc-200 bg-white dark:bg-zinc-950 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[11px] font-medium text-red-600 dark:text-red-400">Extrapolada (R$)</label>
+                  <input type="number" step="0.01" value={form.margemExtrapolada} onChange={e => setForm({ ...form, margemExtrapolada: e.target.value })}
+                    className="w-full rounded-lg border border-red-200 bg-red-50 dark:bg-red-950/20 dark:border-red-800 px-3 py-2 text-sm text-red-700 focus:outline-none focus:ring-2 focus:ring-red-400" />
                 </div>
               </div>
             </div>
