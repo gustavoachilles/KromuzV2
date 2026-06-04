@@ -554,14 +554,25 @@ export function SimuladorClient({ empresaId, convenios }: { empresaId: string, c
 
       </div>
 
-      {/* Modal de Cadastro */}
+      {/* Modal de Cadastro — pré-preenche com dados do HISCON */}
       <LeadFormModal
         open={showCadastroModal}
         onClose={() => setShowCadastroModal(false)}
-        leadSelecionado={null}
-        initialNome={cliente.nome || ""}
+        leadSelecionado={resultado ? {
+          id: "",
+          nome: cliente.nome || "",
+          numeroBeneficio: cliente.numeroBeneficio || "",
+          especieBeneficio: cliente.especie || null,
+          margemLivre: cliente.margemLivre || null,
+          margemRmc: cliente.margemRmc || null,
+          margemRcc: cliente.margemRcc || null,
+          uf: cliente.uf || "",
+          ddb: cliente.dataDespachoBeneficio || null,
+          origem: "simulador_hiscon",
+        } as any : null}
         onSuccess={handleCadastroSuccess}
       />
     </div>
   );
 }
+
