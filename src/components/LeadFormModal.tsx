@@ -130,7 +130,7 @@ const INSS_ESPECIES = [
   { id: 99, nome: "Pensão Especial Vitalícia" },
 ];
 
-const BANCOS_BRASIL = [
+export const BANCOS_BRASIL = [
   { compe: "001", nome: "Banco do Brasil" },
   { compe: "003", nome: "Banco da Amazônia" },
   { compe: "004", nome: "Banco do Nordeste" },
@@ -1170,13 +1170,23 @@ export function LeadFormModal({
                 </div>
                 <div className="space-y-2">
                   <label className="text-[11px] font-medium text-zinc-700 dark:text-zinc-300">Agência</label>
-                  <input value={form.agenciaCliente} onChange={e => setForm({ ...form, agenciaCliente: e.target.value })} placeholder="0000"
-                    className="w-full rounded-lg border border-zinc-200 bg-white dark:bg-zinc-950 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100" />
+                  <div className="flex items-center gap-1">
+                    <input value={form.agenciaCliente} onChange={e => setForm({ ...form, agenciaCliente: e.target.value })} placeholder="0000"
+                      className="flex-1 rounded-lg border border-zinc-200 bg-white dark:bg-zinc-950 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100" />
+                    <span className="text-zinc-400 font-bold">-</span>
+                    <input value={(form as any).digitoAgenciaCliente || ""} onChange={e => setForm({ ...form, digitoAgenciaCliente: e.target.value } as any)} placeholder="0" maxLength={2}
+                      className="w-10 rounded-lg border border-zinc-200 bg-white dark:bg-zinc-950 px-2 py-2 text-sm text-center focus:outline-none focus:ring-2 focus:ring-brand/100" />
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <label className="text-[11px] font-medium text-zinc-700 dark:text-zinc-300">Conta</label>
-                  <input value={form.contaCliente} onChange={e => setForm({ ...form, contaCliente: e.target.value })} placeholder="00000-0"
-                    className="w-full rounded-lg border border-zinc-200 bg-white dark:bg-zinc-950 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100" />
+                  <div className="flex items-center gap-1">
+                    <input value={form.contaCliente} onChange={e => setForm({ ...form, contaCliente: e.target.value })} placeholder="00000"
+                      className="flex-1 rounded-lg border border-zinc-200 bg-white dark:bg-zinc-950 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100" />
+                    <span className="text-zinc-400 font-bold">-</span>
+                    <input value={(form as any).digitoContaCliente || ""} onChange={e => setForm({ ...form, digitoContaCliente: e.target.value } as any)} placeholder="0" maxLength={2}
+                      className="w-10 rounded-lg border border-zinc-200 bg-white dark:bg-zinc-950 px-2 py-2 text-sm text-center focus:outline-none focus:ring-2 focus:ring-brand/100" />
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <label className="text-[11px] font-medium text-zinc-700 dark:text-zinc-300">Tipo</label>
