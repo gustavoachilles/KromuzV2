@@ -8,10 +8,12 @@ interface SimuladorTableRowProps {
   contrato: ContratoAtivo;
   oportunidades: Oportunidade[];
   onOpenInsight?: (context: any) => void;
+  clienteId?: string;
   clienteNome?: string;
+  clienteCpf?: string;
 }
 
-export function SimuladorTableRow({ contrato, oportunidades, onOpenInsight, clienteNome }: SimuladorTableRowProps) {
+export function SimuladorTableRow({ contrato, oportunidades, onOpenInsight, clienteId, clienteNome, clienteCpf }: SimuladorTableRowProps) {
   const [checked, setChecked] = useState(false);
   const [propostaGerada, setPropostaGerada] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
@@ -88,8 +90,9 @@ export function SimuladorTableRow({ contrato, oportunidades, onOpenInsight, clie
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          leadId: clienteId || undefined,
           clienteNome: clienteNome || "Cliente do Simulador",
-          clienteCpf: undefined,
+          clienteCpf: clienteCpf || undefined,
           tipoOperacao: simulacaoSelecionada.tipo,
           bancoNome: simulacaoSelecionada.bancoNome,
           produtoNome: simulacaoSelecionada.produtoNome,
@@ -326,6 +329,12 @@ export function SimuladorTableRow({ contrato, oportunidades, onOpenInsight, clie
                       <span className="text-slate-500">Cliente:</span>
                       <span className="font-semibold">{clienteNome || "Cliente do Simulador"}</span>
                     </div>
+                    {clienteCpf && (
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">CPF:</span>
+                      <span className="font-semibold">{clienteCpf}</span>
+                    </div>
+                    )}
                     <div className="flex justify-between">
                       <span className="text-slate-500">Operação:</span>
                       <span className="font-semibold">{parseTipo(simulacaoSelecionada.tipo)}</span>

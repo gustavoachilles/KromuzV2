@@ -4,19 +4,37 @@ import { useState } from "react";
 import { UploadHiscon } from "@/components/simulador/UploadHiscon";
 import { Oportunidade, ClienteSimulacao, ContratoAtivo } from "@/lib/motor-regras/simulador";
 import { SimuladorTable } from "@/components/simulador/SimuladorTable";
-import { Calculator, FileText, RefreshCw, Wallet, CreditCard, ArrowRightLeft, UserCircle2, ArrowLeft, Search, CheckCircle2, Sparkles } from "lucide-react";
+import { Calculator, FileText, RefreshCw, Wallet, CreditCard, ArrowRightLeft, UserCircle2, ArrowLeft, Search, CheckCircle2, Sparkles, UserCheck, UserPlus, X, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { AiInsightModal } from "@/components/simulador/AiInsightModal";
+import { LeadFormModal } from "@/components/LeadFormModal";
 
 interface SimulacaoResult {
-  cliente: ClienteSimulacao;
+  cliente: ClienteSimulacao & { nome?: string };
   contratos: ContratoAtivo[];
   oportunidades: Oportunidade[];
+}
+
+interface ClienteVinculado {
+  id: string;
+  nome: string;
+  cpf?: string;
+  telefone?: string;
+  email?: string;
+  numeroBeneficio?: string;
+  especieBeneficio?: number;
 }
 
 export function SimuladorClient({ empresaId, convenios }: { empresaId: string, convenios?: { id: string, nome: string }[] }) {
   const [tab, setTab] = useState<"hiscon" | "manual">("hiscon");
   const [resultado, setResultado] = useState<SimulacaoResult | null>(null);
+
+  // Cliente vinculado
+  const [clienteVinculado, setClienteVinculado] = useState<ClienteVinculado | null>(null);
+  const [clientesCandidatos, setClientesCandidatos] = useState<ClienteVinculado[]>([]);
+  const [showClienteConfirm, setShowClienteConfirm] = useState(false);
+  const [showCadastroModal, setShowCadastroModal] = useState(false);
+  const [margensAtualizadas, setMargensAtualizadas] = useState(false);
 
   // Estados da Calculadora Manual
   const [formManual, setFormManual] = useState({
@@ -30,6 +48,97 @@ export function SimuladorClient({ empresaId, convenios }: { empresaId: string, c
     open: false, 
     context: {} 
   });
+
+  // Buscar cliente automaticamente pelos dados do HISCON
+  async function buscarClienteAutomatico(clienteData: SimulacaoResult["cliente"]) {
+    try {
+      const queries: string[] = [];
+      if (clienteData.numeroBeneficio) queries.push(clienteData.numeroBeneficio);
+      if (clienteData.nome && clienteData.nome.length > 3) queries.push(clienteData.nome);
+
+      let todosResultados: ClienteVinculado[] = [];
+      
+      for (const q of queries) {
+        const res = await fetch(`/api/leads/buscar?q=${encodeURIComponent(q)}`);
+        if (res.ok) {
+          const leads = await res.json();
+          for (const lead of leads) {
+            if (!todosResultados.find(r => r.id === lead.id)) {
+              todosResultados.push(lead);
+            }
+          }
+        }
+      }
+
+      if (todosResultados.length === 1) {
+        // Encontrou exatamente 1 — pedir confirmação
+        setClientesCandidatos(todosResultados);
+        setShowClienteConfirm(true);
+      } else if (todosResultados.length > 1) {
+        // Vários candidatos — pedir para escolher
+        setClientesCandidatos(todosResultados);
+        setShowClienteConfirm(true);
+      } else {
+        // Nenhum encontrado — oferecer cadastro
+        setClientesCandidatos([]);
+        setShowClienteConfirm(true);
+      }
+    } catch (err) {
+      console.error("Erro ao buscar cliente:", err);
+    }
+  }
+
+  // Confirmar cliente selecionado e atualizar margens
+  async function confirmarCliente(cliente: ClienteVinculado) {
+    setClienteVinculado(cliente);
+    setShowClienteConfirm(false);
+
+    // Atualizar margens do cliente com dados do HISCON
+    if (resultado) {
+      try {
+        const res = await fetch(`/api/leads/${cliente.id}/margens`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            margemLivre: resultado.cliente.margemLivre || undefined,
+            margemRmc: resultado.cliente.margemRmc || undefined,
+            margemRcc: resultado.cliente.margemRcc || undefined,
+            numeroBeneficio: resultado.cliente.numeroBeneficio || undefined,
+            especieBeneficio: resultado.cliente.especie || undefined,
+          })
+        });
+        if (res.ok) {
+          setMargensAtualizadas(true);
+          toast.success("Margens do cliente atualizadas com dados do HISCON");
+        }
+      } catch {
+        toast.error("Erro ao atualizar margens");
+      }
+    }
+  }
+
+  // Quando o HISCON processa com sucesso
+  function handleProcessamentoCompleto(data: SimulacaoResult) {
+    setResultado(data);
+    setClienteVinculado(null);
+    setMargensAtualizadas(false);
+    // Buscar automaticamente o cliente
+    buscarClienteAutomatico(data.cliente);
+  }
+
+  // Callback quando cadastra novo cliente
+  function handleNovoCadastro() {
+    setShowCadastroModal(true);
+    setShowClienteConfirm(false);
+  }
+
+  function handleCadastroSuccess() {
+    setShowCadastroModal(false);
+    // Re-buscar cliente após cadastro
+    if (resultado) {
+      setTimeout(() => buscarClienteAutomatico(resultado.cliente), 500);
+    }
+  }
 
   async function handleSimularManual(e: React.FormEvent) {
     e.preventDefault();
@@ -88,7 +197,7 @@ export function SimuladorClient({ empresaId, convenios }: { empresaId: string, c
           <div className="p-8">
             <UploadHiscon 
               empresaId={empresaId} 
-              onProcessamentoCompleto={(data) => setResultado(data)} 
+              onProcessamentoCompleto={handleProcessamentoCompleto} 
             />
           </div>
         )}
@@ -178,12 +287,144 @@ export function SimuladorClient({ empresaId, convenios }: { empresaId: string, c
       
       {/* Botão de Voltar */}
       <button 
-        onClick={() => setResultado(null)}
+        onClick={() => { setResultado(null); setClienteVinculado(null); setMargensAtualizadas(false); }}
         className="flex items-center text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors"
       >
         <ArrowLeft className="w-4 h-4 mr-2" />
         Simular outro extrato
       </button>
+
+      {/* Banner de Cliente Vinculado */}
+      {clienteVinculado ? (
+        <div className="bg-gradient-to-r from-emerald-50 to-green-50 dark:from-emerald-950/30 dark:to-green-950/30 border border-emerald-200 dark:border-emerald-800 rounded-2xl p-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-emerald-500 flex items-center justify-center text-white font-bold">
+              <UserCheck className="w-5 h-5" />
+            </div>
+            <div>
+              <p className="text-sm font-bold text-emerald-800 dark:text-emerald-300">
+                Cliente vinculado: {clienteVinculado.nome}
+              </p>
+              <p className="text-xs text-emerald-600 dark:text-emerald-400">
+                {clienteVinculado.cpf && `CPF: ${clienteVinculado.cpf} · `}
+                {clienteVinculado.numeroBeneficio && `NB: ${clienteVinculado.numeroBeneficio} · `}
+                {margensAtualizadas && (
+                  <span className="font-semibold">✓ Margens atualizadas em {new Date().toLocaleDateString("pt-BR")}</span>
+                )}
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => setClienteVinculado(null)}
+            className="p-2 text-emerald-400 hover:text-emerald-600 transition"
+            title="Desvincular"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      ) : (
+        <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-2xl p-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <AlertCircle className="w-5 h-5 text-amber-500" />
+            <div>
+              <p className="text-sm font-medium text-amber-800 dark:text-amber-300">
+                Nenhum cliente vinculado a esta simulação
+              </p>
+              <p className="text-xs text-amber-600 dark:text-amber-400">
+                Propostas geradas ficarão sem vínculo com a carteira de clientes
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => buscarClienteAutomatico(cliente)}
+            className="px-3 py-1.5 bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 text-xs font-semibold rounded-lg hover:bg-amber-200 transition"
+          >
+            Buscar Cliente
+          </button>
+        </div>
+      )}
+
+      {/* Modal de Confirmação de Cliente */}
+      {showClienteConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
+            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-4 flex items-center justify-between">
+              <div className="flex items-center gap-2 text-white">
+                <UserCircle2 className="w-5 h-5" />
+                <h3 className="font-bold text-lg">
+                  {clientesCandidatos.length > 0 ? "Cliente Localizado" : "Cliente Não Encontrado"}
+                </h3>
+              </div>
+              <button onClick={() => setShowClienteConfirm(false)} className="text-white/80 hover:text-white">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4">
+              {clientesCandidatos.length > 0 ? (
+                <>
+                  <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                    {clientesCandidatos.length === 1 
+                      ? "Encontramos um cliente que corresponde aos dados do HISCON. É este o cliente correto?"
+                      : "Encontramos vários clientes que podem corresponder. Selecione o correto:"}
+                  </p>
+                  <div className="space-y-2 max-h-60 overflow-y-auto">
+                    {clientesCandidatos.map(c => (
+                      <button
+                        key={c.id}
+                        onClick={() => confirmarCliente(c)}
+                        className="w-full text-left p-3 rounded-xl border border-zinc-200 dark:border-zinc-700 hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/30 transition group"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center text-white text-sm font-bold shrink-0">
+                            {c.nome?.charAt(0)?.toUpperCase() || "?"}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-semibold text-zinc-900 dark:text-white truncate">{c.nome}</p>
+                            <p className="text-xs text-zinc-400 truncate">
+                              {c.cpf && `CPF: ${c.cpf}`}
+                              {c.numeroBeneficio && ` · NB: ${c.numeroBeneficio}`}
+                              {c.telefone && ` · ${c.telefone}`}
+                            </p>
+                          </div>
+                          <CheckCircle2 className="w-5 h-5 text-zinc-300 group-hover:text-blue-500 transition shrink-0" />
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <div className="text-center py-4">
+                  <UserPlus className="w-12 h-12 mx-auto text-zinc-300 mb-3" />
+                  <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                    Não encontramos nenhum cliente com os dados extraídos do HISCON.
+                  </p>
+                  <p className="text-xs text-zinc-400 mt-1">
+                    {cliente.numeroBeneficio && `NB buscado: ${cliente.numeroBeneficio}`}
+                    {cliente.nome && ` · Nome: ${cliente.nome}`}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 flex gap-3 justify-between">
+              <button
+                onClick={handleNovoCadastro}
+                className="px-4 py-2 text-sm font-semibold text-blue-600 bg-blue-50 dark:bg-blue-950/30 rounded-lg hover:bg-blue-100 transition flex items-center gap-2"
+              >
+                <UserPlus className="w-4 h-4" />
+                Cadastrar Novo
+              </button>
+              <button
+                onClick={() => setShowClienteConfirm(false)}
+                className="px-4 py-2 text-sm font-medium text-zinc-600 bg-white dark:bg-zinc-700 border border-zinc-200 dark:border-zinc-600 rounded-lg hover:bg-zinc-100 transition"
+              >
+                Pular
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Resumo do Cliente */}
       <div className="bg-gradient-to-r from-slate-900 to-slate-800 rounded-2xl p-6 text-white shadow-lg">
@@ -192,7 +433,9 @@ export function SimuladorClient({ empresaId, convenios }: { empresaId: string, c
             <UserCircle2 className="w-6 h-6 text-indigo-300" />
           </div>
           <div>
-            <h2 className="text-xl font-bold">{cliente.nome || "Resumo do Cliente"}</h2>
+            <h2 className="text-xl font-bold">
+              {clienteVinculado?.nome || cliente.nome || "Resumo do Cliente"}
+            </h2>
             <p className="text-slate-300 text-sm">Dados extraídos com precisão via IA</p>
           </div>
         </div>
@@ -301,12 +544,24 @@ export function SimuladorClient({ empresaId, convenios }: { empresaId: string, c
             <SimuladorTable 
               contratos={contratos} 
               oportunidades={oportunidades} 
+              clienteId={clienteVinculado?.id}
+              clienteNome={clienteVinculado?.nome || cliente.nome}
+              clienteCpf={clienteVinculado?.cpf}
               onOpenInsight={(ctx) => setInsightModal({ open: true, context: { ...ctx, clienteIdade: cliente.idade } })}
             />
           </div>
         </div>
 
       </div>
+
+      {/* Modal de Cadastro */}
+      <LeadFormModal
+        open={showCadastroModal}
+        onClose={() => setShowCadastroModal(false)}
+        leadSelecionado={null}
+        initialNome={cliente.nome || ""}
+        onSuccess={handleCadastroSuccess}
+      />
     </div>
   );
 }

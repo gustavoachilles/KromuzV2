@@ -734,6 +734,9 @@ model Lead {
   complemento String?
   bairro      String?
 
+  // Data da última atualização das margens (HISCON)
+  dataAtualizacaoMargens DateTime? @map("data_atualizacao_margens")
+
   // Dados bancários do cliente
   bancoCliente     String? @map("banco_cliente")
   agenciaCliente   String? @map("agencia_cliente")

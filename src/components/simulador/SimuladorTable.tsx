@@ -6,10 +6,13 @@ import { SimuladorTableRow } from "./SimuladorTableRow";
 interface SimuladorTableProps {
   contratos: ContratoAtivo[];
   oportunidades: Oportunidade[];
+  clienteId?: string;
+  clienteNome?: string;
+  clienteCpf?: string;
   onOpenInsight?: (context: any) => void;
 }
 
-export function SimuladorTable({ contratos, oportunidades, onOpenInsight }: SimuladorTableProps) {
+export function SimuladorTable({ contratos, oportunidades, clienteId, clienteNome, clienteCpf, onOpenInsight }: SimuladorTableProps) {
   return (
     <div className="overflow-x-auto bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
       <table className="w-full text-left border-collapse">
@@ -35,6 +38,9 @@ export function SimuladorTable({ contratos, oportunidades, onOpenInsight }: Simu
               key={contrato.id} 
               contrato={contrato} 
               oportunidades={oportunidades} 
+              clienteId={clienteId}
+              clienteNome={clienteNome}
+              clienteCpf={clienteCpf}
               onOpenInsight={onOpenInsight}
             />
           ))}
