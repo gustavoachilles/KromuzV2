@@ -741,7 +741,7 @@ export function LeadFormModal({
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={e => { e.stopPropagation(); onClose(); }}>
-      <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-2xl w-full max-w-5xl mx-4 max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}>
+      <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-2xl w-full max-w-3xl mx-4 max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between p-6 border-b border-zinc-100 dark:border-zinc-800 shrink-0">
           <div className="flex items-center gap-4">
             <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">{form.id ? "Editar Lead" : "Novo Cliente"}</h2>
@@ -792,13 +792,6 @@ export function LeadFormModal({
             className={`py-3 text-sm font-bold border-b-2 flex items-center gap-1 transition ${tabModal === "refin" ? "border-amber-500 text-amber-600" : "border-transparent text-zinc-500 hover:text-zinc-700"}`}
           >
             ✨ Refin Hunter
-          </button>
-          <button
-            type="button"
-            onClick={() => setTabModal("inss")}
-            className={`py-3 text-sm font-bold border-b-2 flex items-center gap-1 transition ${tabModal === "inss" ? "border-blue-500 text-blue-600" : "border-transparent text-zinc-500 hover:text-zinc-700"}`}
-          >
-            Gov.br Extrator
           </button>
         </div>
 
@@ -960,7 +953,7 @@ export function LeadFormModal({
         <form onSubmit={salvarLead} className={`flex-1 overflow-y-auto p-6 space-y-6 ${tabModal !== "dados" ? "hidden" : ""}`}>
           {erro && <div className="rounded-lg bg-red-50 border border-red-200 text-red-700 px-4 py-3 text-sm font-medium">{erro}</div>}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="space-y-6">
             <div className="space-y-4">
               <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2">Dados do Cliente</h3>
 
@@ -1000,36 +993,36 @@ export function LeadFormModal({
                         }
                         setRevelarCpf(!revelarCpf);
                       }}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-zinc-400 hover:text-brand transition"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-brand transition"
                     >
-                      {revelarCpf ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      {revelarCpf ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                   </div>
-                  {cpfErro && <p className="text-[11px] text-red-500 font-medium">⚠ {cpfErro}</p>}
+                  {cpfErro && <p className="text-xs text-red-500 font-medium">{cpfErro}</p>}
                 </div>
-                <div className="space-y-2">
+                <div className="space-y-1">
                   <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Telefone</label>
-                  <div className="relative">
+                  <div className="relative group">
                     <input
-                      type={revelarTel ? "text" : "password"}
+                      type={revelarTelefone ? "text" : "password"}
                       value={form.telefone}
-                      readOnly={!revelarTel}
+                      readOnly={!revelarTelefone}
                       onChange={e => setForm({ ...form, telefone: mascaraTelefone(e.target.value) })}
                       placeholder="(**) *****-****"
                       maxLength={15}
-                      className={`w-full rounded-lg border border-zinc-200 bg-white dark:bg-zinc-950 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100 transition-all ${!revelarTel ? 'blur-[3px] select-none' : ''}`}
+                      className={`w-full rounded-lg border border-zinc-200 bg-white dark:bg-zinc-950 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100 transition-all ${!revelarTelefone ? 'blur-[3px] select-none' : ''}`}
                     />
                     <button
                       type="button"
                       onClick={() => {
-                        if (!revelarTel && form.id) {
-                          fetch('/api/logs', { method: 'POST', body: JSON.stringify({ tipo: 'VISUALIZACAO_DADOS', recurso: 'LEAD', recursoId: form.id, descricao: 'Visualizou Telefone do cliente' }) });
+                        if (!revelarTelefone && form.id) {
+                          fetch('/api/logs', { method: 'POST', body: JSON.stringify({ tipo: 'VISUALIZACAO_DADOS', recurso: 'LEAD', recursoId: form.id, descricao: 'Visualizou telefone do cliente' }) });
                         }
-                        setRevelarTel(!revelarTel);
+                        setRevelarTelefone(!revelarTelefone);
                       }}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-zinc-400 hover:text-brand transition"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-brand transition"
                     >
-                      {revelarTel ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      {revelarTelefone ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                   </div>
                 </div>
@@ -1038,15 +1031,8 @@ export function LeadFormModal({
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Data de Nascimento</label>
-                  <div className="flex items-center gap-2">
-                    <input type="date" value={form.dataNascimento} onChange={e => setForm({ ...form, dataNascimento: e.target.value })} max={new Date().toISOString().split('T')[0]}
-                      className="flex-1 rounded-lg border border-zinc-200 bg-white dark:bg-zinc-950 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100" />
-                    {form.dataNascimento && calcularIdade(form.dataNascimento) !== null && (
-                      <span className="text-xs font-bold text-brand bg-brand/10 px-2 py-1 rounded-full whitespace-nowrap">
-                        {calcularIdade(form.dataNascimento)} anos
-                      </span>
-                    )}
-                  </div>
+                  <input type="date" value={form.dataNascimento} onChange={e => setForm({ ...form, dataNascimento: e.target.value })}
+                    className="w-full rounded-lg border border-zinc-200 bg-white dark:bg-zinc-950 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100" />
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Renda (R$)</label>
@@ -1066,119 +1052,11 @@ export function LeadFormModal({
                 <input type="date" value={form.ddb} onChange={e => setForm({ ...form, ddb: e.target.value })}
                   className="w-full rounded-lg border border-zinc-200 bg-white dark:bg-zinc-950 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100" />
               </div>
-
-              <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wider mt-4 mb-1">Endereço</h3>
-              <div className="grid grid-cols-3 gap-3">
-                <div className="space-y-2">
-                  <label className="text-[11px] font-medium text-zinc-700 dark:text-zinc-300">CEP</label>
-                  <input value={form.cep} maxLength={9}
-                    onChange={async (e) => {
-                      const val = mascaraCep(e.target.value);
-                      setForm(prev => ({ ...prev, cep: val }));
-                      const raw = val.replace(/\D/g, '');
-                      if (raw.length === 8) {
-                        try {
-                          const res = await fetch(`https://viacep.com.br/ws/${raw}/json/`);
-                          const data = await res.json();
-                          if (!data.erro) {
-                            setForm(prev => ({ ...prev, logradouro: data.logradouro || '', bairro: data.bairro || '', cidade: data.localidade || '', uf: data.uf || '' }));
-                          }
-                        } catch {}
-                      }
-                    }}
-                    placeholder="00000-000"
-                    className="w-full rounded-lg border border-zinc-200 bg-white dark:bg-zinc-950 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100" />
-                </div>
-                <div className="col-span-2 space-y-2">
-                  <label className="text-[11px] font-medium text-zinc-700 dark:text-zinc-300">Logradouro</label>
-                  <input value={form.logradouro} onChange={e => setForm({ ...form, logradouro: e.target.value })}
-                    className="w-full rounded-lg border border-zinc-200 bg-white dark:bg-zinc-950 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100" />
-                </div>
-              </div>
-              <div className="grid grid-cols-4 gap-3">
-                <div className="space-y-2">
-                  <label className="text-[11px] font-medium text-zinc-700 dark:text-zinc-300">Nº</label>
-                  <input value={form.numero} onChange={e => setForm({ ...form, numero: e.target.value })}
-                    className="w-full rounded-lg border border-zinc-200 bg-white dark:bg-zinc-950 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100" />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[11px] font-medium text-zinc-700 dark:text-zinc-300">Complemento</label>
-                  <input value={form.complemento} onChange={e => setForm({ ...form, complemento: e.target.value })}
-                    className="w-full rounded-lg border border-zinc-200 bg-white dark:bg-zinc-950 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100" />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[11px] font-medium text-zinc-700 dark:text-zinc-300">UF</label>
-                  <select value={form.uf} onChange={e => setForm({ ...form, uf: e.target.value, cidade: "" })}
-                    className="w-full rounded-lg border border-zinc-200 bg-white dark:bg-zinc-950 px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100">
-                    <option value="">UF</option>
-                    {estadosIBGE.map(est => <option key={est.id} value={est.sigla}>{est.sigla}</option>)}
-                  </select>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-2">
-                  <label className="text-[11px] font-medium text-zinc-700 dark:text-zinc-300">Bairro</label>
-                  <input value={form.bairro} onChange={e => setForm({ ...form, bairro: e.target.value })}
-                    className="w-full rounded-lg border border-zinc-200 bg-white dark:bg-zinc-950 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100" />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[11px] font-medium text-zinc-700 dark:text-zinc-300">Cidade</label>
-                  <input list="cidades-list-modal" value={form.cidade} onChange={e => setForm({ ...form, cidade: e.target.value })} disabled={!form.uf} placeholder="Pesquise a cidade"
-                    className="w-full rounded-lg border border-zinc-200 bg-white dark:bg-zinc-950 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100 disabled:opacity-50" />
-                  <datalist id="cidades-list-modal">
-                    {cidadesIBGE.map(cid => <option key={cid.id} value={cid.nome} />)}
-                  </datalist>
-                </div>
-              </div>
-
-              <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wider mt-4 mb-1">Dados Bancários do Cliente</h3>
-              <div className="flex items-end gap-3 flex-wrap">
-                <div className="space-y-1 flex-1 min-w-[140px]">
-                  <label className="text-[11px] font-medium text-zinc-700 dark:text-zinc-300">Banco</label>
-                  <input
-                    list="bancos-compe-list-modal"
-                    value={form.bancoCliente}
-                    onChange={e => setForm({ ...form, bancoCliente: e.target.value })}
-                    placeholder="Nome ou código COMPE"
-                    className="w-full rounded-lg border border-zinc-200 bg-white dark:bg-zinc-950 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100" />
-                  <datalist id="bancos-compe-list-modal">
-                    {BANCOS_BRASIL.map(b => <option key={b.compe} value={`${b.compe} - ${b.nome}`} />)}
-                  </datalist>
-                </div>
-                <div className="space-y-1">
-                  <label className="text-[11px] font-medium text-zinc-700 dark:text-zinc-300">Agência</label>
-                  <div className="flex items-center gap-1">
-                    <input value={form.agenciaCliente} onChange={e => setForm({ ...form, agenciaCliente: e.target.value })} placeholder="0000"
-                      className="w-[72px] rounded-lg border border-zinc-200 bg-white dark:bg-zinc-950 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100" />
-                    <span className="text-zinc-400 font-bold">-</span>
-                    <input value={(form as any).digitoAgenciaCliente || ""} onChange={e => setForm({ ...form, digitoAgenciaCliente: e.target.value } as any)} placeholder="0" maxLength={2}
-                      className="w-10 rounded-lg border border-zinc-200 bg-white dark:bg-zinc-950 px-2 py-2 text-sm text-center focus:outline-none focus:ring-2 focus:ring-brand/100" />
-                  </div>
-                </div>
-                <div className="space-y-1">
-                  <label className="text-[11px] font-medium text-zinc-700 dark:text-zinc-300">Conta</label>
-                  <div className="flex items-center gap-1">
-                    <input value={form.contaCliente} onChange={e => setForm({ ...form, contaCliente: e.target.value })} placeholder="00000"
-                      className="w-[80px] rounded-lg border border-zinc-200 bg-white dark:bg-zinc-950 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100" />
-                    <span className="text-zinc-400 font-bold">-</span>
-                    <input value={(form as any).digitoContaCliente || ""} onChange={e => setForm({ ...form, digitoContaCliente: e.target.value } as any)} placeholder="0" maxLength={2}
-                      className="w-10 rounded-lg border border-zinc-200 bg-white dark:bg-zinc-950 px-2 py-2 text-sm text-center focus:outline-none focus:ring-2 focus:ring-brand/100" />
-                  </div>
-                </div>
-                <div className="space-y-1">
-                  <label className="text-[11px] font-medium text-zinc-700 dark:text-zinc-300">Tipo</label>
-                  <select value={form.tipoContaCliente} onChange={e => setForm({ ...form, tipoContaCliente: e.target.value })}
-                    className="rounded-lg border border-zinc-200 bg-white dark:bg-zinc-950 px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100">
-                    <option value="">—</option>
-                    <option value="CC">Corrente</option>
-                    <option value="CP">Poupança</option>
-                  </select>
-                </div>
-              </div>
             </div>
 
+            {/* Dados do Benefício */}
             <div className="space-y-4">
-              <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2">Detalhes da Operação</h3>
+              <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2">Dados do Benefício</h3>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
@@ -1213,54 +1091,127 @@ export function LeadFormModal({
                     className="w-full rounded-lg border border-zinc-200 bg-white dark:bg-zinc-950 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100" />
                 </div>
               </div>
+            </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Banco</label>
-                  <select value={form.bancoPreferido} onChange={e => setForm({ ...form, bancoPreferido: e.target.value })}
-                    className="w-full rounded-lg border border-zinc-200 bg-white dark:bg-zinc-950 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100">
-                    <option value="">Selecione Banco...</option>
-                    {bancos.map(b => <option key={b.id} value={b.nome}>{b.nome}</option>)}
-                  </select>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Convênio</label>
-                  <select value={form.convenioNome} onChange={e => setForm({ ...form, convenioNome: e.target.value })}
-                    className="w-full rounded-lg border border-zinc-200 bg-white dark:bg-zinc-950 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100">
-                    <option value="">Selecione Convênio...</option>
-                    {convenios.map(c => <option key={c.id} value={c.nome}>{c.nome}</option>)}
-                  </select>
-                </div>
+            {/* Endereço */}
+            <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wider mt-4 mb-1">Endereço</h3>
+            <div className="grid grid-cols-3 gap-3">
+              <div className="space-y-2">
+                <label className="text-[11px] font-medium text-zinc-700 dark:text-zinc-300">CEP</label>
+                <input value={form.cep}
+                  onChange={async (e) => {
+                    const raw = e.target.value.replace(/\D/g, '');
+                    setForm({ ...form, cep: raw });
+                    if (raw.length === 8) {
+                      try {
+                        const res = await fetch(`https://viacep.com.br/ws/${raw}/json/`);
+                        const data = await res.json();
+                        if (!data.erro) {
+                          setForm(prev => ({ ...prev, logradouro: data.logradouro || '', bairro: data.bairro || '', cidade: data.localidade || '', uf: data.uf || '' }));
+                        }
+                      } catch {}
+                    }
+                  }}
+                  placeholder="00000-000"
+                  className="w-full rounded-lg border border-zinc-200 bg-white dark:bg-zinc-950 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100" />
               </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Tipo de Operação</label>
-                  <select value={form.tipoOperacao} onChange={e => setForm({ ...form, tipoOperacao: e.target.value })}
-                    className="w-full rounded-lg border border-zinc-200 bg-white dark:bg-zinc-950 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100">
-                    <option value="">—</option>
-                    <option value="EMPRESTIMO_CONSIGNADO">Margem Nova</option>
-                    <option value="REFINANCIAMENTO">Refinanciamento</option>
-                    <option value="PORTABILIDADE">Portabilidade</option>
-                    <option value="PORTABILIDADE_REFIN">Port + Refin</option>
-                    <option value="CARTAO_CONSIGNADO">Cartão RMC</option>
-                    <option value="CARTAO_BENEFICIO">Cartão RCC</option>
-                  </select>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Valor Liberado (R$)</label>
-                  <input type="text" value={form.valorLiberado} onChange={e => setForm({ ...form, valorLiberado: formatMoedaInput(e.target.value) })} placeholder="0.00"
-                    className="w-full rounded-lg border border-zinc-200 bg-white dark:bg-zinc-950 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100 font-bold text-emerald-700" />
-                </div>
-              </div>
-
-              <div className="space-y-2 pt-2">
-                <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Observações</label>
-                <textarea value={form.observacoes} onChange={e => setForm({ ...form, observacoes: e.target.value })} rows={2}
-                  className="w-full rounded-lg border border-zinc-200 bg-white dark:bg-zinc-950 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100 resize-none" />
+              <div className="col-span-2 space-y-2">
+                <label className="text-[11px] font-medium text-zinc-700 dark:text-zinc-300">Logradouro</label>
+                <input value={form.logradouro} onChange={e => setForm({ ...form, logradouro: e.target.value })}
+                  className="w-full rounded-lg border border-zinc-200 bg-white dark:bg-zinc-950 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100" />
               </div>
             </div>
+            <div className="grid grid-cols-4 gap-3">
+              <div className="space-y-2">
+                <label className="text-[11px] font-medium text-zinc-700 dark:text-zinc-300">Nº</label>
+                <input value={form.numero} onChange={e => setForm({ ...form, numero: e.target.value })}
+                  className="w-full rounded-lg border border-zinc-200 bg-white dark:bg-zinc-950 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[11px] font-medium text-zinc-700 dark:text-zinc-300">Complemento</label>
+                <input value={form.complemento} onChange={e => setForm({ ...form, complemento: e.target.value })}
+                  className="w-full rounded-lg border border-zinc-200 bg-white dark:bg-zinc-950 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[11px] font-medium text-zinc-700 dark:text-zinc-300">UF</label>
+                <select value={form.uf} onChange={e => setForm({ ...form, uf: e.target.value, cidade: "" })}
+                  className="w-full rounded-lg border border-zinc-200 bg-white dark:bg-zinc-950 px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100">
+                  <option value="">UF</option>
+                  {estadosIBGE.map(est => <option key={est.id} value={est.sigla}>{est.sigla}</option>)}
+                </select>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <label className="text-[11px] font-medium text-zinc-700 dark:text-zinc-300">Bairro</label>
+                <input value={form.bairro} onChange={e => setForm({ ...form, bairro: e.target.value })}
+                  className="w-full rounded-lg border border-zinc-200 bg-white dark:bg-zinc-950 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[11px] font-medium text-zinc-700 dark:text-zinc-300">Cidade</label>
+                <input list="cidades-list-modal" value={form.cidade} onChange={e => setForm({ ...form, cidade: e.target.value })} disabled={!form.uf} placeholder="Pesquise a cidade"
+                  className="w-full rounded-lg border border-zinc-200 bg-white dark:bg-zinc-950 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100 disabled:opacity-50" />
+                <datalist id="cidades-list-modal">
+                  {cidadesIBGE.map(cid => <option key={cid.id} value={cid.nome} />)}
+                </datalist>
+              </div>
+            </div>
+
+            {/* Dados Bancários */}
+            <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wider mt-4 mb-1">Dados Bancários do Cliente</h3>
+            <div className="flex items-end gap-3 flex-wrap">
+              <div className="space-y-1 flex-1 min-w-[140px]">
+                <label className="text-[11px] font-medium text-zinc-700 dark:text-zinc-300">Banco</label>
+                <input
+                  list="bancos-compe-list-modal"
+                  value={form.bancoCliente}
+                  onChange={e => setForm({ ...form, bancoCliente: e.target.value })}
+                  placeholder="Nome ou código COMPE"
+                  className="w-full rounded-lg border border-zinc-200 bg-white dark:bg-zinc-950 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100" />
+                <datalist id="bancos-compe-list-modal">
+                  {BANCOS_BRASIL.map(b => <option key={b.compe} value={`${b.compe} - ${b.nome}`} />)}
+                </datalist>
+              </div>
+              <div className="space-y-1">
+                <label className="text-[11px] font-medium text-zinc-700 dark:text-zinc-300">Agência</label>
+                <div className="flex items-center gap-1">
+                  <input value={form.agenciaCliente} onChange={e => setForm({ ...form, agenciaCliente: e.target.value })} placeholder="0000"
+                    className="w-[72px] rounded-lg border border-zinc-200 bg-white dark:bg-zinc-950 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100" />
+                  <span className="text-zinc-400 font-bold">-</span>
+                  <input value={(form as any).digitoAgenciaCliente || ""} onChange={e => setForm({ ...form, digitoAgenciaCliente: e.target.value } as any)} placeholder="0" maxLength={2}
+                    className="w-10 rounded-lg border border-zinc-200 bg-white dark:bg-zinc-950 px-2 py-2 text-sm text-center focus:outline-none focus:ring-2 focus:ring-brand/100" />
+                </div>
+              </div>
+              <div className="space-y-1">
+                <label className="text-[11px] font-medium text-zinc-700 dark:text-zinc-300">Conta</label>
+                <div className="flex items-center gap-1">
+                  <input value={form.contaCliente} onChange={e => setForm({ ...form, contaCliente: e.target.value })} placeholder="00000"
+                    className="w-[80px] rounded-lg border border-zinc-200 bg-white dark:bg-zinc-950 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100" />
+                  <span className="text-zinc-400 font-bold">-</span>
+                  <input value={(form as any).digitoContaCliente || ""} onChange={e => setForm({ ...form, digitoContaCliente: e.target.value } as any)} placeholder="0" maxLength={2}
+                    className="w-10 rounded-lg border border-zinc-200 bg-white dark:bg-zinc-950 px-2 py-2 text-sm text-center focus:outline-none focus:ring-2 focus:ring-brand/100" />
+                </div>
+              </div>
+              <div className="space-y-1">
+                <label className="text-[11px] font-medium text-zinc-700 dark:text-zinc-300">Tipo</label>
+                <select value={form.tipoContaCliente} onChange={e => setForm({ ...form, tipoContaCliente: e.target.value })}
+                  className="rounded-lg border border-zinc-200 bg-white dark:bg-zinc-950 px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100">
+                  <option value="">—</option>
+                  <option value="CC">Corrente</option>
+                  <option value="CP">Poupança</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Observações */}
+            <div className="space-y-2 pt-2">
+              <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Observações</label>
+              <textarea value={form.observacoes} onChange={e => setForm({ ...form, observacoes: e.target.value })} rows={2}
+                className="w-full rounded-lg border border-zinc-200 bg-white dark:bg-zinc-950 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100 resize-none" />
+            </div>
           </div>
+
+
 
           <div className="mt-8 pt-6 border-t border-zinc-200 dark:border-zinc-800">
             <div className="flex items-center gap-2 mb-4">
