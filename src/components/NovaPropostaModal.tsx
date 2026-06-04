@@ -401,42 +401,17 @@ export function NovaPropostaModal({
 
             {form.formaPagamento === "CONTA" && (
               <div className="grid grid-cols-[1fr_auto_auto] gap-4 animate-in fade-in slide-in-from-top-2 duration-300">
-                <div className="relative">
+                <div>
                   <label className={labelClass}>Banco</label>
                   <input type="text"
-                    value={bancoPagQuery || form.bancoPagamento}
-                    onChange={e => {
-                      const v = e.target.value;
-                      setBancoPagQuery(v);
-                      setShowBancoPagDropdown(true);
-                      if (!v) updateForm("bancoPagamento", "");
-                    }}
-                    onFocus={() => setShowBancoPagDropdown(true)}
-                    onBlur={() => setTimeout(() => setShowBancoPagDropdown(false), 200)}
+                    list="bancos-compe-list-proposta"
+                    value={form.bancoPagamento}
+                    onChange={e => updateForm("bancoPagamento", e.target.value)}
                     placeholder="Nome ou código COMPE"
                     className={inputClass} />
-                  {showBancoPagDropdown && (bancoPagQuery || "").length >= 1 && (() => {
-                    const q = (bancoPagQuery || "").toLowerCase();
-                    const filtered = BANCOS_BRASIL.filter(b => b.nome.toLowerCase().includes(q) || b.compe.includes(q)).slice(0, 10);
-                    if (filtered.length === 0) return null;
-                    return (
-                      <div className="absolute z-50 mt-1 w-full bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl shadow-2xl max-h-48 overflow-y-auto">
-                        {filtered.map(b => (
-                          <button key={b.compe} type="button"
-                            onMouseDown={e => {
-                              e.preventDefault();
-                              updateForm("bancoPagamento", `${b.compe} - ${b.nome}`);
-                              setBancoPagQuery("");
-                              setShowBancoPagDropdown(false);
-                            }}
-                            className="w-full text-left px-3 py-2 hover:bg-zinc-50 dark:hover:bg-zinc-700/50 transition border-b border-zinc-100 dark:border-zinc-700/50 last:border-0 flex items-center gap-2">
-                            <span className="text-[11px] font-bold text-zinc-400 bg-zinc-100 dark:bg-zinc-700 px-1.5 py-0.5 rounded font-mono">{b.compe}</span>
-                            <span className="text-sm text-zinc-800 dark:text-zinc-200 truncate">{b.nome}</span>
-                          </button>
-                        ))}
-                      </div>
-                    );
-                  })()}
+                  <datalist id="bancos-compe-list-proposta">
+                    {BANCOS_BRASIL.map(b => <option key={b.compe} value={`${b.compe} - ${b.nome}`} />)}
+                  </datalist>
                 </div>
                 <div>
                   <label className={labelClass}>Agência</label>

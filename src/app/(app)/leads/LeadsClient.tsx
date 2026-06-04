@@ -1227,42 +1227,17 @@ export function LeadsClient({
                       {/* Dados Bancários do Cliente */}
                       <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wider mt-4 mb-1">Dados Bancários do Cliente</h3>
                       <div className="grid grid-cols-4 gap-3">
-                        <div className="space-y-2 relative">
+                        <div className="space-y-2">
                           <label className="text-[11px] font-medium text-zinc-700 dark:text-zinc-300">Banco</label>
                           <input
-                            value={bancoClienteQuery || form.bancoCliente}
-                            onChange={e => {
-                              const v = e.target.value;
-                              setBancoClienteQuery(v);
-                              setShowBancoDropdown(true);
-                              if (!v) setForm({ ...form, bancoCliente: "" });
-                            }}
-                            onFocus={() => setShowBancoDropdown(true)}
-                            onBlur={() => setTimeout(() => setShowBancoDropdown(false), 200)}
-                            placeholder="Nome ou código"
+                            list="bancos-compe-list"
+                            value={form.bancoCliente}
+                            onChange={e => setForm({ ...form, bancoCliente: e.target.value })}
+                            placeholder="Nome ou código COMPE"
                             className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100" />
-                          {showBancoDropdown && (bancoClienteQuery || "").length >= 1 && (() => {
-                            const q = (bancoClienteQuery || "").toLowerCase();
-                            const filtered = BANCOS_BRASIL.filter(b => b.nome.toLowerCase().includes(q) || b.compe.includes(q)).slice(0, 12);
-                            if (filtered.length === 0) return null;
-                            return (
-                              <div className="absolute z-50 mt-1 w-[280px] bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl shadow-2xl max-h-48 overflow-y-auto">
-                                {filtered.map(b => (
-                                  <button key={b.compe} type="button"
-                                    onMouseDown={e => {
-                                      e.preventDefault();
-                                      setForm({ ...form, bancoCliente: `${b.compe} - ${b.nome}` });
-                                      setBancoClienteQuery("");
-                                      setShowBancoDropdown(false);
-                                    }}
-                                    className="w-full text-left px-3 py-2 hover:bg-zinc-50 dark:hover:bg-zinc-700/50 transition border-b border-zinc-100 dark:border-zinc-700/50 last:border-0 flex items-center gap-2">
-                                    <span className="text-[11px] font-bold text-zinc-400 bg-zinc-100 dark:bg-zinc-700 px-1.5 py-0.5 rounded font-mono">{b.compe}</span>
-                                    <span className="text-sm text-zinc-800 dark:text-zinc-200 truncate">{b.nome}</span>
-                                  </button>
-                                ))}
-                              </div>
-                            );
-                          })()}
+                          <datalist id="bancos-compe-list">
+                            {BANCOS_BRASIL.map(b => <option key={b.compe} value={`${b.compe} - ${b.nome}`} />)}
+                          </datalist>
                         </div>
                         <div className="space-y-2">
                           <label className="text-[11px] font-medium text-zinc-700 dark:text-zinc-300">Agência</label>
