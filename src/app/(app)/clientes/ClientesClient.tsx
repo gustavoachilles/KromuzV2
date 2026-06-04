@@ -1,8 +1,10 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Search, Users, Phone, Mail, MapPin, CreditCard, ChevronLeft, ChevronRight, Eye, EyeOff, Calendar, DollarSign, Hash, Key } from "lucide-react";
+import { Search, Users, Phone, Mail, MapPin, CreditCard, ChevronLeft, ChevronRight, Eye, EyeOff, X, Pencil, Trash2, Plus, Hash } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { LeadFormModal } from "@/components/LeadFormModal";
+import { toast } from "sonner";
 
 interface Cliente {
   id: string;
@@ -35,6 +37,7 @@ interface Cliente {
   observacoes?: string;
   createdAt: string;
   updatedAt: string;
+  [key: string]: any;
 }
 
 export default function ClientesClient() {
@@ -47,6 +50,11 @@ export default function ClientesClient() {
   const [revelarCpf, setRevelarCpf] = useState<Record<string, boolean>>({});
   const [revelarTel, setRevelarTel] = useState<Record<string, boolean>>({});
   const limit = 50;
+
+  // Modal states
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalLead, setModalLead] = useState<any>(null);
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
 
   const fetchClientes = useCallback(async () => {
     setLoading(true);
@@ -75,11 +83,6 @@ export default function ClientesClient() {
 
   const totalPages = Math.ceil(total / limit);
 
-  const mascaraCpf = (cpf: string) => {
-    if (!cpf) return "—";
-    return cpf;
-  };
-
   const formatDate = (d?: string) => {
     if (!d) return "—";
     return new Date(d).toLocaleDateString("pt-BR");
@@ -92,6 +95,47 @@ export default function ClientesClient() {
     let age = today.getFullYear() - born.getFullYear();
     if (today.getMonth() < born.getMonth() || (today.getMonth() === born.getMonth() && today.getDate() < born.getDate())) age--;
     return age;
+  };
+
+  const handleNovoCliente = () => {
+    setModalLead(null);
+    setModalOpen(true);
+  };
+
+  const handleEditar = (c: Cliente) => {
+    setModalLead(c);
+    setModalOpen(true);
+  };
+
+  const handleExcluir = async (id: string) => {
+    try {
+      const res = await fetch(`/api/leads/${id}`, { method: "DELETE" });
+      if (res.ok) {
+        toast.success("Cliente excluído com sucesso");
+        setSelecionado(null);
+        setConfirmDelete(null);
+        fetchClientes();
+      } else {
+        toast.error("Erro ao excluir cliente");
+      }
+    } catch {
+      toast.error("Erro ao excluir cliente");
+    }
+  };
+
+  const handleModalSuccess = () => {
+    setModalOpen(false);
+    setModalLead(null);
+    fetchClientes();
+    // Atualizar o selecionado se estava editando
+    if (selecionado) {
+      setTimeout(async () => {
+        const params = new URLSearchParams({ page: "1", limit: "1", busca: selecionado.id });
+        const res = await fetch(`/api/clientes?${params}`);
+        const data = await res.json();
+        if (data.clientes?.length) setSelecionado(data.clientes[0]);
+      }, 500);
+    }
   };
 
   return (
@@ -109,6 +153,14 @@ export default function ClientesClient() {
                 <p className="text-xs text-zinc-500">{total} clientes na carteira</p>
               </div>
             </div>
+            <button
+              onClick={handleNovoCliente}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-white text-sm font-semibold shadow-lg transition-all hover:scale-[1.02] active:scale-[0.98]"
+              style={{ background: "linear-gradient(135deg, var(--brand-primary), color-mix(in srgb, var(--brand-primary) 80%, #000))" }}
+            >
+              <Plus className="h-4 w-4" />
+              Novo Cliente
+            </button>
           </div>
 
           {/* Search */}
@@ -127,7 +179,7 @@ export default function ClientesClient() {
       <div className="max-w-[1600px] mx-auto px-6 py-6">
         <div className="flex gap-6">
           {/* Lista */}
-          <div className={`${selecionado ? "w-1/2" : "w-full"} transition-all duration-300`}>
+          <div className={`transition-all duration-300 ${selecionado ? "w-[55%]" : "w-full"}`}>
             {loading ? (
               <div className="flex items-center justify-center py-20">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500" />
@@ -136,7 +188,7 @@ export default function ClientesClient() {
               <div className="text-center py-20 text-zinc-400">
                 <Users className="h-12 w-12 mx-auto mb-3 opacity-30" />
                 <p className="text-lg font-medium">Nenhum cliente encontrado</p>
-                <p className="text-sm mt-1">Clientes aparecem aqui quando têm CPF cadastrado</p>
+                <p className="text-sm mt-1">Cadastre seu primeiro cliente clicando em &quot;Novo Cliente&quot;</p>
               </div>
             ) : (
               <>
@@ -147,9 +199,9 @@ export default function ClientesClient() {
                         <th className="text-left px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-zinc-400">Cliente</th>
                         <th className="text-left px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-zinc-400">CPF</th>
                         <th className="text-left px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-zinc-400">Telefone</th>
-                        <th className="text-left px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-zinc-400">Cidade/UF</th>
-                        <th className="text-left px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-zinc-400">NB</th>
-                        <th className="text-left px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-zinc-400">Vendedor</th>
+                        {!selecionado && <th className="text-left px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-zinc-400">Cidade/UF</th>}
+                        {!selecionado && <th className="text-left px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-zinc-400">NB</th>}
+                        {!selecionado && <th className="text-left px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-zinc-400">Vendedor</th>}
                       </tr>
                     </thead>
                     <tbody>
@@ -205,15 +257,21 @@ export default function ClientesClient() {
                               )}
                             </div>
                           </td>
-                          <td className="px-4 py-3 text-sm text-zinc-600 dark:text-zinc-400">
-                            {c.cidade && c.uf ? `${c.cidade}/${c.uf}` : c.uf || "—"}
-                          </td>
-                          <td className="px-4 py-3 text-sm font-mono text-zinc-600 dark:text-zinc-400">
-                            {c.numeroBeneficio || "—"}
-                          </td>
-                          <td className="px-4 py-3 text-sm text-zinc-600 dark:text-zinc-400 truncate max-w-[120px]">
-                            {c.vendedorNome || "—"}
-                          </td>
+                          {!selecionado && (
+                            <td className="px-4 py-3 text-sm text-zinc-600 dark:text-zinc-400">
+                              {c.cidade && c.uf ? `${c.cidade}/${c.uf}` : c.uf || "—"}
+                            </td>
+                          )}
+                          {!selecionado && (
+                            <td className="px-4 py-3 text-sm font-mono text-zinc-600 dark:text-zinc-400">
+                              {c.numeroBeneficio || "—"}
+                            </td>
+                          )}
+                          {!selecionado && (
+                            <td className="px-4 py-3 text-sm text-zinc-600 dark:text-zinc-400 truncate max-w-[120px]">
+                              {c.vendedorNome || "—"}
+                            </td>
+                          )}
                         </motion.tr>
                       ))}
                     </tbody>
@@ -224,7 +282,7 @@ export default function ClientesClient() {
                 {totalPages > 1 && (
                   <div className="flex items-center justify-between mt-4 px-2">
                     <span className="text-xs text-zinc-400">
-                      Mostrando {(page - 1) * limit + 1}–{Math.min(page * limit, total)} de {total}
+                      {(page - 1) * limit + 1}–{Math.min(page * limit, total)} de {total}
                     </span>
                     <div className="flex items-center gap-1">
                       <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
@@ -251,29 +309,83 @@ export default function ClientesClient() {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 40 }}
                 transition={{ duration: 0.25 }}
-                className="w-1/2 bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm overflow-y-auto"
+                className="w-[45%] bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm overflow-y-auto"
                 style={{ maxHeight: "calc(100vh - 200px)" }}
               >
                 <div className="p-6 space-y-6">
-                  {/* Header */}
-                  <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-400 to-indigo-600 flex items-center justify-center text-white text-xl font-bold shadow-lg shadow-blue-500/20">
-                      {selecionado.nome?.charAt(0)?.toUpperCase() || "?"}
-                    </div>
-                    <div>
-                      <h2 className="text-lg font-bold text-zinc-900 dark:text-white">{selecionado.nome}</h2>
-                      <div className="flex items-center gap-2 mt-0.5">
-                        {selecionado.vendedorNome && (
-                          <span className="text-[11px] bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400 px-2 py-0.5 rounded-full font-medium">
-                            {selecionado.vendedorNome}
-                          </span>
-                        )}
-                        <span className="text-[11px] text-zinc-400">
-                          desde {formatDate(selecionado.createdAt)}
-                        </span>
+                  {/* Header com ações */}
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-400 to-indigo-600 flex items-center justify-center text-white text-xl font-bold shadow-lg shadow-blue-500/20">
+                        {selecionado.nome?.charAt(0)?.toUpperCase() || "?"}
+                      </div>
+                      <div>
+                        <h2 className="text-lg font-bold text-zinc-900 dark:text-white">{selecionado.nome}</h2>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          {selecionado.vendedorNome && (
+                            <span className="text-[11px] bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400 px-2 py-0.5 rounded-full font-medium">
+                              {selecionado.vendedorNome}
+                            </span>
+                          )}
+                          <span className="text-[11px] text-zinc-400">desde {formatDate(selecionado.createdAt)}</span>
+                        </div>
                       </div>
                     </div>
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => handleEditar(selecionado)}
+                        className="p-2 rounded-lg text-zinc-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-950/30 transition"
+                        title="Editar cliente"
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </button>
+                      <button
+                        onClick={() => setConfirmDelete(selecionado.id)}
+                        className="p-2 rounded-lg text-zinc-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition"
+                        title="Excluir cliente"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                      <button
+                        onClick={() => setSelecionado(null)}
+                        className="p-2 rounded-lg text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition"
+                        title="Fechar"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
                   </div>
+
+                  {/* Confirmação de exclusão */}
+                  <AnimatePresence>
+                    {confirmDelete === selecionado.id && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="rounded-xl bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 p-4"
+                      >
+                        <p className="text-sm font-medium text-red-700 dark:text-red-400">
+                          Tem certeza que deseja excluir <strong>{selecionado.nome}</strong>?
+                        </p>
+                        <p className="text-xs text-red-500 mt-1">Esta ação não pode ser desfeita.</p>
+                        <div className="flex gap-2 mt-3">
+                          <button
+                            onClick={() => handleExcluir(selecionado.id)}
+                            className="px-4 py-1.5 rounded-lg bg-red-600 text-white text-sm font-semibold hover:bg-red-700 transition"
+                          >
+                            Sim, excluir
+                          </button>
+                          <button
+                            onClick={() => setConfirmDelete(null)}
+                            className="px-4 py-1.5 rounded-lg bg-zinc-200 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-300 text-sm font-medium hover:bg-zinc-300 dark:hover:bg-zinc-600 transition"
+                          >
+                            Cancelar
+                          </button>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
 
                   {/* Dados Pessoais */}
                   <Section title="Dados Pessoais" icon={<Users className="h-4 w-4" />}>
@@ -325,6 +437,15 @@ export default function ClientesClient() {
           </AnimatePresence>
         </div>
       </div>
+
+      {/* Modal de criação/edição (reutiliza LeadFormModal) */}
+      <LeadFormModal
+        open={modalOpen}
+        onClose={() => { setModalOpen(false); setModalLead(null); }}
+        leadSelecionado={modalLead}
+        onSuccess={handleModalSuccess}
+        onDelete={(id) => { handleExcluir(id); setModalOpen(false); }}
+      />
     </div>
   );
 }
