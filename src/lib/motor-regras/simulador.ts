@@ -8,7 +8,7 @@ export interface ClienteSimulacao {
   especieNome?: string;
   numeroBeneficio?: string;
   possuiRepresentanteLegal: boolean;
-  dataDespachoBeneficio: Date;
+  dataDespachoBeneficio: Date | null;
   margemLivre: number;
   margemRmc: number;
   margemRcc: number;
@@ -148,9 +148,11 @@ export function calcularOportunidades(
     }
 
     // DDB (IN100 - Bloqueio de 90 dias)
-    const diffDias = (new Date().getTime() - cliente.dataDespachoBeneficio.getTime()) / (1000 * 3600 * 24);
-    if (regra.ddbMinimoDias && diffDias < regra.ddbMinimoDias) {
-      continue;
+    if (regra.ddbMinimoDias && cliente.dataDespachoBeneficio) {
+      const diffDias = (new Date().getTime() - cliente.dataDespachoBeneficio.getTime()) / (1000 * 3600 * 24);
+      if (diffDias < regra.ddbMinimoDias) {
+        continue;
+      }
     }
 
     // 2. Simulação por Tipo de Operação

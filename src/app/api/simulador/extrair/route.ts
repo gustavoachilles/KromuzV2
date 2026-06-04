@@ -76,9 +76,12 @@ export async function POST(req: NextRequest) {
 
     // 2. Mapeia para os tipos do simulador
     console.log("🗺️ [Simulador] Mapeando dados do cliente...");
-    const dataAtual = new Date();
-    let ddb = new Date(hiscon.dados_cliente.data_despacho_beneficio);
-    if (isNaN(ddb.getTime())) ddb = dataAtual;
+    const ddbRaw = hiscon.dados_cliente.data_despacho_beneficio;
+    let ddb: Date | null = null;
+    if (ddbRaw) {
+      const parsed = new Date(ddbRaw);
+      if (!isNaN(parsed.getTime())) ddb = parsed;
+    }
 
     // 2. Uso da Idade Manual ou Padrão de 60 anos (pois não existe no HISCON)
     const idade = idadeManual ? Number(idadeManual) : 60;

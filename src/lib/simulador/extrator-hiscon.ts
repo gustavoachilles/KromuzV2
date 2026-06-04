@@ -8,14 +8,22 @@ export type ResultadoExtracaoHiscon =
 const PROMPT_HISCON = `Você é um especialista em análise de Crédito Consignado (INSS).
 Extraia os dados do HISCON PDF em anexo.
 
+REGRA ABSOLUTA: NUNCA INVENTE DADOS. Se uma informação NÃO existir no PDF, retorne null para strings e 0 para números. Não estime, não adivinhe, não invente datas, idades ou valores. Apenas extraia o que ESTÁ ESCRITO no documento.
+
 COMO O SEU CÉREBRO FUNCIONA (OBRIGATÓRIO):
 Para não errar nos cálculos matemáticos (como calcular as parcelas pagas baseadas na data de início), você DEVE obrigatoriamente iniciar sua resposta com uma tag <analise>.
-Dentro da tag, você vai detalhar seu raciocínio passo a passo: "Contrato X começou em 01/2025. Estamos em maio de 2026. Logo, pagou 16 parcelas".
+Dentro da tag, você vai detalhar seu raciocínio passo a passo: "Contrato X começou em 01/2025. Estamos em junho de 2026. Logo, pagou 17 parcelas".
 Somente APÓS fechar a tag </analise>, retorne EXCLUSIVAMENTE o JSON estruturado.
 
 SEÇÕES DO HISCON QUE VOCÊ DEVE EXTRAIR:
 
-1. DADOS DO BENEFÍCIO: Nome, número do benefício, espécie, UF, data de despacho.
+1. DADOS DO BENEFÍCIO: Nome, número do benefício, espécie (código numérico), situação.
+   - "Não possui representante legal" → possui_representante_legal = false
+   - "Possui representante legal" → possui_representante_legal = true
+   - Se NÃO encontrar DIB/DDB/Data de Despacho → data_despacho_beneficio = null
+   - Se NÃO encontrar data de nascimento → data_nascimento = null
+   - Se NÃO encontrar idade → idade = 0
+   - Se NÃO encontrar UF → uf = ""
 
 2. DADOS DO PAGAMENTO (OBRIGATÓRIO):
    Procure a seção que mostra onde o benefício é pago:
@@ -27,7 +35,7 @@ SEÇÕES DO HISCON QUE VOCÊ DEVE EXTRAIR:
 3. VALORES DO BENEFÍCIO (OBRIGATÓRIO):
    Procure a tabela "VALORES DO BENEFÍCIO":
    - "BASE DE CÁLCULO" → Valor em R$ (este é a renda do cliente)
-   - "MARGEM EXTRAPOLADA***" → Valor em R$ (quando total comprometido > máximo permitido)
+   - "MARGEM EXTRAPOLADA***" → Valor em R$ (quando total comprometido > máximo permitido). Se não existir, retorne 0.
 
 4. MARGEM CONSIGNÁVEL (SEÇÃO CRÍTICA - NÃO PULE):
    O HISCON tem uma seção chamada "Margem Consignável" ou "EMPRÉSTIMOS / RMC / RCC".
@@ -45,13 +53,13 @@ ESTRUTURA OBRIGATÓRIA DO JSON (logo após fechar a tag de análise):
   "dados_cliente": {
     "nome": "NOME COMPLETO",
     "idade": 0,
-    "data_nascimento": "AAAA-MM-DD",
+    "data_nascimento": null,
     "especie_beneficio": 0,
     "especie_nome": "NOME DA ESPECIE",
     "numero_beneficio": "000.000.000-0",
-    "uf": "UF",
+    "uf": "",
     "possui_representante_legal": false,
-    "data_despacho_beneficio": "AAAA-MM-DD",
+    "data_despacho_beneficio": null,
     "banco_pagamento": "NOME DO BANCO",
     "meio_pagamento": "Conta Corrente",
     "agencia_pagamento": "0000",
@@ -85,6 +93,7 @@ Considere o ano atual como 2026 (Mês atual: Junho de 2026). IMPORTANTE:
 4. Na <analise>, SEMPRE descreva o valor de margem encontrado: "Margem empréstimo: R$ XXX,XX".
 5. EXTRAIA o banco/agência/conta de pagamento e a base de cálculo — são dados essenciais.
 6. Se houver MARGEM EXTRAPOLADA, registre o valor. Se não houver, coloque 0.
+7. NUNCA INVENTE dados que não estão no PDF. Se não encontrar DIB/DDB, idade ou data de nascimento, use null.
 Nunca escreva nada após o final do JSON.`;
 
 export async function processarHisconV3(pdfBufferBase64: string): Promise<ResultadoExtracaoHiscon> {

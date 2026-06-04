@@ -21,7 +21,7 @@ export const ExtratoHisconSchema = z.object({
     uf: z.string().describe("Sigla do estado de residência (ex: SP, RJ)"),
     especie_beneficio: z.number().describe("Código da espécie do benefício INSS (ex: 41, 42, 32, 21)"),
     possui_representante_legal: z.boolean().describe("Se o benefício é gerido por tutor, curador ou procurador"),
-    data_despacho_beneficio: z.string().describe("Data de início do benefício ou DDB (YYYY-MM-DD)"),
+    data_despacho_beneficio: z.string().nullable().optional().describe("Data de início do benefício ou DDB (YYYY-MM-DD). null se não constar no extrato"),
     data_nascimento: z.string().optional().describe("Data de nascimento se disponível"),
     especie_nome: z.string().optional().describe("Nome da espécie se disponível"),
     numero_beneficio: z.string().optional().describe("Número do benefício se disponível"),
