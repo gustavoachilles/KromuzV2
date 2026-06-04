@@ -558,7 +558,9 @@ export function SimuladorClient({ empresaId, convenios }: { empresaId: string, c
       <LeadFormModal
         open={showCadastroModal}
         onClose={() => setShowCadastroModal(false)}
-        leadSelecionado={resultado ? {
+        leadSelecionado={(() => {
+          if (!resultado) return null;
+          const lead = {
           id: "",
           nome: cliente.nome || "",
           numeroBeneficio: cliente.numeroBeneficio || "",
@@ -575,7 +577,11 @@ export function SimuladorClient({ empresaId, convenios }: { empresaId: string, c
           contaCliente: cliente.contaPagamento || "",
           tipoContaCliente: cliente.meioPagamento === "Conta Corrente" ? "CC" : cliente.meioPagamento === "Conta Poupança" ? "CP" : "",
           origem: "simulador_hiscon",
-        } as any : null}
+          } as any;
+          console.log("📋 [DEBUG] Lead pré-preenchido para modal:", JSON.stringify(lead, null, 2));
+          console.log("📋 [DEBUG] cliente.bancoPagamento:", cliente.bancoPagamento, "| cliente.baseCalculo:", cliente.baseCalculo, "| cliente.margemExtrapolada:", cliente.margemExtrapolada);
+          return lead;
+        })()}
         onSuccess={handleCadastroSuccess}
       />
     </div>
