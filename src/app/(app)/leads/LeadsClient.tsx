@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { InboxDrawer } from "./InboxDrawer";
+import { BANCOS_BRASIL } from "@/components/LeadFormModal";
 
 type PipelineColuna = { id: string; nome: string; cor: string | null; ordem: number; };
 
@@ -193,7 +194,7 @@ export function LeadsClient({
     cep: "", logradouro: "", numero: "", complemento: "", bairro: "",
     numeroBeneficio: "", especieBeneficio: "", margemLivre: "", margemRmc: "", margemRcc: "",
     tipoOperacao: "", valorLiberado: "", bancoPreferido: "", convenioNome: "",
-    bancoCliente: "", agenciaCliente: "", contaCliente: "", tipoContaCliente: "",
+    bancoCliente: "", agenciaCliente: "", digitoAgenciaCliente: "", contaCliente: "", digitoContaCliente: "", tipoContaCliente: "",
     origem: "manual", canalContato: "", observacoes: "",
     arquivosExistem: [] as any[],
   });
@@ -206,6 +207,10 @@ export function LeadsClient({
   const [analisandoHiscon, setAnalisandoHiscon] = useState(false);
   const [resultadoRefin, setResultadoRefin] = useState<any>(null);
   const [validandoDoc, setValidandoDoc] = useState<string | null>(null);
+
+  // Banco Cliente search
+  const [bancoClienteQuery, setBancoClienteQuery] = useState("");
+  const [showBancoDropdown, setShowBancoDropdown] = useState(false);
 
   async function analisarHiscon() {
     if (!textoHiscon) return;
@@ -1195,11 +1200,6 @@ export function LeadsClient({
                             className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100" />
                         </div>
                         <div className="space-y-2">
-                          <label className="text-[11px] font-medium text-zinc-700 dark:text-zinc-300">Bairro</label>
-                          <input value={form.bairro} onChange={e => setForm({ ...form, bairro: e.target.value })}
-                            className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100" />
-                        </div>
-                        <div className="space-y-2">
                           <label className="text-[11px] font-medium text-zinc-700 dark:text-zinc-300">UF</label>
                           <select value={form.uf} onChange={e => setForm({ ...form, uf: e.target.value, cidade: "" })}
                             className="w-full rounded-lg border border-zinc-200 bg-white px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100">
@@ -1208,32 +1208,81 @@ export function LeadsClient({
                           </select>
                         </div>
                       </div>
-                      <div className="space-y-2">
-                        <label className="text-[11px] font-medium text-zinc-700 dark:text-zinc-300">Cidade</label>
-                        <input list="cidades-list" value={form.cidade} onChange={e => setForm({ ...form, cidade: e.target.value })} disabled={!form.uf} placeholder="Pesquise a cidade"
-                          className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100 disabled:opacity-50" />
-                        <datalist id="cidades-list">
-                          {cidadesIBGE.map(cid => <option key={cid.id} value={cid.nome} />)}
-                        </datalist>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-2">
+                          <label className="text-[11px] font-medium text-zinc-700 dark:text-zinc-300">Bairro</label>
+                          <input value={form.bairro} onChange={e => setForm({ ...form, bairro: e.target.value })}
+                            className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100" />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-[11px] font-medium text-zinc-700 dark:text-zinc-300">Cidade</label>
+                          <input list="cidades-list" value={form.cidade} onChange={e => setForm({ ...form, cidade: e.target.value })} disabled={!form.uf} placeholder="Pesquise a cidade"
+                            className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100 disabled:opacity-50" />
+                          <datalist id="cidades-list">
+                            {cidadesIBGE.map(cid => <option key={cid.id} value={cid.nome} />)}
+                          </datalist>
+                        </div>
                       </div>
 
                       {/* Dados Bancários do Cliente */}
                       <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wider mt-4 mb-1">Dados Bancários do Cliente</h3>
                       <div className="grid grid-cols-4 gap-3">
-                        <div className="space-y-2">
+                        <div className="space-y-2 relative">
                           <label className="text-[11px] font-medium text-zinc-700 dark:text-zinc-300">Banco</label>
-                          <input value={form.bancoCliente} onChange={e => setForm({ ...form, bancoCliente: e.target.value })} placeholder="Nome"
+                          <input
+                            value={bancoClienteQuery || form.bancoCliente}
+                            onChange={e => {
+                              const v = e.target.value;
+                              setBancoClienteQuery(v);
+                              setShowBancoDropdown(true);
+                              if (!v) setForm({ ...form, bancoCliente: "" });
+                            }}
+                            onFocus={() => setShowBancoDropdown(true)}
+                            onBlur={() => setTimeout(() => setShowBancoDropdown(false), 200)}
+                            placeholder="Nome ou código"
                             className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100" />
+                          {showBancoDropdown && (bancoClienteQuery || "").length >= 1 && (() => {
+                            const q = (bancoClienteQuery || "").toLowerCase();
+                            const filtered = BANCOS_BRASIL.filter(b => b.nome.toLowerCase().includes(q) || b.compe.includes(q)).slice(0, 12);
+                            if (filtered.length === 0) return null;
+                            return (
+                              <div className="absolute z-50 mt-1 w-[280px] bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl shadow-2xl max-h-48 overflow-y-auto">
+                                {filtered.map(b => (
+                                  <button key={b.compe} type="button"
+                                    onMouseDown={e => {
+                                      e.preventDefault();
+                                      setForm({ ...form, bancoCliente: `${b.compe} - ${b.nome}` });
+                                      setBancoClienteQuery("");
+                                      setShowBancoDropdown(false);
+                                    }}
+                                    className="w-full text-left px-3 py-2 hover:bg-zinc-50 dark:hover:bg-zinc-700/50 transition border-b border-zinc-100 dark:border-zinc-700/50 last:border-0 flex items-center gap-2">
+                                    <span className="text-[11px] font-bold text-zinc-400 bg-zinc-100 dark:bg-zinc-700 px-1.5 py-0.5 rounded font-mono">{b.compe}</span>
+                                    <span className="text-sm text-zinc-800 dark:text-zinc-200 truncate">{b.nome}</span>
+                                  </button>
+                                ))}
+                              </div>
+                            );
+                          })()}
                         </div>
                         <div className="space-y-2">
                           <label className="text-[11px] font-medium text-zinc-700 dark:text-zinc-300">Agência</label>
-                          <input value={form.agenciaCliente} onChange={e => setForm({ ...form, agenciaCliente: e.target.value })} placeholder="0000"
-                            className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100" />
+                          <div className="flex items-center gap-1">
+                            <input value={form.agenciaCliente} onChange={e => setForm({ ...form, agenciaCliente: e.target.value })} placeholder="0000"
+                              className="flex-1 rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100" />
+                            <span className="text-zinc-400 font-bold">-</span>
+                            <input value={form.digitoAgenciaCliente} onChange={e => setForm({ ...form, digitoAgenciaCliente: e.target.value })} placeholder="0" maxLength={2}
+                              className="w-10 rounded-lg border border-zinc-200 bg-white px-2 py-2 text-sm text-center focus:outline-none focus:ring-2 focus:ring-brand/100" />
+                          </div>
                         </div>
                         <div className="space-y-2">
                           <label className="text-[11px] font-medium text-zinc-700 dark:text-zinc-300">Conta</label>
-                          <input value={form.contaCliente} onChange={e => setForm({ ...form, contaCliente: e.target.value })} placeholder="00000-0"
-                            className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100" />
+                          <div className="flex items-center gap-1">
+                            <input value={form.contaCliente} onChange={e => setForm({ ...form, contaCliente: e.target.value })} placeholder="00000"
+                              className="flex-1 rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100" />
+                            <span className="text-zinc-400 font-bold">-</span>
+                            <input value={form.digitoContaCliente} onChange={e => setForm({ ...form, digitoContaCliente: e.target.value })} placeholder="0" maxLength={2}
+                              className="w-10 rounded-lg border border-zinc-200 bg-white px-2 py-2 text-sm text-center focus:outline-none focus:ring-2 focus:ring-brand/100" />
+                          </div>
                         </div>
                         <div className="space-y-2">
                           <label className="text-[11px] font-medium text-zinc-700 dark:text-zinc-300">Tipo</label>
