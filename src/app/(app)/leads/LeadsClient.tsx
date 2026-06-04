@@ -1051,9 +1051,7 @@ export function LeadsClient({
                 <form onSubmit={salvarLead} className={`flex-1 overflow-y-auto p-6 space-y-6 ${tabModal !== "dados" ? "hidden" : ""}`}>
                   {erro && <div className="rounded-lg bg-red-50 border border-red-200 text-red-700 px-4 py-3 text-sm font-medium">{erro}</div>}
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    {/* Coluna 1: Dados Pessoais */}
-                    <div className="space-y-4">
+                  <div className="space-y-4">
                       <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2">Dados do Cliente</h3>
 
                       <div className="space-y-2">
@@ -1322,39 +1320,11 @@ export function LeadsClient({
                             className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100" />
                         </div>
                       </div>
-                    </div>
-
-                    {/* Coluna 2: Detalhes da Operação */}
-                    <div className="space-y-4">
-                      <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2">Detalhes da Operação</h3>
-
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Tipo de Operação</label>
-                          <select value={form.tipoOperacao} onChange={e => setForm({ ...form, tipoOperacao: e.target.value })}
-                            className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100">
-                            <option value="">—</option>
-                            <option value="EMPRESTIMO_CONSIGNADO">Margem Nova</option>
-                            <option value="REFINANCIAMENTO">Refinanciamento</option>
-                            <option value="PORTABILIDADE">Portabilidade</option>
-                            <option value="PORTABILIDADE_REFIN">Port + Refin</option>
-                            <option value="CARTAO_CONSIGNADO">Cartão RMC</option>
-                            <option value="CARTAO_BENEFICIO">Cartão RCC</option>
-                          </select>
-                        </div>
-                        <div className="space-y-2">
-                          <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Valor Liberado (R$)</label>
-                          <input type="text" value={form.valorLiberado} onChange={e => setForm({ ...form, valorLiberado: formatMoedaInput(e.target.value) })} placeholder="0.00"
-                            className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100 font-bold text-emerald-700" />
-                        </div>
-                      </div>
-
-                      <div className="space-y-2 pt-2">
+                      <div className="space-y-2 mt-4">
                         <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Observações</label>
-                        <textarea value={form.observacoes} onChange={e => setForm({ ...form, observacoes: e.target.value })} rows={4}
+                        <textarea value={form.observacoes} onChange={e => setForm({ ...form, observacoes: e.target.value })} rows={3}
                           className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100 resize-none" />
                       </div>
-                    </div>
                   </div>
 
                   {/* Seção de Documentos / Anexos */}
