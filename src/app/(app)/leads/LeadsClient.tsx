@@ -1226,8 +1226,8 @@ export function LeadsClient({
 
                       {/* Dados Bancários do Cliente */}
                       <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wider mt-4 mb-1">Dados Bancários do Cliente</h3>
-                      <div className="grid grid-cols-4 gap-3">
-                        <div className="space-y-2">
+                      <div className="flex items-end gap-3 flex-wrap">
+                        <div className="space-y-1 flex-1 min-w-[140px]">
                           <label className="text-[11px] font-medium text-zinc-700 dark:text-zinc-300">Banco</label>
                           <input
                             list="bancos-compe-list"
@@ -1239,30 +1239,30 @@ export function LeadsClient({
                             {BANCOS_BRASIL.map(b => <option key={b.compe} value={`${b.compe} - ${b.nome}`} />)}
                           </datalist>
                         </div>
-                        <div className="space-y-2">
+                        <div className="space-y-1">
                           <label className="text-[11px] font-medium text-zinc-700 dark:text-zinc-300">Agência</label>
                           <div className="flex items-center gap-1">
                             <input value={form.agenciaCliente} onChange={e => setForm({ ...form, agenciaCliente: e.target.value })} placeholder="0000"
-                              className="flex-1 rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100" />
+                              className="w-[72px] rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100" />
                             <span className="text-zinc-400 font-bold">-</span>
                             <input value={form.digitoAgenciaCliente} onChange={e => setForm({ ...form, digitoAgenciaCliente: e.target.value })} placeholder="0" maxLength={2}
                               className="w-10 rounded-lg border border-zinc-200 bg-white px-2 py-2 text-sm text-center focus:outline-none focus:ring-2 focus:ring-brand/100" />
                           </div>
                         </div>
-                        <div className="space-y-2">
+                        <div className="space-y-1">
                           <label className="text-[11px] font-medium text-zinc-700 dark:text-zinc-300">Conta</label>
                           <div className="flex items-center gap-1">
                             <input value={form.contaCliente} onChange={e => setForm({ ...form, contaCliente: e.target.value })} placeholder="00000"
-                              className="flex-1 rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100" />
+                              className="w-[80px] rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100" />
                             <span className="text-zinc-400 font-bold">-</span>
                             <input value={form.digitoContaCliente} onChange={e => setForm({ ...form, digitoContaCliente: e.target.value })} placeholder="0" maxLength={2}
                               className="w-10 rounded-lg border border-zinc-200 bg-white px-2 py-2 text-sm text-center focus:outline-none focus:ring-2 focus:ring-brand/100" />
                           </div>
                         </div>
-                        <div className="space-y-2">
+                        <div className="space-y-1">
                           <label className="text-[11px] font-medium text-zinc-700 dark:text-zinc-300">Tipo</label>
                           <select value={form.tipoContaCliente} onChange={e => setForm({ ...form, tipoContaCliente: e.target.value })}
-                            className="w-full rounded-lg border border-zinc-200 bg-white px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100">
+                            className="rounded-lg border border-zinc-200 bg-white px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100">
                             <option value="">—</option>
                             <option value="CC">Corrente</option>
                             <option value="CP">Poupança</option>
