@@ -793,6 +793,13 @@ export function LeadFormModal({
           >
             ✨ Refin Hunter
           </button>
+          <button
+            type="button"
+            onClick={() => setTabModal("inss")}
+            className={`py-3 text-sm font-bold border-b-2 flex items-center gap-1 transition ${tabModal === "inss" ? "border-blue-500 text-blue-600" : "border-transparent text-zinc-500 hover:text-zinc-700"}`}
+          >
+            Gov.br Extrator
+          </button>
         </div>
 
         {tabModal === "refin" && (
