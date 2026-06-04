@@ -1011,25 +1011,25 @@ export function LeadFormModal({
                   <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Telefone</label>
                   <div className="relative group">
                     <input
-                      type={revelarTelefone ? "text" : "password"}
+                      type={revelarTel ? "text" : "password"}
                       value={form.telefone}
-                      readOnly={!revelarTelefone}
+                      readOnly={!revelarTel}
                       onChange={e => setForm({ ...form, telefone: mascaraTelefone(e.target.value) })}
                       placeholder="(**) *****-****"
                       maxLength={15}
-                      className={`w-full rounded-lg border border-zinc-200 bg-white dark:bg-zinc-950 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100 transition-all ${!revelarTelefone ? 'blur-[3px] select-none' : ''}`}
+                      className={`w-full rounded-lg border border-zinc-200 bg-white dark:bg-zinc-950 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100 transition-all ${!revelarTel ? 'blur-[3px] select-none' : ''}`}
                     />
                     <button
                       type="button"
                       onClick={() => {
-                        if (!revelarTelefone && form.id) {
+                        if (!revelarTel && form.id) {
                           fetch('/api/logs', { method: 'POST', body: JSON.stringify({ tipo: 'VISUALIZACAO_DADOS', recurso: 'LEAD', recursoId: form.id, descricao: 'Visualizou telefone do cliente' }) });
                         }
-                        setRevelarTelefone(!revelarTelefone);
+                        setRevelarTel(!revelarTel);
                       }}
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-brand transition"
                     >
-                      {revelarTelefone ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      {revelarTel ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                   </div>
                 </div>
