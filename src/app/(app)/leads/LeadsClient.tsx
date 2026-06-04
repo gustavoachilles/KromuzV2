@@ -1224,6 +1224,41 @@ export function LeadsClient({
                         </div>
                       </div>
 
+                      {/* Dados do Benefício */}
+                      <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wider mt-4 mb-1">Dados do Benefício</h3>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <label className="text-[11px] font-medium text-zinc-700 dark:text-zinc-300">NB (Benefício)</label>
+                          <input value={form.numeroBeneficio} onChange={e => setForm({ ...form, numeroBeneficio: e.target.value })}
+                            className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100" />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-[11px] font-medium text-zinc-700 dark:text-zinc-300">Espécie INSS</label>
+                          <input list="especies-list" value={form.especieBeneficio} onChange={e => setForm({ ...form, especieBeneficio: e.target.value })} placeholder="Pesquise a espécie"
+                            className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100" />
+                          <datalist id="especies-list">
+                            {INSS_ESPECIES.map(esp => <option key={esp.id} value={`${esp.id} - ${esp.nome}`} />)}
+                          </datalist>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-3 gap-3">
+                        <div className="space-y-2">
+                          <label className="text-[11px] font-medium text-zinc-700 dark:text-zinc-300">Livre (R$)</label>
+                          <input type="number" step="0.01" value={form.margemLivre} onChange={e => setForm({ ...form, margemLivre: e.target.value })}
+                            className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100" />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-[11px] font-medium text-zinc-700 dark:text-zinc-300">RMC (R$)</label>
+                          <input type="number" step="0.01" value={form.margemRmc} onChange={e => setForm({ ...form, margemRmc: e.target.value })}
+                            className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100" />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-[11px] font-medium text-zinc-700 dark:text-zinc-300">RCC (R$)</label>
+                          <input type="number" step="0.01" value={form.margemRcc} onChange={e => setForm({ ...form, margemRcc: e.target.value })}
+                            className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100" />
+                        </div>
+                      </div>
+
                       {/* Dados Bancários do Cliente */}
                       <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wider mt-4 mb-1">Dados Bancários do Cliente</h3>
                       <div className="flex items-end gap-3 flex-wrap">
@@ -1269,64 +1304,29 @@ export function LeadsClient({
                           </select>
                         </div>
                       </div>
+                      <div className="grid grid-cols-2 gap-3 mt-2">
+                        <div className="space-y-1">
+                          <label className="text-[11px] font-medium text-zinc-700 dark:text-zinc-300">Tipo Chave PIX</label>
+                          <select value={(form as any).tipoChavePix || ""} onChange={e => setForm({ ...form, tipoChavePix: e.target.value } as any)}
+                            className="w-full rounded-lg border border-zinc-200 bg-white px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100">
+                            <option value="">—</option>
+                            <option value="CPF">CPF</option>
+                            <option value="TELEFONE">Telefone</option>
+                            <option value="EMAIL">E-mail</option>
+                            <option value="ALEATORIA">Chave Aleatória</option>
+                          </select>
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[11px] font-medium text-zinc-700 dark:text-zinc-300">Chave PIX</label>
+                          <input value={(form as any).chavePix || ""} onChange={e => setForm({ ...form, chavePix: e.target.value } as any)} placeholder="Digite a chave PIX"
+                            className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100" />
+                        </div>
+                      </div>
                     </div>
 
-                    {/* Coluna 2: Dados Operacionais */}
+                    {/* Coluna 2: Detalhes da Operação */}
                     <div className="space-y-4">
                       <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2">Detalhes da Operação</h3>
-
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">NB (Benefício)</label>
-                          <input value={form.numeroBeneficio} onChange={e => setForm({ ...form, numeroBeneficio: e.target.value })}
-                            className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100" />
-                        </div>
-                        <div className="space-y-2">
-                          <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Espécie INSS</label>
-                          <input list="especies-list" value={form.especieBeneficio} onChange={e => setForm({ ...form, especieBeneficio: e.target.value })} placeholder="Pesquise a espécie"
-                            className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100" />
-                          <datalist id="especies-list">
-                            {INSS_ESPECIES.map(esp => <option key={esp.id} value={`${esp.id} - ${esp.nome}`} />)}
-                          </datalist>
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-3 gap-3">
-                        <div className="space-y-2">
-                          <label className="text-[11px] font-medium text-zinc-700 dark:text-zinc-300">Livre (R$)</label>
-                          <input type="number" step="0.01" value={form.margemLivre} onChange={e => setForm({ ...form, margemLivre: e.target.value })}
-                            className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100" />
-                        </div>
-                        <div className="space-y-2">
-                          <label className="text-[11px] font-medium text-zinc-700 dark:text-zinc-300">RMC (R$)</label>
-                          <input type="number" step="0.01" value={form.margemRmc} onChange={e => setForm({ ...form, margemRmc: e.target.value })}
-                            className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100" />
-                        </div>
-                        <div className="space-y-2">
-                          <label className="text-[11px] font-medium text-zinc-700 dark:text-zinc-300">RCC (R$)</label>
-                          <input type="number" step="0.01" value={form.margemRcc} onChange={e => setForm({ ...form, margemRcc: e.target.value })}
-                            className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100" />
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Banco</label>
-                          <select value={form.bancoPreferido} onChange={e => setForm({ ...form, bancoPreferido: e.target.value })}
-                            className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100">
-                            <option value="">Selecione Banco...</option>
-                            {bancos.map(b => <option key={b.id} value={b.nome}>{b.nome}</option>)}
-                          </select>
-                        </div>
-                        <div className="space-y-2">
-                          <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Convênio</label>
-                          <select value={form.convenioNome} onChange={e => setForm({ ...form, convenioNome: e.target.value })}
-                            className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100">
-                            <option value="">Selecione Convênio...</option>
-                            {convenios.map(c => <option key={c.id} value={c.nome}>{c.nome}</option>)}
-                          </select>
-                        </div>
-                      </div>
 
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
@@ -1351,7 +1351,7 @@ export function LeadsClient({
 
                       <div className="space-y-2 pt-2">
                         <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Observações</label>
-                        <textarea value={form.observacoes} onChange={e => setForm({ ...form, observacoes: e.target.value })} rows={2}
+                        <textarea value={form.observacoes} onChange={e => setForm({ ...form, observacoes: e.target.value })} rows={4}
                           className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand/100 resize-none" />
                       </div>
                     </div>
