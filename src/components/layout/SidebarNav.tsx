@@ -23,7 +23,7 @@ export function SidebarNav({ permissoes }: { permissoes: Permissoes }) {
   const p = (mod: string) => permissoes[mod] === true;
 
   // Detect which section has active route to auto-open it
-  const crmPaths = ["/leads", "/esteira", "/comissoes", "/comissoes/sincronizar", "/comissoes/tabelas", "/metas", "/ranking", "/inbox", "/inbox/dashboard", "/inbox/mensagens-rapidas", "/recuperacao", "/marketing", "/canais", "/calendario", "/automacoes", "/dashboard-financeiro", "/vendedores", "/dashboard-vendedores"];
+  const crmPaths = ["/leads", "/clientes", "/esteira", "/comissoes", "/comissoes/sincronizar", "/comissoes/tabelas", "/metas", "/ranking", "/inbox", "/inbox/dashboard", "/inbox/mensagens-rapidas", "/recuperacao", "/marketing", "/canais", "/calendario", "/automacoes", "/dashboard-financeiro", "/vendedores", "/dashboard-vendedores"];
   const inteligenciaPaths = ["/simulador", "/motor-regras", "/roteiros", "/mapa-portabilidade", "/conhecimento"];
   const cadastroPaths = ["/regras", "/bancos", "/produtos", "/convenios", "/credenciais", "/importacao"];
   const sistemaPaths = ["/relatorios", "/auditoria", "/sla", "/configuracoes", "/assinatura"];
@@ -126,6 +126,9 @@ export function SidebarNav({ permissoes }: { permissoes: Permissoes }) {
           )}
           {p("leads") && (
             <NavLink isSubItem href="/leads" icon={<Users className="h-4 w-4" />} active={pathname === "/leads"}>Leads</NavLink>
+          )}
+          {p("leads") && (
+            <NavLink isSubItem href="/clientes" icon={<UserCheck className="h-4 w-4" />} active={pathname === "/clientes"}>Clientes</NavLink>
           )}
           {p("leads") && (
             <NavLink isSubItem href="/marketing" icon={<Megaphone className="h-4 w-4" />} active={pathname === "/marketing"}>Marketing</NavLink>
