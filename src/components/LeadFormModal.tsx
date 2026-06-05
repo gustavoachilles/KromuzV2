@@ -503,7 +503,7 @@ export function LeadFormModal({
           uf: l.uf || "",
           cidade: l.cidade || "",
           dataNascimento: l.dataNascimento ? new Date(l.dataNascimento).toISOString().split('T')[0] : "",
-          renda: l.renda ? l.renda.toString() : "",
+          renda: l.renda ? Number(l.renda).toFixed(2) : "",
           ddb: l.ddb ? new Date(l.ddb).toISOString().split('T')[0] : "",
           cep: l.cep || "",
           logradouro: l.logradouro || "",
