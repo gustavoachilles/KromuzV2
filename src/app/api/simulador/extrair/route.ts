@@ -44,20 +44,23 @@ export async function POST(req: NextRequest) {
       } catch { /* ignore */ }
       console.log(`✅ [Simulador] Robô leu o PDF com sucesso! (Contratos achados: ${hiscon.contratos_ativos.length})`);
       
-      // Se o robô não achar contratos OU não achar margem, tenta IA
-      const margemZero = (hiscon.dados_cliente.margens?.emprestimo_livre || 0) === 0;
-      if (hiscon.contratos_ativos.length === 0 || margemZero) {
-        console.log(`⚠️ [Simulador] Robô incompleto (contratos: ${hiscon.contratos_ativos.length}, margem: ${margemZero ? '0' : 'OK'}). Tentando IA...`);
-        const extracao = await processarHisconV3(pdfBase64);
-        iaRan = true;
-        if (extracao.ok) {
-          console.log("✅ [Simulador] IA completou a extração!");
-          iaResult = JSON.stringify(extracao.dados.dados_cliente?.margens);
-          hiscon = extracao.dados;
-        } else {
-          iaResult = `FALHOU: ${extracao.erro}`;
-          console.log("ℹ️ [Simulador] IA falhou:", extracao.erro);
+      // SEMPRE chama IA para obter dados completos (banco, renda, margem extrapolada)
+      console.log(`🤖 [Simulador] Chamando IA para dados completos (banco pagamento, renda, margens)...`);
+      const extracao = await processarHisconV3(pdfBase64);
+      iaRan = true;
+      if (extracao.ok) {
+        console.log("✅ [Simulador] IA completou a extração!");
+        iaResult = JSON.stringify(extracao.dados.dados_cliente?.margens);
+        // Preservar contratos do robô se IA extraiu menos
+        const contratosRobo = hiscon.contratos_ativos;
+        hiscon = extracao.dados;
+        if (hiscon.contratos_ativos.length < contratosRobo.length) {
+          console.log(`⚠️ [Simulador] IA achou ${hiscon.contratos_ativos.length} contratos vs robô ${contratosRobo.length}. Usando contratos do robô.`);
+          hiscon.contratos_ativos = contratosRobo;
         }
+      } else {
+        iaResult = `FALHOU: ${extracao.erro}`;
+        console.log("ℹ️ [Simulador] IA falhou, usando apenas dados do robô:", extracao.erro);
       }
     } catch (e: any) {
       console.warn("⚠️ [Simulador] Robô falhou com erro, tentando via IA como fallback...", e.message);
