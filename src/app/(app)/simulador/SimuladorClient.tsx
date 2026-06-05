@@ -35,6 +35,7 @@ export function SimuladorClient({ empresaId, convenios }: { empresaId: string, c
   const [showClienteConfirm, setShowClienteConfirm] = useState(false);
   const [showCadastroModal, setShowCadastroModal] = useState(false);
   const [margensAtualizadas, setMargensAtualizadas] = useState(false);
+  const [hisconPdfFile, setHisconPdfFile] = useState<File | null>(null);
 
   // Estados da Calculadora Manual
   const [formManual, setFormManual] = useState({
@@ -118,10 +119,11 @@ export function SimuladorClient({ empresaId, convenios }: { empresaId: string, c
   }
 
   // Quando o HISCON processa com sucesso
-  function handleProcessamentoCompleto(data: SimulacaoResult) {
+  function handleProcessamentoCompleto(data: SimulacaoResult, pdfFile?: File) {
     setResultado(data);
     setClienteVinculado(null);
     setMargensAtualizadas(false);
+    if (pdfFile) setHisconPdfFile(pdfFile);
     // Buscar automaticamente o cliente
     buscarClienteAutomatico(data.cliente);
   }
@@ -583,6 +585,7 @@ export function SimuladorClient({ empresaId, convenios }: { empresaId: string, c
           return lead;
         })()}
         onSuccess={handleCadastroSuccess}
+        initialFiles={hisconPdfFile ? [hisconPdfFile] : undefined}
       />
     </div>
   );

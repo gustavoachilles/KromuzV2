@@ -4,7 +4,7 @@ import { useState } from "react";
 import { UploadCloud, FileType, CheckCircle, XCircle, Loader2 } from "lucide-react";
 
 interface UploadHisconProps {
-  onProcessamentoCompleto: (dados: any) => void;
+  onProcessamentoCompleto: (dados: any, pdfFile?: File) => void;
   empresaId: string;
 }
 
@@ -61,7 +61,7 @@ export function UploadHiscon({ onProcessamentoCompleto, empresaId }: UploadHisco
           }
 
           console.log("📊 [DEBUG] Resposta completa da API:", JSON.stringify(data, null, 2));
-          onProcessamentoCompleto(data);
+          onProcessamentoCompleto(data, selectedFile);
           setLoading(false);
         } catch (err: any) {
           console.error("Erro no processamento do HISCON:", err);

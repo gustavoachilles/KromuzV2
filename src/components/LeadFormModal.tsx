@@ -422,6 +422,7 @@ type LeadFormModalProps = {
   onSuccess: (lead: any) => void;
   onDelete?: (id: string) => void;
   initialNome?: string;
+  initialFiles?: File[];
 };
 
 export function LeadFormModal({
@@ -434,6 +435,7 @@ export function LeadFormModal({
   onSuccess,
   onDelete,
   initialNome = "",
+  initialFiles,
 }: LeadFormModalProps) {
   const router = useRouter();
   
@@ -540,7 +542,7 @@ export function LeadFormModal({
           origem: "manual", canalContato: "", observacoes: "", arquivosExistem: []
         });
       }
-      setArquivosPendentes([]);
+      setArquivosPendentes(initialFiles || []);
       setCpfErro(null);
       setErro(null);
       setTabModal("dados");
