@@ -136,13 +136,21 @@ export async function processarHisconV3(pdfBufferBase64: string): Promise<Result
 
     try {
       // Limpeza agressiva para pegar apenas o JSON
-      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      // Remove o bloco <analise>...</analise> primeiro para evitar pegar JSON de dentro dele
+      const textSemAnalise = text.replace(/<analise>[\s\S]*?<\/analise>/g, '');
+      console.log("🔍 [IA] Texto sem analise (primeiros 500 chars):", textSemAnalise.substring(0, 500));
+      
+      const jsonMatch = textSemAnalise.match(/\{[\s\S]*\}/);
       if (!jsonMatch) throw new Error("Nenhum JSON encontrado na resposta");
       
       const dados = JSON.parse(jsonMatch[0]);
+      console.log("🔍 [IA] Campos em dados_cliente:", Object.keys(dados.dados_cliente || {}));
+      console.log("🔍 [IA] banco_pagamento:", dados.dados_cliente?.banco_pagamento);
+      console.log("🔍 [IA] base_calculo:", dados.dados_cliente?.base_calculo);
+      console.log("🔍 [IA] margem_extrapolada:", dados.dados_cliente?.margens?.margem_extrapolada);
       return { ok: true, dados };
     } catch (e) {
-      console.error("Erro ao parsear JSON da IA. Texto bruto:", text);
+      console.error("Erro ao parsear JSON da IA. Texto bruto (primeiros 1000 chars):", text.substring(0, 1000));
       return { ok: false, erro: "Falha ao processar estrutura de dados da IA.", isRetryable: true };
     }
   } catch (error: any) {
