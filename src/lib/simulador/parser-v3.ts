@@ -80,10 +80,20 @@ export async function parseHisconPdf(buffer: Buffer): Promise<ExtratoHisconRaw> 
 
   // === 2.6 BASE DE CÁLCULO E MARGEM EXTRAPOLADA ===
   let baseCalculo = 0;
-  const baseMatch = flat.match(/BASE DE C[AÁ]LCULO\s*R\$([\d.,]+)/i);
+  // Debug: mostrar texto próximo de "BASE" para ajustar regex
+  const baseIdx = flat.toUpperCase().indexOf('BASE DE C');
+  if (baseIdx >= 0) {
+    console.log(`🔍 [Robô V3] Texto ao redor de BASE DE CÁLCULO: "${flat.substring(baseIdx, baseIdx + 100)}"`);
+  }
+  // Tentar vários padrões
+  const baseMatch = flat.match(/BASE DE C[AÁ]LCULO\s*R\$\s*([\d.,]+)/i) 
+    || flat.match(/BASE DE C[AÁ]LCULO[^R]*R\$\s*([\d.,]+)/i)
+    || raw.match(/BASE DE C[AÁ]LCULO[\s\S]*?R\$\s*([\d.,]+)/i);
   if (baseMatch) {
     baseCalculo = parseMoeda(baseMatch[1]);
     console.log(`💰 [Robô V3] Base de cálculo: R$ ${baseCalculo}`);
+  } else {
+    console.log(`⚠️ [Robô V3] Base de cálculo NÃO encontrada no texto`);
   }
 
   let margemExtrapolada = 0;
