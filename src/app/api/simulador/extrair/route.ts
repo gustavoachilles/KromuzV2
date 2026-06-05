@@ -50,7 +50,14 @@ export async function POST(req: NextRequest) {
       iaRan = true;
       if (extracao.ok) {
         console.log("✅ [Simulador] IA completou a extração!");
-        iaResult = JSON.stringify(extracao.dados.dados_cliente?.margens);
+        console.log("🏦 [Simulador] IA banco_pagamento:", extracao.dados.dados_cliente?.banco_pagamento);
+        console.log("🏦 [Simulador] IA base_calculo:", extracao.dados.dados_cliente?.base_calculo);
+        console.log("🏦 [Simulador] IA agencia:", extracao.dados.dados_cliente?.agencia_pagamento);
+        console.log("🏦 [Simulador] IA conta:", extracao.dados.dados_cliente?.conta_pagamento);
+        console.log("🏦 [Simulador] IA meio:", extracao.dados.dados_cliente?.meio_pagamento);
+        console.log("🏦 [Simulador] IA margem_extrapolada:", extracao.dados.dados_cliente?.margens?.margem_extrapolada);
+        console.log("🏦 [Simulador] IA DDB:", extracao.dados.dados_cliente?.data_despacho_beneficio);
+        iaResult = JSON.stringify(extracao.dados.dados_cliente);
         // Preservar contratos do robô se IA extraiu menos
         const contratosRobo = hiscon.contratos_ativos;
         hiscon = extracao.dados;
