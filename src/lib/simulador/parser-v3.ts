@@ -59,7 +59,47 @@ export async function parseHisconPdf(buffer: Buffer): Promise<ExtratoHisconRaw> 
     if (alt) { margemLivre = parseMoeda(alt[1]); margemFound = true; }
   }
 
-  console.log(`📊 [Robô V3] Margens: Livre=${margemLivre}, RMC=${margemRmc}, RCC=${margemRcc}`);
+  // Extrair RMC e RCC - procurar padrão com 3 valores sequenciais após MARGEM DISPONÍVEL
+  const margemAllMatch = flat.match(/MARGEM DISPON[IÍ]VEL\*?\s*R\$([\d.,]+)\s*R\$([\d.,]+)\s*R\$([\d.,]+)/i);
+  if (margemAllMatch) {
+    margemLivre = parseMoeda(margemAllMatch[1]);
+    margemRmc = parseMoeda(margemAllMatch[2]);
+    margemRcc = parseMoeda(margemAllMatch[3]);
+    console.log(`✅ [Robô V3] Margens completas: Livre=${margemLivre}, RMC=${margemRmc}, RCC=${margemRcc}`);
+  }
+
+  console.log(`📊 [Robô V3] Margens finais: Livre=${margemLivre}, RMC=${margemRmc}, RCC=${margemRcc}`);
+
+  // === 2.5 DADOS BANCÁRIOS (PAGAMENTO) ===
+  const bancoPagamento = flat.match(/Pago em:\s*([A-ZÀ-Ú\s]+?)(?:\s{2,}|Meio|Agência|Não)/i)?.[1]?.trim() || null;
+  const meioPagamento = flat.match(/Meio:\s*(Conta\s+(?:Corrente|Poupan[cç]a))/i)?.[1]?.trim() || null;
+  const agenciaPagamento = flat.match(/Ag[eê]ncia:\s*(\d+)/i)?.[1] || null;
+  const contaPagamento = flat.match(/Conta\s+(?:Corrente|Poupan[cç]a):\s*(\d+)/i)?.[1] || null;
+  
+  console.log(`🏦 [Robô V3] Banco: ${bancoPagamento}, Meio: ${meioPagamento}, Agência: ${agenciaPagamento}, Conta: ${contaPagamento}`);
+
+  // === 2.6 BASE DE CÁLCULO E MARGEM EXTRAPOLADA ===
+  let baseCalculo = 0;
+  const baseMatch = flat.match(/BASE DE C[AÁ]LCULO\s*R\$([\d.,]+)/i);
+  if (baseMatch) {
+    baseCalculo = parseMoeda(baseMatch[1]);
+    console.log(`💰 [Robô V3] Base de cálculo: R$ ${baseCalculo}`);
+  }
+
+  let margemExtrapolada = 0;
+  const extrapMatch = flat.match(/MARGEM EXTRAPOLADA\*{0,3}\s*R\$([\d.,]+)/i);
+  if (extrapMatch) {
+    margemExtrapolada = parseMoeda(extrapMatch[1]);
+    console.log(`⚠️ [Robô V3] Margem Extrapolada: R$ ${margemExtrapolada}`);
+  }
+
+  // === 2.7 DDB (Data de Despacho do Benefício) - só se existir no texto ===
+  let ddb: string | null = null;
+  const ddbMatch = flat.match(/(?:DIB|DDB|Data de Despacho|Data In[ií]cio do Benef[ií]cio)[:\s]*(\d{2}\/\d{2}\/\d{4})/i);
+  if (ddbMatch) {
+    const [dia, mes, ano] = ddbMatch[1].split('/');
+    ddb = `${ano}-${mes}-${dia}`;
+  }
 
   // === 3. CONTRATOS ATIVOS ===
   const contratos: any[] = [];
@@ -192,18 +232,24 @@ export async function parseHisconPdf(buffer: Buffer): Promise<ExtratoHisconRaw> 
   return {
     dados_cliente: {
       nome,
-      idade: 60,
-      data_nascimento: "1960-01-01",
+      idade: 0,
+      data_nascimento: null,
       uf,
       especie_beneficio: especie,
       especie_nome: `Espécie ${especie}`,
       numero_beneficio: nBeneficio,
       possui_representante_legal: possuiRepresentante,
-      data_despacho_beneficio: "2015-01-01",
+      data_despacho_beneficio: ddb,
+      banco_pagamento: bancoPagamento,
+      meio_pagamento: meioPagamento,
+      agencia_pagamento: agenciaPagamento,
+      conta_pagamento: contaPagamento,
+      base_calculo: baseCalculo || undefined,
       margens: {
         emprestimo_livre: margemLivre,
         cartao_rmc_livre: margemRmc,
         cartao_rcc_livre: margemRcc,
+        margem_extrapolada: margemExtrapolada || undefined,
       }
     },
     contratos_ativos: contratos
