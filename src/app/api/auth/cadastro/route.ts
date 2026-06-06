@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { createClient } from "@supabase/supabase-js";
-import { createAsaasCustomer } from "@/lib/asaas";
+import { createAsaasCustomer, createAsaasSubscription } from "@/lib/asaas";
 
 export async function POST(req: Request) {
   try {
-    const { email, password, nome, empresa } = await req.json();
+    const { email, password, nome, empresa, plano } = await req.json();
 
     if (!email || !password || !nome || !empresa) {
       return NextResponse.json({ error: "Todos os campos são obrigatórios." }, { status: 400 });
@@ -58,7 +58,8 @@ export async function POST(req: Request) {
         data: {
           nomeEmpresa: empresa,
           status: "TRIAL",
-          statusAssinatura: "ACTIVE"
+          statusAssinatura: "ACTIVE",
+          planoSlug: plano || "start",
         }
       });
       empresaId = novaEmpresa.id;
@@ -84,6 +85,20 @@ export async function POST(req: Request) {
           where: { id: empresaId },
           data: { asaasCustomerId: asaasCustomer.id }
         });
+
+        // Criar assinatura no Asaas com o plano escolhido
+        const precos: Record<string, number> = { start: 69.90, pro: 149.90, black: 349.90 };
+        const valor = precos[plano || "start"] || 69.90;
+        try {
+          await createAsaasSubscription(
+            asaasCustomer.id,
+            valor,
+            `Kromuz ${(plano || "start").charAt(0).toUpperCase() + (plano || "start").slice(1)} - Mensal`
+          );
+          console.log(`✅ [Cadastro] Assinatura Asaas criada: R$ ${valor}/mês`);
+        } catch (subErr) {
+          console.error("Aviso: Falha ao criar assinatura Asaas", subErr);
+        }
       } catch (asaasErr) {
         console.error("Aviso: Falha ao criar cliente Asaas, mas cadastro prosseguiu.", asaasErr);
       }

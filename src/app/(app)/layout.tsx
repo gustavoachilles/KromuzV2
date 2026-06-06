@@ -13,7 +13,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     // Busca os dados de branding da empresa
     const empresa = await prisma.empresa.findUnique({
       where: { id: sessao.empresaId },
-      select: { corPrimaria: true, logoUrl: true, nomeFantasia: true, planoSlug: true }
+      select: { corPrimaria: true, logoUrl: true, nomeFantasia: true, planoSlug: true, statusAssinatura: true }
     });
 
     // Busca as permissões do cargo do usuário
@@ -93,7 +93,24 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         </div>
       </aside>
 
-      <main className="flex-1 min-w-0 h-screen overflow-y-auto pl-4">{children}</main>
+      <main className="flex-1 min-w-0 h-screen overflow-y-auto pl-4 relative">
+        {children}
+        {/* Bloqueio por inadimplência */}
+        {empresa?.statusAssinatura === "BLOCKED" && (
+          <div className="fixed inset-0 z-[9999] bg-zinc-950/95 backdrop-blur-sm flex items-center justify-center">
+            <div className="max-w-md text-center space-y-6 p-8">
+              <div className="w-16 h-16 rounded-full bg-red-500/20 flex items-center justify-center mx-auto">
+                <svg className="w-8 h-8 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+              </div>
+              <h2 className="text-2xl font-bold text-white">Acesso Bloqueado</h2>
+              <p className="text-zinc-400">Sua assinatura está suspensa por falta de pagamento. Regularize para voltar a usar o Kromuz.</p>
+              <Link href="/assinatura" className="inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-xl font-bold transition shadow-lg shadow-red-600/30">
+                Regularizar Agora
+              </Link>
+            </div>
+          </div>
+        )}
+      </main>
     </div>
   );
   } catch (err: any) {

@@ -311,7 +311,7 @@ export default async function LandingPage() {
 
                   {/* CTA */}
                   <Link 
-                    href="/cadastro" 
+                    href={`/cadastro?plano=${plano.slug}`} 
                     className={`w-full text-center font-bold py-3.5 rounded-xl transition-all duration-200 ${
                       plano.destaque 
                         ? "bg-gradient-to-r from-blue-500 to-violet-500 text-white shadow-lg shadow-blue-500/20 hover:shadow-blue-500/40 hover:scale-[1.02]" 
