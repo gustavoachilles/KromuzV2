@@ -29,21 +29,23 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Empresa não encontrada" }, { status: 404 });
     }
 
-    // Verificar se é upgrade (não permitir downgrade por aqui)
+    // Verificar direção da mudança
     const ordemPlanos: PlanoSlug[] = ["start", "pro", "black"];
     const idxAtual = ordemPlanos.indexOf(empresa.planoSlug as PlanoSlug);
     const idxDesejado = ordemPlanos.indexOf(planoDesejado as PlanoSlug);
+    const isUpgrade = idxDesejado > idxAtual || empresa.planoSlug === "beta";
+    const isDowngrade = idxDesejado < idxAtual;
 
-    if (idxDesejado <= idxAtual && empresa.planoSlug !== "beta") {
-      return NextResponse.json({ error: "Downgrade não permitido por esta rota. Entre em contato com o suporte." }, { status: 400 });
+    if (!isUpgrade && !isDowngrade) {
+      return NextResponse.json({ error: "Você já está neste plano." }, { status: 400 });
     }
 
     const planoInfo = getPlano(planoDesejado);
     const valor = PRECOS[planoDesejado];
 
-    // Criar assinatura no Asaas (se tiver customerId)
+    // Criar assinatura no Asaas apenas para upgrade
     let asaasSubscription = null;
-    if (empresa.asaasCustomerId) {
+    if (isUpgrade && empresa.asaasCustomerId) {
       try {
         asaasSubscription = await createAsaasSubscription(
           empresa.asaasCustomerId,
@@ -52,7 +54,7 @@ export async function POST(request: NextRequest) {
         );
         console.log("✅ [Asaas] Assinatura criada:", asaasSubscription.id);
       } catch (err) {
-        console.error("⚠️ [Asaas] Erro ao criar assinatura, prosseguindo com upgrade local:", err);
+        console.error("⚠️ [Asaas] Erro ao criar assinatura, prosseguindo:", err);
       }
     }
 
@@ -65,30 +67,33 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // Registrar fatura inicial (pendente)
-    const vencimento = new Date();
-    vencimento.setDate(vencimento.getDate() + 30); // Vence em 30 dias
+    // Registrar fatura apenas em upgrade
+    if (isUpgrade) {
+      const vencimento = new Date();
+      vencimento.setDate(vencimento.getDate() + 30);
+      await prisma.faturaSaaS.create({
+        data: {
+          empresaId: sessao.empresaId,
+          valor,
+          status: "PENDING",
+          vencimento,
+          asaasInvoiceId: asaasSubscription?.id || null,
+          linkPagamento: asaasSubscription?.paymentLink || null,
+        },
+      });
+    }
 
-    await prisma.faturaSaaS.create({
-      data: {
-        empresaId: sessao.empresaId,
-        valor,
-        status: "PENDING",
-        vencimento,
-        asaasInvoiceId: asaasSubscription?.id || null,
-        linkPagamento: asaasSubscription?.paymentLink || null,
-      },
-    });
-
-    console.log(`🚀 [Upgrade] ${empresa.nomeEmpresa}: ${empresa.planoSlug} → ${planoDesejado} (R$ ${valor})`);
+    const acao = isUpgrade ? "Upgrade" : "Downgrade";
+    console.log(`🚀 [${acao}] ${empresa.nomeEmpresa}: ${empresa.planoSlug} → ${planoDesejado} (R$ ${valor})`);
 
     return NextResponse.json({
       success: true,
       plano: planoDesejado,
       nome: planoInfo.nome,
       valor,
+      isUpgrade,
       paymentLink: asaasSubscription?.paymentLink || null,
-      message: `Upgrade para ${planoInfo.nome} realizado com sucesso!`,
+      message: `${acao} para ${planoInfo.nome} realizado com sucesso!`,
     });
 
   } catch (err: any) {

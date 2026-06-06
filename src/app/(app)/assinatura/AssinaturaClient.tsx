@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   CheckCircle2, AlertCircle, Download, Users, Zap, Star, Crown,
-  ArrowUp, Database, HardDrive, Loader2, X,
+  ArrowUp, ArrowDown, Database, HardDrive, Loader2, X,
 } from "lucide-react";
 
 type PlanoInfo = {
@@ -62,6 +62,7 @@ export function AssinaturaClient({
   const ordemPlanos: PlanoSlugType[] = ["start", "pro", "black"];
   const idxAtual = ordemPlanos.indexOf(planoSlug as PlanoSlugType);
   const planosSuperiores = PLANOS_UPGRADE.filter((_, i) => i > idxAtual);
+  const planosInferiores = PLANOS_UPGRADE.filter((_, i) => i < idxAtual && idxAtual !== -1);
 
   const isOverdue = statusAssinatura === "OVERDUE";
   const faturaAberta = faturas.find(f => f.status === "PENDING" || f.status === "OVERDUE");
@@ -85,7 +86,7 @@ export function AssinaturaClient({
         return;
       }
 
-      setUpgradeSuccess(`Upgrade para ${data.nome} realizado! 🎉`);
+      setUpgradeSuccess(data.message || `Alteração realizada! 🎉`);
       
       // Se tiver link de pagamento do Asaas, abrir
       if (data.paymentLink) {
@@ -358,6 +359,70 @@ export function AssinaturaClient({
               <h3 className="font-bold text-zinc-900 dark:text-white">Plano Máximo</h3>
               <p className="text-xs text-zinc-500 mt-1">Você está no plano mais completo do Kromuz!</p>
             </div>
+          )}
+
+          {/* Downgrade */}
+          {planosInferiores.length > 0 && (
+            <>
+              <div className="mx-3 my-2 h-px bg-zinc-200 dark:bg-zinc-800" />
+              <p className="text-xs text-zinc-400 uppercase tracking-wider font-bold px-1">Reduzir Plano</p>
+              {planosInferiores.map((p) => {
+                const Icon = p.icon;
+                const isLoading = upgradeLoading === p.slug;
+                return (
+                  <div 
+                    key={p.slug}
+                    className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 opacity-70 hover:opacity-100 transition"
+                  >
+                    <div className="flex items-center gap-3 mb-2">
+                      <div 
+                        className="w-8 h-8 rounded-lg flex items-center justify-center"
+                        style={{ backgroundColor: `${p.cor}10`, border: `1px solid ${p.cor}20` }}
+                      >
+                        <Icon className="w-4 h-4" style={{ color: p.cor }} />
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-zinc-700 dark:text-zinc-300 text-xs">{p.nome}</h3>
+                        <p className="text-[10px] text-zinc-400">{p.usuarios} usuários · {p.leads} leads</p>
+                      </div>
+                    </div>
+                    <div className="flex items-end justify-between">
+                      <div>
+                        <span className="text-lg font-bold text-zinc-600 dark:text-zinc-400">
+                          R$ {p.preco.toFixed(2).replace('.', ',')}
+                        </span>
+                        <span className="text-[10px] text-zinc-400">/mês</span>
+                      </div>
+                      {showConfirm === p.slug ? (
+                        <div className="flex gap-1.5">
+                          <button
+                            onClick={() => handleUpgrade(p.slug)}
+                            disabled={isLoading}
+                            className="flex items-center gap-1 text-[10px] font-bold px-2.5 py-1.5 rounded-lg bg-amber-500 text-white hover:bg-amber-600 transition disabled:opacity-50"
+                          >
+                            {isLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <CheckCircle2 className="w-3 h-3" />}
+                            Confirmar
+                          </button>
+                          <button
+                            onClick={() => setShowConfirm(null)}
+                            className="flex items-center text-[10px] px-1.5 py-1.5 rounded-lg bg-zinc-200 dark:bg-zinc-800 text-zinc-500 transition"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => setShowConfirm(p.slug)}
+                          className="flex items-center gap-1 text-[10px] font-bold px-3 py-1.5 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 transition"
+                        >
+                          <ArrowDown className="w-3 h-3" /> Downgrade
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </>
           )}
 
           {/* Módulos do plano */}
