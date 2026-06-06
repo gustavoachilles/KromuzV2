@@ -2,11 +2,18 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
 // Asaas envia eventos de pagamento para este endpoint
-// Configurar no painel Asaas: https://www.asaas.com/customerAccount/webhook
 // URL: https://kromuzv2.onrender.com/api/webhooks/asaas
+
+const ASAAS_WEBHOOK_TOKEN = process.env.ASAAS_WEBHOOK_TOKEN || "";
 
 export async function POST(request: NextRequest) {
   try {
+    // Validar token de autenticação
+    const token = request.headers.get("asaas-access-token");
+    if (ASAAS_WEBHOOK_TOKEN && token !== ASAAS_WEBHOOK_TOKEN) {
+      console.error("❌ [Asaas Webhook] Token inválido");
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
     const body = await request.json();
     const { event, payment } = body;
 
